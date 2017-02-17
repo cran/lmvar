@@ -1,0 +1,328 @@
+%\VignetteIndexEntry{Math details}
+%\VignetteEngine{R.rsp::tex}
+%\VignetteKeyword{R}
+%\VignetteKeyword{package}
+%\VignetteKeyword{vignette}
+%\VignetteKeyword{LaTeX}
+%!TeX spellcheck = en_US
+\documentclass{article}
+\usepackage{amsmath,amsfonts}
+\usepackage{mathtools}
+
+\newcommand{\vvec}[1]{\vec{\vec{#1}}}
+\newcommand{\cov}{\text{cov}}
+\newcommand{\Ker}{\text{Ker}}
+
+\newtheorem{lemma}{Lemma}
+
+\begin{document}
+\section{LMVAR: a linear model with heteroscedasticity}
+This vignette describes in more detail the mathematical aspects of the model with which the \texttt{lmvar} package is concerned. A short description can be found in the vignette 'Intro' of this package.
+
+Assume that a stochastic vector $Y \in \mathbb{R}^n$ has a multivariate normal distribution as
+\begin{equation}
+Y \sim \mathcal{N}_n(\mu^\star, \Sigma)
+\end{equation}
+in which $\mu^\star \in \mathbb{R}^n$ is the expected value and $\Sigma \in \mathbb{R}^{n,n}$ a diagonal covariance matrix
+\begin{equation}
+\Sigma_{ij} = 
+\begin{cases}
+0 & i \neq j \\
+(\sigma_i^\star)^2 & i=j.
+\end{cases}
+\end{equation}
+Assume that the vector of expectation values $\mu$ is linearly dependent on the values of the covariates in a model matrix $X_\mu$:
+\begin{equation}
+\mu^\star = X_\mu \beta_\mu^\star
+\end{equation}
+with $X_\mu \in \mathbb{R}^{n,k_\mu}$ and $\beta_\mu^\star \in \mathbb{R}^{k_\mu}$.
+
+Similarly, assume that the vector $\sigma^\star = (\sigma_1^\star, \dots, \sigma_n^\star)$ depends on the covariates in a model matrix $X_\sigma$ as
+\begin{equation}
+\log \sigma^\star = X_\sigma \beta_\sigma^\star
+\end{equation}
+where $\log \sigma^\star = (\log\sigma_1^\star, \dots, \log\sigma_n^\star)$, $X_\sigma \in \mathbb{R}^{n,k_\sigma}$ and $\beta_\sigma^\star \in \mathbb{R}^{k_\sigma}$. The logarithm is taken to be the 'natural logarithm', i.e., with base $e$.
+
+We assume $n \geq k_\mu + k_\sigma$ to avoid having an overdetermined system when we calculate estimators for $\beta_\mu^\star$ and $\beta_\sigma^\star$, as explained in the next section.
+
+If we take $X_\sigma$ a $n\times 1$ matrix in which each element is equal to 1, we have the standard linear model.
+
+The parameter vector $\beta_\mu^\star$ is defined uniquely only if $X_\mu$ is full-rank. If not, the space $\mathbb{R}^{k_\mu}$ can be split into subspaces such that there is a uniquely defined $\beta_\mu^\star$ in each subspace. The way \texttt{lmvar} treats this is as follows. If the user-supplied $X_\mu$ is not full-rank, \texttt{lmvar} removes just enough columns from the matrix to make it full-rank. This amounts to selecting $\beta_\mu^\star$ from the subspace in which all vector elements corresponding to the removed columns, are set to zero.
+
+In the same way, if the user-supplied $X_\sigma$ is not full-rank, just enough columns are removed to make it so. This defines a subspace in which $\beta_\sigma^\star$ is defined uniquely.
+
+In what follows we assume that $X_\mu$ and $X_\sigma$ are the matrices after the columns have been removed, i.e., they are full-rank matrices. The vector elements that are set to zero, drop out of $\beta_\mu^\star$ and $\beta_\sigma^\star$ and the dimensions $k_\mu$ and $k_\sigma$ are reduced accordingly. These reduced dimensions are returned by the function \texttt{dfree} in the \texttt{lmvar} package.
+
+\section{Maximum-likelihood equations}
+A vector element $Y_i$ is distributed as
+\begin{equation}
+Y_i \sim \frac{1}{\sqrt{2\pi}\sigma_i^\star} \exp \left( -\frac{(Y_i - \mu_i^\star)^2}{2 (\sigma_i^\star)^2} \right).
+\end{equation}
+The logarithm of the likelihood $\mathcal L$ is defined as
+\begin{equation}
+\log \mathcal{L}(\beta_\mu, \beta_\sigma) = - \frac{n}{2} \log(2\pi) - \sum_{k=1}^n ( \log \sigma_k + \frac{(y_k - \mu_k)^2}{2 \sigma_k^2}).
+\end{equation}
+for all vectors $\beta_\mu \in \mathbb{R}^{k_\mu}$ and $\beta_\sigma \in \mathbb{R}^{k_\sigma}$ and $\mu$ and $\sigma$ defined as
+\begin{equation}
+\begin{split}
+\mu & = X_\mu \beta_\mu \\
+\log \sigma & = X_\sigma \beta_\sigma.
+\end{split}
+\end{equation}
+
+We are looking for $\hat{\beta_\mu} \in \mathbb{R}^{k_\mu}$ and $\hat{\beta_\sigma} \in  \mathbb{R}^{k_\sigma}$ that maximize the log-likelihood:
+\begin{equation} \label{eq:mle def}
+(\hat{\beta}_\mu, \, \hat{\beta}_\sigma) = \underset{(\beta_\mu, \beta_\sigma) \in \mathbb{R}^{k_\mu} \times \mathbb{R}^{k_\sigma}} {\text{argmax}} \log \mathcal{L} (\beta_\mu, \beta_\sigma).
+\end{equation}
+These maximum likelihood estimators are taken to be the estimators of $\beta_\mu^\star$ and $\beta_\sigma^\star$.
+We assume that  $\hat{\beta}_{\mu}$ and $\hat{\beta}_\sigma$ thus defined, exist and are unique. 
+
+Given $\hat{\beta}_\sigma$, this is true for $\hat{\beta}_\mu$. Namely, given any $\beta_\sigma$, $\log \mathcal{L}$ is maximized by the $\beta_\mu$ which is the solution of
+\begin{equation} \label{eq:mle mu}
+\nabla_{\beta_\mu} \log \mathcal{L} =  0 
+\end{equation}
+where $\nabla_{\beta_\mu}$ stands for the gradient $(\frac{\partial}{\partial \beta_{\mu,1}}, \dots, \frac{\partial}{\partial \beta_{\mu,n}})$. 
+
+The derivatives are
+\begin{align}
+\frac{\partial \log \mathcal{L}}{\partial \beta_{\mu,i}} & = \sum_{k=1}^n ( \frac{(y_k - \mu_k)}{\sigma_k^2}) (X_\mu)_{ki} \label{eq:dll dbmu}\\
+& = \left( X_\mu^T \Lambda (y -\mu) \right)_i
+\end{align}
+with $\Lambda$ a diagonal matrix given by 
+\begin{equation} \label{eq:Lambda def}
+\Lambda_{ij} = \frac{1}{\sigma_i^2} \delta_{ij}.
+\end{equation}
+Hence
+\begin{equation}
+\nabla_{\beta_\mu} \log \mathcal{L} =  X_\mu^T \Lambda (y -\mu) 
+\end{equation}
+and the maximum-likelihood equation \eqref{eq:mle mu} becomes
+\begin{equation}
+X_\mu^T \Lambda X_\mu \beta_\mu = X_\mu^T \Lambda y
+\end{equation} 
+which has the solution
+\begin{equation} 
+\beta_\mu = \left( X_\mu^T \Lambda X_\mu \right)^{-1} X_\mu^T \Lambda y . \label{eq:bmustar}
+\end{equation}
+Because of our assumption that $X_\mu$ is full rank, the inverse of the matrix $X_\mu^T \Lambda X_\mu$ can be taken.
+
+It is easy to see that the solution \eqref{eq:bmustar} represents a maximum in the log-likelihood. The matrix $H_{\mu \mu}$ of second-order derivatives
+\begin{equation}
+\left( H_{\mu \mu} \right)_{ij} = \frac{\partial^2 \log L}{\partial \beta_{\mu i} \partial \beta_{\mu j}}
+\end{equation}
+is given by
+\begin{equation} \label{eq:Hmumu}
+H_{\mu \mu} = - X_\mu^T \Lambda X_\mu,
+\end{equation}
+which is negative-definite for any $\beta_\sigma$. 
+
+Our maximization search can now be carried out in a smaller space:
+\begin{equation} \label{eq:mle sigma}
+\hat{\beta_\sigma} = \underset{\beta_\sigma \in \mathbb{R}^{k_\sigma}} {\text{argmax}} \; \log \mathcal{L}_P ( \beta_\sigma)
+\end{equation}
+where $\mathcal{L}_P$ is the so-called profile-likelihood
+\begin{equation} 
+\mathcal{L}_P ( \beta_\sigma) = \mathcal{L} (\beta_\mu (\beta_\sigma), \beta_\sigma).
+\end{equation}
+with $\beta_\mu$ depending on $\beta_\sigma$ as in \eqref{eq:bmustar}.
+
+To find $\hat{\beta}_\sigma$ from \eqref{eq:mle sigma}, we must solve
+\begin{equation} \label{eq:mle sigma 2}
+(\nabla_{\beta_\mu} \log \mathcal{L}) \, (\nabla_{\beta_\sigma} \beta_\mu) + \nabla_{\beta_\sigma} \log \mathcal{L} = 0 
+\end{equation}
+evaluated at $\beta_\mu = \beta_\mu(\beta_\sigma)$, and $(\nabla_{\beta_\sigma} \beta_\mu)$ the matrix 
+\begin{equation}
+(\nabla_{\beta_\sigma} \beta_\mu)_{ij} = \frac{\partial \beta_{\mu i}}{\partial \beta_{\sigma j}}.
+\end{equation}
+However, because of \eqref{eq:mle mu}, the first term in \eqref{eq:mle sigma 2} vanishes and we are left to solve
+\begin{equation} \label{eq:mle sigma 3}
+\nabla_{\beta_\sigma} \log \mathcal{L} = 0.
+\end{equation}
+The derivatives that are the elements of this gradient are given by 
+\begin{align}
+\frac{\partial \log \mathcal{L}}{\partial \beta_{\sigma i}} & = \sum_{k=1}^n ( - (X_\sigma)_{ki} + \frac{(y_k - \mu_k)^2}{\sigma_k^2} (X_\sigma)_{ki}) \nonumber\\
+& = \sum_{k=1}^n (\frac{(y_k - \mu_k)^2}{\sigma_k^2} -1) (X_\sigma)_{ki}. \label{eq:mle sigma 4}
+\end{align}
+The entire gradient can be written as a matrix-product as
+\begin{equation} \label{eq:mle 2}
+\nabla_{\beta_\sigma} \log \mathcal{L} = X_\sigma^T \lambda_\sigma
+\end{equation}
+with $\lambda_\sigma$ a vector of length $n$ whose elements $\lambda_{\sigma i}$ are
+\begin{equation}
+\lambda_{\sigma i} = \left( \frac{y_i - \mu_i}{\sigma_i} \right)^2 -1.
+\end{equation}
+The maximum-likelihood equations \eqref{eq:mle sigma 3} take the form
+\begin{equation}
+X_\sigma^T \lambda_\sigma = 0.
+\end{equation}
+
+The estimate $\mu$ of the expectation value that appears in $\lambda_\sigma$ depends on $\beta_\sigma$ as
+\begin{align}
+\mu & = X_\mu \beta_\mu \nonumber\\
+& = X_\mu \left( X_\mu^T \Lambda X_\mu \right)^{-1} X_\mu^T \Lambda y \nonumber\\
+& = \Lambda^{1/2} X_\mu \left( X_\mu^T \Lambda X_\mu \right)^{-1} X_\mu^T \Lambda^{1/2} y
+\end{align}
+where the latter form is the more symmetric, with
+\begin{equation}
+\left( \Lambda^{1/2} \right)_{ij} = \frac{1}{\sigma_i} \delta_{ij}.
+\end{equation}
+The vector $(y - \mu) / \sigma$ can be written as
+\begin{equation}
+\frac{y-\mu}{\sigma} = \Lambda^{1/2} \left[ I - \Lambda^{1/2} X_\mu \left( X_\mu^T \Lambda X_\mu \right)^{-1} X_\mu^T \Lambda^{1/2} \right] y 
+\end{equation}
+in which $I \in \mathbb{R}^{n,n}$ is the identity matrix.
+
+\subsection{Profile-likelihood Hessian}
+Numerical procedures to solve the maximum-likelihood equations $X_\sigma^T \lambda_\sigma=0$ involve the calculation of the Hessian $H_P$ of the profile log-likelihood. $H_P$ is the matrix of second-order derivatives of $\log \mathcal{L}_P$:
+\begin{equation}
+\left( H_P \right)_{ij} = \frac{\partial^2 \log \mathcal{L}_P}{\partial \beta_{\sigma j} \partial \beta_{\sigma i}}
+\end{equation}
+Differentiation of \eqref{eq:mle sigma 4} gives for the second-order derivatives
+\begin{equation} \label{eq:hess}
+\left( H_P \right)_{ij} = -2 \sum_{k=1}^n (X_\sigma^T)_{ik} \frac{y_k - \mu_k}{\sigma_k^2} \left\lbrace \frac{\partial \mu_k}{\partial \beta_{\sigma j}} + (y_k - \mu_k) (X_\sigma)_{kj} \right\rbrace
+\end{equation} 
+with
+$\partial \mu_k / (\partial \beta_{\sigma j})$ the element at row $k$ and column $j$ of the matrix $(\nabla_{\beta_\sigma} \mu)$. Given that $\mu = X_\mu \beta_\mu$ and $\beta_\mu$ is given by \eqref{eq:bmustar}, the {\em j}-th column vector of the matrix is
+\begin{align}
+\frac{\partial \mu}{\partial \beta_{\sigma j}} & = X_\mu \frac{\partial \beta_\mu}{\partial \beta_{\sigma j}} \nonumber\\
+& = X_\mu \left\lbrace \frac{\partial \left( X_\mu^T \Lambda X_\mu \right)^{-1}}{\partial \beta_{\sigma j}} X_\mu^T \Lambda + \left( X_\mu^T \Lambda X_\mu \right)^{-1} X_\mu^T \frac{\partial \Lambda}{\partial \beta_{\sigma j}} \right\rbrace y \nonumber\\
+& = X_\mu \left( X_\mu^T \Lambda X_\mu \right)^{-1} \left\lbrace - X_\mu^T \frac{\partial \Lambda}{\partial \beta_{\sigma j}} X_\mu \left( X_\mu^T \Lambda X_\mu \right)^{-1} X_\mu^T \Lambda + X_\mu^T \frac{\partial \Lambda}{\partial \beta_{\sigma j}} \right\rbrace y \nonumber\\
+& = X_\mu \left( X_\mu^T \Lambda X_\mu \right)^{-1} X_\mu^T \frac{\partial \Lambda}{\partial \beta_{\sigma j}} \left\lbrace - X_\mu \left( X_\mu^T \Lambda X_\mu \right)^{-1} X_\mu^T \Lambda + I \right\rbrace y \nonumber\\
+& = X_\mu \left( X_\mu^T \Lambda X_\mu \right)^{-1} X_\mu^T \frac{\partial \Lambda}{\partial \beta_{\sigma j}} (y - \mu)
+\end{align}
+The matrix $\partial \Lambda / (\partial \beta_{\sigma j})$ takes the form
+\begin{align}
+\frac{\partial \Lambda}{\partial \beta_{\sigma j}} & = \sum_{i=1}^n \frac{\partial \Lambda}{\partial \sigma_i} \frac{\partial \sigma_i}{\partial \beta_{\sigma j}}\\
+& = -2 
+\begin{pmatrix}
+(X_\sigma)_{1j} & & 0 \nonumber\\
+& \ddots & \\
+0 & & (X_\sigma)_{nj}
+\end{pmatrix} \Lambda
+\end{align}
+The {\em j}-th column vector of the matrix is
+\begin{equation}
+\frac{\partial \mu}{\partial \beta_{\sigma j}} = -2 X_\mu \left( X_\mu^T \Lambda X_\mu \right)^{-1} X_\mu^T
+\begin{pmatrix}
+\frac{y_1 - \mu_1}{\sigma_1^2} \left( X_\sigma \right)_{1j} \\
+\vdots \\
+\frac{y_n - \mu_n}{\sigma_n^2} \left( X_\sigma \right)_{nj}
+\end{pmatrix}
+\end{equation}
+and the element $(\nabla_{\beta_\sigma} \mu)_{kj}$ of the matrix $(\nabla_{\beta_\sigma} \mu)$ is given by
+\begin{equation}
+\frac{\partial \mu_k}{\partial \beta_{\sigma j}} = -2 \sum_{l=1}^n \left( X_\mu \left( X_\mu^T \Lambda X_\mu \right)^{-1} X_\mu^T \right)_{kl} \frac{y_l - \mu_l}{\sigma_l^2} \left( X_\sigma \right)_{lj}. 
+\end{equation}
+If we substitute this result in \eqref{eq:hess}, we obtain for the element at row $i$ and column $j$ of the Hessian:
+\begin{align}
+& \left( H_P \right)_{ij}  = \nonumber \\
+& \quad 4 \sum_{k,l=1}^n (X_\sigma^T)_{ik} \frac{y_k - \mu_k}{\sigma_k^2} \left( X_\mu \left( X_\mu^T \Lambda X_\mu \right)^{-1} X_\mu^T \right)_{kl} \frac{y_l - \mu_l}{\sigma_l^2} \left( X_\sigma \right)_{lj} + \nonumber\\
+& \quad -2 \sum_{k=1}^n (X_\sigma^T)_{ik} \left( \frac{y_k - \mu_k}{\sigma_k} \right)^2 (X_\sigma)_{kj}.
+\end{align}
+We can write the Hessian as a matrix-product as
+\begin{equation}
+\begin{split}
+H_P = X_\sigma^T \tilde{\Lambda}_1 X_\mu \left( X_\mu^T \Lambda X_\mu \right)^{-1} X_\mu^T \tilde{\Lambda}_1 X_\sigma + X_\sigma^T \tilde{\Lambda}_2 X_\sigma
+\end{split}
+\end{equation}
+with two $n \times n$ diagonal matrices
+\begin{equation}
+\begin{split}
+\left(\tilde{\Lambda}_1 \right)_{ij} & =  2 \, \frac{y_i - \mu_i}{\sigma_i^2} \, \delta_{ij} \\
+\left( \tilde{\Lambda}_2 \right)_{ij} & = -2 \left( \frac{y_i - \mu_i}{\sigma_i} \right)^2 \, \delta_{ij}.
+\end{split}
+\end{equation}
+
+\section{Distributions for estimators}
+Asymptotic theory of maximum-likelihood estimators tells that the vector of the combined estimators $(\hat{\beta}_\mu, \hat{\beta}_\sigma)$ as defined in \eqref{eq:mle def}, is distributed approximately as
+\begin{equation}
+(\hat{\beta}_\mu, \hat{\beta}_\sigma) \sim \mathcal{N}_{k_\mu + k_\sigma} \left((\beta_\mu^\star, \beta_\sigma^\star), \Sigma_{\beta \beta} \right) \qquad \text{for } n \text{ large.} 
+\end{equation}
+This distribution is valid in the limit of a large number of observations $n$. 
+
+The covariance matrix $\Sigma_{\beta \beta}$ is given in terms of the inverse Fisher information matrix $I_n$:
+\begin{equation}
+\Sigma_{\beta \beta} = \frac{1}{n} I_n^{-1}.
+\end{equation}
+The Fisher information matrix is given in terms of the expected value of the Hessian:
+\begin{equation}
+I_n = - \frac{1}{n} E[H].
+\end{equation}
+The Hessian $H$ is the Hessian of the full log-likelihood, in contrast to the profile-likelihood Hessian:
+\begin{equation}
+H =
+\begin{pmatrix}
+H_{\mu\mu} & H_{\mu\sigma} \\
+H_{\mu\sigma}^T & H_{\sigma\sigma}
+\end{pmatrix}
+\end{equation}
+with the three block-matrices defined as
+\begin{equation}
+\left( H_{\mu\mu} \right)_{ij} = \frac{\partial^2 \log L}{\partial \beta_{\mu i} \partial \beta_{\mu j}}, \; \left( H_{\mu\sigma} \right)_{ij} = \frac{\partial^2 \log L}{\partial \beta_{\mu i} \partial \beta_{\sigma j}}, \; \left( H_{\sigma\sigma} \right)_{ij} = \frac{\partial^2 \log L}{\partial \beta_{\sigma i} \partial \beta_{\sigma j}}.
+\end{equation}
+We have already calculated $H_{\mu\mu}$ in \eqref{eq:Hmumu}. Differentiation of \eqref{eq:dll dbmu} and \eqref{eq:mle sigma 4} respectively gives
+\begin{align*}
+\left( H_{\mu\sigma} \right)_{ij} & = -2 \sum_{k=1}^n \frac{y_k - \mu_k}{\sigma_k^2} \left( X_\mu \right)_{ki} \left( X_\sigma \right)_{kj}  \\
+\left( H_{\sigma\sigma} \right)_{ij} & = -2 \sum_{k=1}^n \left( \frac{y_k - \mu_k}{\sigma_k} \right)^2 \left( X_\sigma \right)_{ki} \left( X_\sigma \right)_{kj}.
+\end{align*}
+In matrix notation:
+\begin{equation}
+H_{\mu\sigma} = X_\mu^T \Lambda_1 X_\sigma, \qquad H_{\sigma\sigma} = X_\sigma^T \Lambda_2 X_\sigma,
+\end{equation}
+with the diagonal matrices
+\begin{equation}
+\left( \Lambda_1 \right)_{ij} = -2 \, \frac{y_i - \mu_i}{\sigma_i^2} \, \delta_{ij}, \qquad \left( \Lambda_2 \right)_{ij} = -2 \left( \frac{y_i - \mu_i}{\sigma_i} \right)^2 \delta_{ij}.
+\end{equation}
+When we take expected values, we have to take $\beta_\mu = \beta_\mu^\star$ and $\beta_\sigma = \beta_\sigma^\star$. Keeping in mind that 
+\begin{align*}
+E[Y - \mu^\star] & = 0 \\
+E[(Y_i-\mu_i^\star)(Y_j - \mu_j^\star)] & = {\sigma_i^\star}^2 \delta_{ij},
+\end{align*}
+we have
+\begin{equation}
+E[H_{\mu\mu}] = - X_\mu^T \Lambda^\star X_\mu, \; E[H_{\mu\sigma}] = 0, \; E[H_{\sigma\sigma}] = -2 X_\sigma^T X_\sigma
+\end{equation}
+where $\Lambda^\star$ is $\Lambda$ with $\sigma$ taken to be $\sigma^\star$. This brings the expected value of the Hessian in the form
+\begin{equation} \label{eq:exp H}
+E[H] = - 
+\begin{pmatrix}
+X_\mu^T \Lambda^\star X_\mu & 0 \\
+0 & 2 X_\sigma^T X_\sigma
+\end{pmatrix}.
+\end{equation}
+The function \texttt{fisher} in the \texttt{lmvar} package calculates the Fisher information matrix. It estimates $E[H]$ by replacing the true but unknown $\sigma^\star$ by its maximum-likelihood estimator $\hat{\sigma}$ in $\Lambda^\star$.
+
+The expectation value \eqref{eq:exp H} brings the covariance matrix $\Sigma_{\beta\beta}$ in the form
+\begin{equation}
+\Sigma_{\beta\beta} = 
+\begin{pmatrix}
+\left( X_\mu^T \Lambda^\star X_\mu \right)^{-1} & 0 \\
+0 & \frac{1}{2} \left( X_\sigma^T X_\sigma \right)^{-1}
+\end{pmatrix}.
+\end{equation}
+This implies
+\begin{equation}
+\begin{aligned}
+\hat{\beta}_\mu & \sim \mathcal{N}_{k_\mu}( \beta_\mu^\star, \, \left( X_\mu^T \Lambda^\star X_\mu \right)^{-1}) \\ 
+\hat{\beta}_\sigma & \sim \mathcal{N}_{k_\sigma}( \beta_\sigma^\star, \,\tfrac{1}{2} \left( X_\sigma^T X_\sigma \right)^{-1})
+\end{aligned} \qquad \text{ for } n \text{ large.}
+\end{equation}
+We obtain for the asymptotic distribution of the maximum-likelihood estimators of $\mu^\star$ and $\sigma^\star$
+\begin{equation}
+\begin{aligned}
+\hat{\mu} & \sim \mathcal{N}_n (\mu^\star, \, X_\mu \left( X_\mu^T \Lambda^\star X_\mu \right)^{-1} X_\mu^T) \\
+\log \hat{\sigma} & \sim \mathcal{N}_n (\log \sigma^\star, \, \tfrac{1}{2} X_\sigma \left( X_\sigma^T X_\sigma \right)^{-1} X_\sigma^T)
+\end{aligned}
+\qquad \text{ for } n \text{ large.}
+\end{equation} 
+The expectation value and the variance for an element $\hat{\sigma}_i$ of $\hat{\sigma}$ are
+\begin{equation}
+\begin{aligned}
+E[\hat{\sigma}_i] & = \sigma_i^\star \exp\left( \frac{(X_\sigma \left( X_\sigma^T X_\sigma \right)^{-1} X_\sigma^T)_{ii}}{4} \right) \\
+\text{var}(\hat{\sigma}_i) & = \left( E[\hat{\sigma}_i] \right)^2 \left(\exp (\frac{(X_\sigma \left( X_\sigma^T X_\sigma \right)^{-1} X_\sigma^T)_{ii}}{2}) - 1 \right)
+\end{aligned}
+\qquad \text{ for } n \text{ large}.
+\end{equation}
+The function \texttt{fitted.lmvar} (with the option \texttt{log = FALSE}) returns $\hat{\mu}$ and $\hat{\sigma}$.
+ 
+\end{document}

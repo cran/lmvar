@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<meta name="author" content="Posthuma Partners" />
+
+<meta name="date" content="2017-02-16" />
+
+<title>A linear model with non-constant variances</title>
+
+
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+div.sourceCode { overflow-x: auto; }
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; line-height: 100%; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+code > span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code > span.dt { color: #902000; } /* DataType */
+code > span.dv { color: #40a070; } /* DecVal */
+code > span.bn { color: #40a070; } /* BaseN */
+code > span.fl { color: #40a070; } /* Float */
+code > span.ch { color: #4070a0; } /* Char */
+code > span.st { color: #4070a0; } /* String */
+code > span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code > span.ot { color: #007020; } /* Other */
+code > span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code > span.fu { color: #06287e; } /* Function */
+code > span.er { color: #ff0000; font-weight: bold; } /* Error */
+code > span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+code > span.cn { color: #880000; } /* Constant */
+code > span.sc { color: #4070a0; } /* SpecialChar */
+code > span.vs { color: #4070a0; } /* VerbatimString */
+code > span.ss { color: #bb6688; } /* SpecialString */
+code > span.im { } /* Import */
+code > span.va { color: #19177c; } /* Variable */
+code > span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code > span.op { color: #666666; } /* Operator */
+code > span.bu { } /* BuiltIn */
+code > span.ex { } /* Extension */
+code > span.pp { color: #bc7a00; } /* Preprocessor */
+code > span.at { color: #7d9029; } /* Attribute */
+code > span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code > span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code > span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+</style>
+
+
+
+<link href="data:text/css;charset=utf-8,body%20%7B%0Abackground%2Dcolor%3A%20%23fff%3B%0Amargin%3A%201em%20auto%3B%0Amax%2Dwidth%3A%20700px%3B%0Aoverflow%3A%20visible%3B%0Apadding%2Dleft%3A%202em%3B%0Apadding%2Dright%3A%202em%3B%0Afont%2Dfamily%3A%20%22Open%20Sans%22%2C%20%22Helvetica%20Neue%22%2C%20Helvetica%2C%20Arial%2C%20sans%2Dserif%3B%0Afont%2Dsize%3A%2014px%3B%0Aline%2Dheight%3A%201%2E35%3B%0A%7D%0A%23header%20%7B%0Atext%2Dalign%3A%20center%3B%0A%7D%0A%23TOC%20%7B%0Aclear%3A%20both%3B%0Amargin%3A%200%200%2010px%2010px%3B%0Apadding%3A%204px%3B%0Awidth%3A%20400px%3B%0Aborder%3A%201px%20solid%20%23CCCCCC%3B%0Aborder%2Dradius%3A%205px%3B%0Abackground%2Dcolor%3A%20%23f6f6f6%3B%0Afont%2Dsize%3A%2013px%3B%0Aline%2Dheight%3A%201%2E3%3B%0A%7D%0A%23TOC%20%2Etoctitle%20%7B%0Afont%2Dweight%3A%20bold%3B%0Afont%2Dsize%3A%2015px%3B%0Amargin%2Dleft%3A%205px%3B%0A%7D%0A%23TOC%20ul%20%7B%0Apadding%2Dleft%3A%2040px%3B%0Amargin%2Dleft%3A%20%2D1%2E5em%3B%0Amargin%2Dtop%3A%205px%3B%0Amargin%2Dbottom%3A%205px%3B%0A%7D%0A%23TOC%20ul%20ul%20%7B%0Amargin%2Dleft%3A%20%2D2em%3B%0A%7D%0A%23TOC%20li%20%7B%0Aline%2Dheight%3A%2016px%3B%0A%7D%0Atable%20%7B%0Amargin%3A%201em%20auto%3B%0Aborder%2Dwidth%3A%201px%3B%0Aborder%2Dcolor%3A%20%23DDDDDD%3B%0Aborder%2Dstyle%3A%20outset%3B%0Aborder%2Dcollapse%3A%20collapse%3B%0A%7D%0Atable%20th%20%7B%0Aborder%2Dwidth%3A%202px%3B%0Apadding%3A%205px%3B%0Aborder%2Dstyle%3A%20inset%3B%0A%7D%0Atable%20td%20%7B%0Aborder%2Dwidth%3A%201px%3B%0Aborder%2Dstyle%3A%20inset%3B%0Aline%2Dheight%3A%2018px%3B%0Apadding%3A%205px%205px%3B%0A%7D%0Atable%2C%20table%20th%2C%20table%20td%20%7B%0Aborder%2Dleft%2Dstyle%3A%20none%3B%0Aborder%2Dright%2Dstyle%3A%20none%3B%0A%7D%0Atable%20thead%2C%20table%20tr%2Eeven%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0A%7D%0Ap%20%7B%0Amargin%3A%200%2E5em%200%3B%0A%7D%0Ablockquote%20%7B%0Abackground%2Dcolor%3A%20%23f6f6f6%3B%0Apadding%3A%200%2E25em%200%2E75em%3B%0A%7D%0Ahr%20%7B%0Aborder%2Dstyle%3A%20solid%3B%0Aborder%3A%20none%3B%0Aborder%2Dtop%3A%201px%20solid%20%23777%3B%0Amargin%3A%2028px%200%3B%0A%7D%0Adl%20%7B%0Amargin%2Dleft%3A%200%3B%0A%7D%0Adl%20dd%20%7B%0Amargin%2Dbottom%3A%2013px%3B%0Amargin%2Dleft%3A%2013px%3B%0A%7D%0Adl%20dt%20%7B%0Afont%2Dweight%3A%20bold%3B%0A%7D%0Aul%20%7B%0Amargin%2Dtop%3A%200%3B%0A%7D%0Aul%20li%20%7B%0Alist%2Dstyle%3A%20circle%20outside%3B%0A%7D%0Aul%20ul%20%7B%0Amargin%2Dbottom%3A%200%3B%0A%7D%0Apre%2C%20code%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0Aborder%2Dradius%3A%203px%3B%0Acolor%3A%20%23333%3B%0Awhite%2Dspace%3A%20pre%2Dwrap%3B%20%0A%7D%0Apre%20%7B%0Aborder%2Dradius%3A%203px%3B%0Amargin%3A%205px%200px%2010px%200px%3B%0Apadding%3A%2010px%3B%0A%7D%0Apre%3Anot%28%5Bclass%5D%29%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0A%7D%0Acode%20%7B%0Afont%2Dfamily%3A%20Consolas%2C%20Monaco%2C%20%27Courier%20New%27%2C%20monospace%3B%0Afont%2Dsize%3A%2085%25%3B%0A%7D%0Ap%20%3E%20code%2C%20li%20%3E%20code%20%7B%0Apadding%3A%202px%200px%3B%0A%7D%0Adiv%2Efigure%20%7B%0Atext%2Dalign%3A%20center%3B%0A%7D%0Aimg%20%7B%0Abackground%2Dcolor%3A%20%23FFFFFF%3B%0Apadding%3A%202px%3B%0Aborder%3A%201px%20solid%20%23DDDDDD%3B%0Aborder%2Dradius%3A%203px%3B%0Aborder%3A%201px%20solid%20%23CCCCCC%3B%0Amargin%3A%200%205px%3B%0A%7D%0Ah1%20%7B%0Amargin%2Dtop%3A%200%3B%0Afont%2Dsize%3A%2035px%3B%0Aline%2Dheight%3A%2040px%3B%0A%7D%0Ah2%20%7B%0Aborder%2Dbottom%3A%204px%20solid%20%23f7f7f7%3B%0Apadding%2Dtop%3A%2010px%3B%0Apadding%2Dbottom%3A%202px%3B%0Afont%2Dsize%3A%20145%25%3B%0A%7D%0Ah3%20%7B%0Aborder%2Dbottom%3A%202px%20solid%20%23f7f7f7%3B%0Apadding%2Dtop%3A%2010px%3B%0Afont%2Dsize%3A%20120%25%3B%0A%7D%0Ah4%20%7B%0Aborder%2Dbottom%3A%201px%20solid%20%23f7f7f7%3B%0Amargin%2Dleft%3A%208px%3B%0Afont%2Dsize%3A%20105%25%3B%0A%7D%0Ah5%2C%20h6%20%7B%0Aborder%2Dbottom%3A%201px%20solid%20%23ccc%3B%0Afont%2Dsize%3A%20105%25%3B%0A%7D%0Aa%20%7B%0Acolor%3A%20%230033dd%3B%0Atext%2Ddecoration%3A%20none%3B%0A%7D%0Aa%3Ahover%20%7B%0Acolor%3A%20%236666ff%3B%20%7D%0Aa%3Avisited%20%7B%0Acolor%3A%20%23800080%3B%20%7D%0Aa%3Avisited%3Ahover%20%7B%0Acolor%3A%20%23BB00BB%3B%20%7D%0Aa%5Bhref%5E%3D%22http%3A%22%5D%20%7B%0Atext%2Ddecoration%3A%20underline%3B%20%7D%0Aa%5Bhref%5E%3D%22https%3A%22%5D%20%7B%0Atext%2Ddecoration%3A%20underline%3B%20%7D%0A%0Acode%20%3E%20span%2Ekw%20%7B%20color%3A%20%23555%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Edt%20%7B%20color%3A%20%23902000%3B%20%7D%20%0Acode%20%3E%20span%2Edv%20%7B%20color%3A%20%2340a070%3B%20%7D%20%0Acode%20%3E%20span%2Ebn%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Efl%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Ech%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Est%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Eco%20%7B%20color%3A%20%23888888%3B%20font%2Dstyle%3A%20italic%3B%20%7D%20%0Acode%20%3E%20span%2Eot%20%7B%20color%3A%20%23007020%3B%20%7D%20%0Acode%20%3E%20span%2Eal%20%7B%20color%3A%20%23ff0000%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Efu%20%7B%20color%3A%20%23900%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%20code%20%3E%20span%2Eer%20%7B%20color%3A%20%23a61717%3B%20background%2Dcolor%3A%20%23e3d2d2%3B%20%7D%20%0A" rel="stylesheet" type="text/css" />
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">A linear model with non-constant variances</h1>
+<h4 class="author"><em>Posthuma Partners</em></h4>
+<h4 class="date"><em>2017-02-16</em></h4>
+
+
+
+<div id="the-package" class="section level2">
+<h2>The package</h2>
+<p>The ‘lmvar’ package fits a linear model in which the assumption of homoscedasticity (i.e., the variance is independent of the expectation value) is dropped. Instead, the variance has its own model, comparable to the model for the expectation value.</p>
+<p>The fit results in an ‘lmvar’ object, which is a list of class ‘lmvar’. Accessor functions are provided to extract the list members such as the fitted betas and the log-likelihood for the model. Various utility functions such as <code>residuals</code> to calculate residuals, <code>AIC</code> to calculate the AIC, <code>fitted</code> to obtain expected values and standard deviations, etc., are also provided by the package.</p>
+<p>The package lacks much of the sophistication of the ‘lm’ and ‘glm’ packages. On the bright side, this means it is simple to use. It is intended for people who run a classical linear model and want to see what happens if the restriction of a constant variance is dropped. Questions in this context are: does the allowance of heteroscedasticity result in a better fit, lower values for the AIC or BIC, smaller errors from a cross-validation, etc.?</p>
+</div>
+<div id="the-model" class="section level2">
+<h2>The model</h2>
+<p>The package fits the following model. A vector <span class="math inline">\(Y\)</span> of observations (sometimes called ‘responses’) of length <span class="math inline">\(n\)</span> is a stochastic vector. It is distributed according to a multivariate Gaussian distribution:</p>
+<span class="math display">\[\begin{equation}
+Y \sim \mathcal{N}_n( \mu, \Sigma),
+\end{equation}\]</span>
+where <span class="math inline">\(\mu\)</span> is the vector of expectation values and <span class="math inline">\(\Sigma\)</span> the covariance matrix (also called the ‘variance-covariance matrix’). Just like in the standard linear model, the covariance is taken to be a <span class="math inline">\(n \times n\)</span> diagonal matrix but contrary to the standard linear model, the diagonal entries need not be all the same:
+<span class="math display">\[\begin{equation}
+\Sigma_{ij} =
+\begin{cases}
+0 &amp; i \neq j\\
+\sigma_i^2 &amp; i=j
+\end{cases}
+\end{equation}\]</span>
+<div id="model-for-the-expectation-values" class="section level3">
+<h3>Model for the expectation values</h3>
+As in the classical linear model, the vector of expectation values <span class="math inline">\(\mu\)</span> is given by
+<span class="math display">\[\begin{equation}
+\mu = X_\mu \beta_\mu
+\end{equation}\]</span>
+<p>where <span class="math inline">\(X_\mu\)</span> is the ‘model matrix’ or ‘design matrix’ for <span class="math inline">\(\mu\)</span> and <span class="math inline">\(\beta_\mu\)</span> the parameter vector for <span class="math inline">\(\mu\)</span>. <span class="math inline">\(X_\mu\)</span> is a <span class="math inline">\(n \times k_\mu\)</span> matrix and <span class="math inline">\(\beta_\mu\)</span> a vector of length <span class="math inline">\(k_\mu\)</span>.</p>
+</div>
+<div id="model-for-the-variances" class="section level3">
+<h3>Model for the variances</h3>
+Let <span class="math inline">\(\sigma\)</span> denotes the vector <span class="math inline">\((\sigma_1, \dots, \sigma_n)\)</span>. The model for <span class="math inline">\(\sigma\)</span> is
+<span class="math display">\[\begin{equation}
+\log \sigma = X_\sigma \beta_\sigma
+\end{equation}\]</span>
+<p>where <span class="math inline">\(\log \sigma\)</span> stands for the vector <span class="math inline">\((\log\sigma_1, \dots, \log\sigma_n)\)</span>, <span class="math inline">\(X_\sigma\)</span> is the ‘model matrix’ or ‘design matrix’ for <span class="math inline">\(\sigma\)</span> and <span class="math inline">\(\beta_\sigma\)</span> the parameter vector for <span class="math inline">\(\sigma\)</span>. The logarithm is taken to be the ‘natural logarithm’ with base <span class="math inline">\(e\)</span>. The dimensions of <span class="math inline">\(X_\sigma\)</span> are <span class="math inline">\(n \times k_\sigma\)</span> and <span class="math inline">\(\beta_\sigma\)</span> is a vector of length <span class="math inline">\(k_\sigma\)</span>.</p>
+</div>
+<div id="also-know-that" class="section level3">
+<h3>Also know that…</h3>
+<p>The vector of observations <span class="math inline">\(Y\)</span> and the matrices <span class="math inline">\(X_\mu\)</span> and <span class="math inline">\(X_\sigma\)</span> are specified by the user. They must contain real values. The fit returns the maximum-likelihood estimators for <span class="math inline">\(\beta_\mu\)</span> and <span class="math inline">\(\beta_\sigma\)</span>. They are also real-valued vectors.</p>
+<p>The model for both <span class="math inline">\(\mu\)</span> and <span class="math inline">\(\sigma\)</span> contains an intercept term. That means that the first column of both matrices is a column in which each matrix-element equals 1. The package will add this column to the user-suppplied matrices to ensure that the intercept term is always present. There is no need for a user to include such a column in a user-supplied model-matrix.</p>
+<p>After adding the intercept column, the package will check whether the resulting matrices are full rank. If not, columns will be removed from each matrix until it is full rank.</p>
+<p>The addition of an intercept column and, possibly, the removal of columns to obtain a full-rank matrix, imply that the actual matrices used in the fit can be different from the user-specified matrices. The matrices that are actually used in the fit are returned as members of the <code>lmvar</code> object.</p>
+<p>Carrying out the fit boils down to solving a set of non-linear equations. This is carried out by the function <code>nleqslv</code> from the package with the same name.</p>
+<p>More mathematical details about the model can be found in the vignette ‘Math’ which comes with this package. It can be viewed with <code>vignette(&quot;Math&quot;)</code> or <code>vignette(&quot;Math&quot;, package=&quot;lmvar&quot;)</code>.</p>
+</div>
+</div>
+<div id="using-the-package" class="section level2">
+<h2>Using the package</h2>
+<p>The main function in the package is <code>lmvar</code>. It carries out a fit and returns an <code>lmvar</code> object.</p>
+<p>The user must specify a vector of observations and two model-matrices when calling <code>lmvar</code>. They must meet the following conditions:</p>
+<ul>
+<li>All observations and matrix elements must be real-valued.</li>
+<li>Missing values, values that are <code>NaN</code> etc., are not allowed.</li>
+<li>A matrix either has column names for all columns or no column names at all. The same column name can appear for both <span class="math inline">\(X_\mu\)</span> and <span class="math inline">\(X_\sigma\)</span> but column names should be unique within each matrix. The intercept column that is added automatically by <code>lmvar</code> is called <code>(Intercept)</code> for <span class="math inline">\(X_\mu\)</span> and <code>(Intercept_s)</code> for <span class="math inline">\(X_\sigma\)</span>. In case no column-names are specified, the second, third, etc. columns are called <code>v1</code>, <code>v2</code> etc. for <span class="math inline">\(X_\mu\)</span> and <code>v1_s</code>, <code>v2_s</code> etc. for <span class="math inline">\(X_\sigma\)</span>.</li>
+<li>When the user-supplied matrix <span class="math inline">\(X_\mu\)</span> has column names, none of those should be <code>(Intercept)</code>. This is a reserved name, as we explained above. Likewise, a user-supplied matrix <span class="math inline">\(X_\sigma\)</span> must not have a column named <code>(Intercept_s)</code>.</li>
+</ul>
+<p>With each column in <span class="math inline">\(X_\mu\)</span> corresponds an element in <span class="math inline">\(\beta_\mu\)</span>. The name of that element is the corresponding column name. The same is true for <span class="math inline">\(X_\sigma\)</span> and <span class="math inline">\(\beta_\sigma\)</span>.</p>
+<p>It can happen that <code>nleqslv</code> fails to solve the maximum-likelihood equations. Sometimes the problem can be traced back to columns in <span class="math inline">\(X_\sigma\)</span> with many zero’s. I.e., covariates (or factor-levels) for <span class="math inline">\(\sigma\)</span> which affect only few observations. Removal of these columns may remedy the issue.</p>
+<p>An <code>lmvar</code> object is a list whose members are intended to be extracted with the supplied accessor and utility functions. The only members for which no such functions have been implemented are:</p>
+<ul>
+<li><code>y</code>: the user-supplied vector of observations</li>
+<li><code>X_mu</code>: the actual, full-rank matrix <span class="math inline">\(X_\mu\)</span> including the intercept term that is used in the fit</li>
+<li><code>X_sigma</code>: the actual, full-rank matrix <span class="math inline">\(X_\sigma\)</span> including the intercept term that is used in the fit</li>
+</ul>
+<p>Once <code>lmvar</code> has run and an <code>lmvar</code>-object created, one can obtain <span class="math inline">\(\beta_\mu\)</span> and <span class="math inline">\(\beta_\sigma\)</span> with the function <code>coef</code>. The function <code>fitted</code> allows one to obtain <span class="math inline">\(\mu\)</span> and <span class="math inline">\(\sigma\)</span>. We refer to the package documentation (in particular the package index which can be viewed with <code>help(package = &quot;lmvar&quot;)</code>) for a list of all available functions and function details.</p>
+</div>
+<div id="demonstration" class="section level2">
+<h2>Demonstration</h2>
+<p>We demonstrate the package with the help of the dataframe <code>attenu</code> which can be found in the <code>datasets</code> package.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(lmvar)
+
+<span class="co"># As example we use the dataset 'attenu' from the library 'datasets'. The dataset contains</span>
+<span class="co"># the response variable 'accel' and two explanatory variables 'mag'  and 'dist'.</span>
+<span class="kw">library</span>(datasets)
+
+<span class="co"># Create the model matrix for the expected values</span>
+X =<span class="st"> </span><span class="kw">cbind</span>(attenu$mag, attenu$dist)
+<span class="kw">colnames</span>(X) =<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;mag&quot;</span>, <span class="st">&quot;dist&quot;</span>)
+
+<span class="co"># Create the model matrix for the standard deviations.</span>
+X_s =<span class="st"> </span><span class="kw">cbind</span>(attenu$mag, <span class="dv">1</span> /<span class="st"> </span>attenu$dist)
+<span class="kw">colnames</span>(X_s) =<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;mag&quot;</span>, <span class="st">&quot;dist_inv&quot;</span>)
+
+<span class="co"># Carry out the fit</span>
+fit =<span class="st"> </span><span class="kw">lmvar</span>(attenu$accel, X, X_s)</code></pre></div>
+<p>We have now created the object <code>fit</code> which is our object of class <code>lmvar</code>. To obtain a first impression of the fit, we look at the summary</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">summary</span>(fit)</code></pre></div>
+<pre><code>## Call: 
+##  lmvar(y = attenu$accel, X_mu = X, X_sigma = X_s)
+## 
+## Standardized residuals: 
+##     Min      1Q  Median      3Q     Max 
+## -1.4679 -0.6615 -0.1132  0.5736  2.9969 
+## 
+## Coefficients:
+##                  Estimate  Std. Error z value  Pr(&gt;|z|)    
+## (Intercept)   -0.14518878  0.06367414 -2.2802    0.0226 *  
+## mag            0.05436925  0.01137133  4.7813 1.742e-06 ***
+## dist          -0.00129047  0.00014701 -8.7779 &lt; 2.2e-16 ***
+## (Intercept_s) -4.33049620  0.44747494 -9.6776 &lt; 2.2e-16 ***
+## mag_s          0.28918112  0.07286834  3.9685 7.231e-05 ***
+## dist_inv_s     3.14861277  0.23985317 13.1273 &lt; 2.2e-16 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Standard deviations: 
+##     Min      1Q  Median      3Q     Max 
+##  0.0634  0.0775  0.0920  0.1095 46.8245 
+## 
+## Comparison to model with constant variance (i.e. classical linear model)
+## Log likelihood-ratio: 31.38197 
+## Additional degrees of freedom: 2 
+## p-value for difference in deviance: 2.35e-14</code></pre>
+<p>The first line shows the call that created <code>fit</code>. Next, we are told something about the distribution of the standardized residuals. Ideally, the first quarter (<code>1Q</code>) must be approximately -0.67, the <code>median</code> 0 and the third quarter (<code>3Q</code>) 0.67.</p>
+<p>Next, the summary shows the matrix with the coefficients <span class="math inline">\(\beta_\mu\)</span> and <span class="math inline">\(\beta_\sigma\)</span>. The coefficients <span class="math inline">\(\beta_\mu\)</span> are <code>(Intercept)</code>, <code>mag</code> and <code>dist</code>. The coefficients <span class="math inline">\(\beta_\sigma\)</span> are <code>(Intercept_s)</code>, <code>mag_s</code> and <code>dist_inv_s</code>. They are called this way to distinguish them from the coefficients for <span class="math inline">\(\beta_\mu\)</span>. In cases where there is no risk of confusion, their true names will be used, which are <code>(Intercept_s)</code>, <code>mag</code> and <code>dist_inv</code>.</p>
+<p>The matrix with coefficients shows that all coefficients are statistically significant at the 5% level.</p>
+<p>The next piece of information gives an impression of the distribution of the standard deviations. They range from 0.0631 to 42.0983.</p>
+<p>Finally the model is compared to a classical linear model with the same model matrix <span class="math inline">\(X_\mu\)</span> but a fixed standard deviation. The summary shows the difference in log-likelihood between the two models and the difference in degrees of freedom. Twice the difference in log-likelihood is the difference in deviance, for which a p-value is calculated. The fact that the p-value in the summary is nearly zero, indicates that the <code>lmvar</code> fit is a better fit than the classical linear model. I.e., it makes sense to let the variance vary instead of keeping it fixed.</p>
+<p>Let’s see how the standard deviations are distributed</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">sigma =<span class="st"> </span><span class="kw">fitted</span>(fit, <span class="dt">mu =</span> <span class="ot">FALSE</span>)
+<span class="kw">hist</span>(sigma)</code></pre></div>
+<p><img src="data:image/png;base64,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" /><!-- --></p>
+<p>To check the distribution of the residuals, we make another histogram.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">hist</span>(<span class="kw">residuals</span>(fit))</code></pre></div>
+<p><img src="data:image/png;base64,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" /><!-- --></p>
+<p>The rank of the matrix <span class="math inline">\(X_\mu\)</span> used in the fit is</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">dfree</span>(fit, <span class="dt">sigma =</span> <span class="ot">FALSE</span>)</code></pre></div>
+<pre><code>## [1] 3</code></pre>
+<p>The value 3 is correct: the user-supplied matrix had 2 columns and <code>lmvar</code> added an intercept column. Apparently all columns are linearly independent so no column had to be removed.</p>
+<p>To see the number of observations in the fit, the log-likelihood and the AIC value, we run</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">nobs</span>(fit)</code></pre></div>
+<pre><code>## [1] 182</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">logLik</span>(fit)</code></pre></div>
+<pre><code>## 'log Lik.' 154.7313 (df=6)</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">AIC</span>(fit)</code></pre></div>
+<pre><code>## [1] -297.4625</code></pre>
+<p>The coefficients <span class="math inline">\(\beta_\mu\)</span> and <span class="math inline">\(\beta_\sigma\)</span> that were displayed in the summary-overview are obtained by</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">coef</span>(fit)</code></pre></div>
+<pre><code>##   (Intercept)           mag          dist (Intercept_s)         mag_s 
+##  -0.145188779   0.054369245  -0.001290472  -4.330496198   0.289181123 
+##    dist_inv_s 
+##   3.148612765</code></pre>
+<p>If we only ask for <span class="math inline">\(\beta_\sigma\)</span>,we see their real names</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">coef</span>(fit, <span class="dt">mu =</span> <span class="ot">FALSE</span>)</code></pre></div>
+<pre><code>## (Intercept_s)           mag      dist_inv 
+##    -4.3304962     0.2891811     3.1486128</code></pre>
+<p>We conclude this demonstration with the covariance matrix for the coefficients <span class="math inline">\(\beta_\mu\)</span></p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">vcov</span>(fit, <span class="dt">sigma =</span> <span class="ot">FALSE</span>)</code></pre></div>
+<pre><code>##               (Intercept)           mag          dist
+## (Intercept)  4.054396e-03 -7.174215e-04  4.262834e-06
+## mag         -7.174215e-04  1.293072e-04 -8.916107e-07
+## dist         4.262834e-06 -8.916107e-07  2.161296e-08</code></pre>
+<p>Hopefully this demonstration has given an idea of how to work with the package. The documentation of the individual fuctions contains further examples.</p>
+</div>
+<div id="functions-in-the-package" class="section level2">
+<h2>Functions in the package</h2>
+<p>We refer to the package index for a list of all available functions. The index can be viewed with <code>help(package=&quot;lmvar&quot;)</code>.</p>
+</div>
+<div id="other-packages" class="section level2">
+<h2>Other packages</h2>
+<p>The function <code>remlscore</code> in the package <code>statmod</code> fits precisely the same model as <code>lmvar</code>. However, <code>statmod</code> does not provide any utility function, which we believe are important to foster the acceptance of this model as a step beyond classical linear regression.</p>
+<p>Other functions that allow for a model of the dispersion are, e.g., <code>hglm</code> in the package <code>hglm</code> and <code>geese</code> in the package <code>geepack</code>. These models are more complicated though, and require a level of expertise not required by <code>lmvar</code>.</p>
+</div>
+<div id="acknowledgements" class="section level2">
+<h2>Acknowledgements</h2>
+<p>We thank prof. dr. Eric Cator for his valuable comments and suggestions.</p>
+<script type="text/x-mathjax-config">
+   MathJax.Hub.Config({  "HTML-CSS": { minScaleAdjust: 125, availableFonts: [] }  });
+</script>
+</div>
+
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

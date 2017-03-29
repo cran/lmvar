@@ -5,8 +5,8 @@
 \title{Predictions for model matrices}
 \usage{
 \method{predict}{lmvar}(object, X_mu = NULL, X_sigma = NULL, mu = TRUE,
-  sigma = TRUE, log = FALSE, interval = c("none", "confidence"),
-  level = 0.95, ...)
+  sigma = TRUE, log = FALSE, interval = c("none", "confidence",
+  "prediction"), level = 0.95, ...)
 }
 \arguments{
 \item{object}{Object of class 'lmvar'}
@@ -19,14 +19,15 @@
 
 \item{sigma}{Boolean, specifies whether or not to include the predictions for the standard deviations}
 
-\item{log}{Boolean, specifies whether \code{object} is a fit to a response-variable \eqn{Y} or to its logarithm \eqn{\log Y}
-In both cases, \code{predict.lmvar} returns expeced values and standard deviations for \eqn{Y} itself.}
+\item{log}{Boolean, specifies whether expected values, standard deviations (as well as their confidence intervals) and
+prediction intervals should be for \eqn{Y} (\code{log = FALSE}) or for \eqn{e^Y} (\code{log = TRUE}).}
 
 \item{interval}{Character string, specifying the type of interval. Possible values are
 \itemize{
-\item "none" No interval
+\item "none" No interval, this is the default
 \item "confidence" Confidence intervals for the expected values (if \code{mu = TRUE}) and the standard deviation
 (if \code{sigma = TRUE})
+\item "prediction" Prediction intervals for the response vector \eqn{Y} (\code{log = FALSE}) or for \eqn{e^Y} (\code{log = TRUE})
 }}
 
 \item{level}{Numeric value between 0 and 1, specifying the confidence level}
@@ -44,17 +45,19 @@ In all other cases: a matrix with one column for each requested feature and one 
 \itemize{
 \item \code{mu} Estimators for the expected value \eqn{\mu}
 \item \code{sigma} Estimators for the standard deviation \eqn{\sigma}
-\item \code{mu_lwr} Lower bound of the interval for \eqn{\mu}
-\item \code{mu_upr} Upper bound of the interval for \eqn{\mu}
-\item \code{sigma_lwr} Lower bound of the interval for \eqn{\sigma}
-\item \code{sigma_upr} Upper bound of the interval for \eqn{\sigma}
+\item \code{mu_lwr} Lower bound of the confidence interval for \eqn{\mu}
+\item \code{mu_upr} Upper bound of the confidence interval for \eqn{\mu}
+\item \code{sigma_lwr} Lower bound of the confidence interval for \eqn{\sigma}
+\item \code{sigma_upr} Upper bound of the confidence interval for \eqn{\sigma}
+\item \code{lwr} Lower bound of the prediction interval
+\item \code{upr} Upper bound of the prediction interval
 }
 }
 \description{
-Estimators and confidence intervals for the expected values and standard deviations of the response-vector \eqn{Y}, given
-model matrices \code{X_mu} and \code{X_sigma}.
+Estimators and confidence intervals for the expected values and standard deviations of the response vector \eqn{Y},
+given model matrices \code{X_mu} and \code{X_sigma}. Prediction intervals for \eqn{Y} as well.
 The estimators are based on the maximum likelihood-estimators for \eqn{\beta_\mu} and \eqn{\beta_\sigma}
-present in an 'lmvar' object. This object can be a fit to either the response vector or the logarithm of the response vector.
+present in an 'lmvar' object. Alternatively, estimators and intervals can be for \eqn{e^Y}.
 }
 \details{
 When \code{X_mu = NULL}, the model matrix \eqn{X_\mu} is taken from \code{object}. Likewise, when
@@ -65,8 +68,10 @@ Both \code{X_mu} and \code{X_sigma} must have column names. Column names are mat
 names in \eqn{\beta_\mu} can be matched with a column in \code{X_mu}, a warning is given. The same is true for \eqn{\beta_\sigma}
 and \code{X_sigma}.
 
-\code{X_mu} can not have a column with the name  "(Intercept)". This column is added by \code{predict.lmvar}. Likewise,
-\code{X_sigma} can not have a column with the name  "(Intercept_s)".
+\code{X_mu} can not have a column with the name  "(Intercept)". This column is added by \code{predict.lmvar} in case
+it is present in \code{object}. Likewise,
+\code{X_sigma} can not have a column with the name  "(Intercept_s)". It is added by \code{predict.lmvar} in case
+it is present in \code{object}
 
 Both matrices must be numeric and can not contain special values like
 \code{NULL}, \code{NaN}, etc.
@@ -77,7 +82,8 @@ and \eqn{X_\sigma}.
 
 If \code{log = TRUE}, \code{predict.lmvar} returns expected values and standard deviations for \eqn{e^Y}.
 
-Confidence intervals are calculated with an approximation that is valid when the number of observations is large.
+Confidence intervals are calculated under the asumption of asymptotic normality. This asumption holds when the number
+of observations is large.
 Intervals must be treated cautiously in case of a small number of observations.
 
 \code{predict.lmvar} with \code{X_mu = NULL} and \code{X_sigma = NULL} is equivalent to the function
@@ -126,7 +132,10 @@ predict(fit, XP, XP_s, mu = FALSE)
 predict(fit, XP, XP_s, sigma = FALSE, interval = "confidence")
 
 # Calculate the standard deviations and their 90\% confidence intervals
-predict(fit, XP, XP_s, sigma = FALSE, interval = "confidence", level = 0.9)
+predict(fit, XP, XP_s, mu = FALSE, interval = "confidence", level = 0.9)
+
+# Calculate the expected values and the 90\% prediction intervals of 'accel'
+predict(fit, XP, XP_s, sigma = FALSE, interval = "prediction", level = 0.9)
 
 # Change the model and fit the log of 'accel'
 y = log(attenu$accel)
@@ -144,9 +153,10 @@ predict(fit_log, XP, XP_s, log = TRUE, interval = "confidence", level = 0.99)
 
 }
 \seealso{
-\code{\link{coef.lmvar}} for the maximum likelihood estimators of \eqn{\beta_\mu} and \eqn{\beta_\sigma}
-in an object of class 'lmvar'.
+\code{\link{coef.lmvar}} and \code{\link[stats]{confint}} for maximum likelihood estimators and confidence intervals
+for \eqn{\beta_\mu} and \eqn{\beta_\sigma}.
 
-\code{\link{fitted.lmvar}} for the expected values and standard deviations of the response vector in an object of class
-'lmvar'.
+\code{\link{fitted.lmvar}} is equivalent to \code{predict.lmvar} with \code{X_mu = NULL} and \code{X_sigma = NULL}.
+I.e. \code{fitted.lmvar} gives estimators and confidence intervals for the expected values and standard deviations of
+the response vector of the fit in \code{object}.
 }

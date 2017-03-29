@@ -2,8 +2,8 @@
 #'
 #' @description Variance-covarience matrix (also simply called the 'covariance matrix') for the
 #' maximum-likelihood estimators of \eqn{\beta_\mu} and \eqn{\beta_\sigma}.
-#' The matrix is calculated using an expression which is only valid in the limit of a large number of
-#' observations.
+#' The matrix is calculated with the assumption of asymptotic normality of maximum likelihood estimators.
+#' This assumption is only valid in the limit of a large number of observations.
 #'
 #' @param object Object of class 'lmvar'
 #' @param mu Specifies whether or not the covariance matrix for \eqn{\beta_\mu} is included in the returned matrix

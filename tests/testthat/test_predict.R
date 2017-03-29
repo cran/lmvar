@@ -209,7 +209,7 @@ test_that("predict works with matrices having only intercept", {
   expect_equal( predict( fitlmvar, M_mu[,-1]), expected)
 
   # Model matrix for mu has intercept term only
-  fitlmvar = suppressWarnings(lmvar( y, X_sigma = M_sigma[,-1]))
+  fitlmvar = lmvar( y, X_sigma = M_sigma[,-1])
 
   X_mu = fitlmvar$X_mu
 
@@ -334,3 +334,97 @@ test_that("predict calculates confidence intervals with log=TRUE", {
   expect_equal( predict(fit, interval = "confidence", level = 0.5, log = TRUE), expected)
 
 })
+
+test_that("predict works correctly for fit without intercept",{
+
+  X_mu = fit$X_mu
+  X_sigma = fit$X_sigma
+
+  # No intercept for model matrix for mu
+  fit_test = lmvar( fit$y, X_mu[,-1], X_sigma[,-1], intercept_mu = FALSE)
+
+  beta_mu = coef( fit_test, sigma = FALSE)
+  beta_sigma = coef( fit_test, mu = FALSE)
+  expected_mu = as.numeric(X_mu[,-1] %*% beta_mu)
+  expected_sigma = as.numeric(exp(X_sigma %*% beta_sigma))
+  expected = cbind( expected_mu, expected_sigma)
+  colnames(expected) = c( "mu", "sigma")
+
+  expect_equal( predict( fit_test), expected)
+  expect_equal( predict( fit_test, X_mu[,-1], X_sigma[,-1]), expected)
+
+  # No intercept for model matrix for sigma
+  fit_test = lmvar( fit$y, X_mu[,-1], X_sigma[,-1], intercept_sigma = FALSE)
+
+  beta_mu = coef( fit_test, sigma = FALSE)
+  beta_sigma = coef( fit_test, mu = FALSE)
+  expected_mu = as.numeric(X_mu %*% beta_mu)
+  expected_sigma = as.numeric(exp(X_sigma[,-1] %*% beta_sigma))
+  expected = cbind( expected_mu, expected_sigma)
+  colnames(expected) = c( "mu", "sigma")
+
+  expect_equal( predict(fit_test), expected)
+  expect_equal( predict( fit_test, X_mu[,-1], X_sigma[,-1]), expected)
+
+  # No intercept for either model matrix
+  fit_test = lmvar( fit$y, X_mu[,-1], X_sigma[,-1], intercept_mu = FALSE, intercept_sigma = FALSE)
+
+  beta_mu = coef( fit_test, sigma = FALSE)
+  beta_sigma = coef( fit_test, mu = FALSE)
+  expected_mu = as.numeric(X_mu[,-1] %*% beta_mu)
+  expected_sigma = as.numeric(exp(X_sigma[,-1] %*% beta_sigma))
+  expected = cbind( expected_mu, expected_sigma)
+  colnames(expected) = c( "mu", "sigma")
+
+  expect_equal( predict( fit_test), expected)
+  expect_equal( predict( fit_test, X_mu[,-1], X_sigma[,-1]), expected)
+})
+
+test_that("predict calculates prediction intervals", {
+
+  mu = fitted( fit, sigma = FALSE)
+  sigma = fitted( fit, mu = FALSE)
+
+  z  = stats::qnorm( 0.5 + 0.95 / 2)
+  lwr = mu - z * sigma
+  upr = mu + z * sigma
+
+  intervals = predict( fit, interval = "prediction")
+
+  expect_equal( intervals[, "lwr"], lwr)
+  expect_equal( intervals[, "upr"], upr)
+
+  z  = stats::qnorm( 0.5 + 0.5 / 2)
+  lwr = mu - z * sigma
+  upr = mu + z * sigma
+
+  intervals = predict( fit, interval = "prediction", level = 0.5)
+
+  expect_equal( intervals[, "lwr"], lwr)
+  expect_equal( intervals[, "upr"], upr)
+})
+
+test_that("predict calculates prediction intervals with log = TRUE", {
+
+  mu = fitted( fit, sigma = FALSE)
+  sigma = fitted( fit, mu = FALSE)
+
+  z  = stats::qnorm( 0.5 + 0.95 / 2)
+  lwr = exp(mu - z * sigma)
+  upr = exp(mu + z * sigma)
+
+  intervals = predict( fit, interval = "prediction", log = TRUE)
+
+  expect_equal( intervals[, "lwr"], lwr)
+  expect_equal( intervals[, "upr"], upr)
+
+  z  = stats::qnorm( 0.5 + 0.5 / 2)
+  lwr = exp(mu - z * sigma)
+  upr = exp(mu + z * sigma)
+
+  intervals = predict( fit, interval = "prediction", level = 0.5, log = TRUE)
+
+  expect_equal( intervals[, "lwr"], lwr)
+  expect_equal( intervals[, "upr"], upr)
+})
+

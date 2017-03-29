@@ -24,17 +24,40 @@ print.summary_lmvar <- function( x, ...){
 
 
   # Add aliased coefficients to the table of coefficients
-  b_names = c( names(x$aliased_mu), beta_sigma_names( names(x$aliased_mu), names(x$aliased_sigma)))
-  df = x$coefficients[ b_names,]
+  names_mu = character()
+  names_sigma = character()
+  n_mu = 0
+  n_sigma = 0
+  if (x$options$mu){
+    names_mu = names(x$aliased_mu)
+    n_mu = sum(x$aliased_mu)
+  }
+  if (x$options$sigma){
+    names_sigma = beta_sigma_names( names_mu, names(x$aliased_sigma))
+    n_sigma = sum(x$aliased_sigma)
+  }
+  b_names = c( names_mu, names_sigma)
+  df = as.data.frame(x$coefficients)[ b_names,]
   rownames(df) = b_names
 
   # Number of aliased coefficients
-  n = sum(x$aliased_mu) + sum(x$aliased_sigma)
-  if (n==0){
-    cat("Coefficients:\n")
+  n = n_mu + n_sigma
+
+  if (x$options$mu & !x$options$sigma){
+    cat("Coefficients beta for mu:")
+  }
+  else if (!x$options$mu & x$options$sigma){
+    cat("Coefficients beta for sigma:")
   }
   else {
-    cat("Coefficients: (", n, " not defined because of singularities)","\n", sep = "")
+    cat("Coefficients:")
+  }
+
+  if (n==0){
+    cat("\n")
+  }
+  else {
+    cat(" (", n, " not defined because of singularities)","\n", sep = "")
   }
 
   stats::printCoefmat( df, cs.ind = 1:2, tst.ind = 3, has.Pvalue = TRUE, P.values = TRUE)
@@ -42,10 +65,12 @@ print.summary_lmvar <- function( x, ...){
 
   cat ("Standard deviations: \n")
   print( round( x$sigma, 4))
-  cat("\n")
 
-  cat("Comparison to model with constant variance (i.e. classical linear model)\n")
-  cat("Log likelihood-ratio:", x$logLik_ratio, "\n")
-  cat("Additional degrees of freedom:", x$df, "\n")
-  cat("p-value for difference in deviance:", signif( x$p_value, 3), "\n")
+  if (x$intercept_sigma){
+    cat("\n")
+    cat("Comparison to model with constant variance (i.e. classical linear model)\n")
+    cat("Log likelihood-ratio:", x$logLik_ratio, "\n")
+    cat("Additional degrees of freedom:", x$df, "\n")
+    cat("p-value for difference in deviance:", signif( x$p_value, 3), "\n")
+  }
 }

@@ -1,19 +1,19 @@
 #' @title Fitted values for an 'lmvar' object
 #'
-#' @description Estimators and confidence intervals for the expected values and standard deviations of the response-vector \eqn{Y} of
-#' an 'lmvar' model. The model can be a fit
-#' to the response vector or to the logarithm of the response vector.
+#' @description Estimators and confidence intervals for the expected values and standard deviations of the response vector \eqn{Y} of
+#' an 'lmvar' model. Prediction intervals for \eqn{Y} as well. Alternatively, estimators and intervals can be for \eqn{e^Y}.
 #'
 #' @param object An 'lmvar' object
 #' @param mu Boolean, specifies whether or not to return the expected values
 #' @param sigma Boolean, specifies whether or not to return the standard deviations
-#' @param log Boolean, specifies whether the observations \eqn{Y} have been fitted or the logarithm \eqn{\log Y}. In both cases,
-#' \code{fitted.lmvar} returns expected values and standard deviations for \eqn{Y} itself.
+#' @param log Boolean, specifies whether expected values, standard deviations (as well as their confidence intervals) and
+#' prediction intervals should be for \eqn{Y} (\code{log = FALSE}) or for \eqn{e^Y} (\code{log = TRUE}).
 #' @param interval Character string, specifying the type of interval. Possible values are
 #' \itemize{
-#' \item "none" No interval
+#' \item "none" No interval, this is the default
 #' \item "confidence" Confidence intervals for the expected values (if \code{mu = TRUE}) and the standard deviation
 #' (if \code{sigma = TRUE})
+#' \item "prediction" Prediction intervals for the response vector \eqn{Y} (\code{log = FALSE}) or for \eqn{e^Y} (\code{log = TRUE})
 #' }
 #' @param level Numeric value between 0 and 1, specifying the confidence level
 #' @param ... For compatibility with \code{\link[stats]{fitted}} generic.
@@ -28,10 +28,12 @@
 #' \itemize{
 #' \item \code{mu} Estimators for the expected value \eqn{\mu}
 #' \item \code{sigma} Estimators for the standard deviation \eqn{\sigma}
-#' \item \code{mu_lwr} Lower bound of the interval for \eqn{\mu}
-#' \item \code{mu_upr} Upper bound of the interval for \eqn{\mu}
-#' \item \code{sigma_lwr} Lower bound of the interval for \eqn{\sigma}
-#' \item \code{sigma_upr} Upper bound of the interval for \eqn{\sigma}
+#' \item \code{mu_lwr} Lower bound of the confidence interval for \eqn{\mu}
+#' \item \code{mu_upr} Upper bound of the confidence interval for \eqn{\mu}
+#' \item \code{sigma_lwr} Lower bound of the confidence interval for \eqn{\sigma}
+#' \item \code{sigma_upr} Upper bound of the confidence interval for \eqn{\sigma}
+#' \item \code{lwr} Lower bound of the prediction interval
+#' \item \code{upr} Upper bound of the prediction interval
 #' }
 #'
 #' @export
@@ -51,11 +53,21 @@
 #' @seealso \code{\link{predict.lmvar}} for expected values, standard deviations and intervals for model matrices different from
 #' the ones present in \code{object}.
 #'
+#' \code{\link{coef.lmvar}} and \code{\link[stats]{confint}} for maximum likelihood estimators and confidence intervals for
+#' \eqn{\beta_\mu} and \eqn{\beta_\sigma}.
+#'
 #' @example R/examples/fitted_examples.R
 #'
 
-fitted.lmvar <- function( object, mu = TRUE, sigma = TRUE, log = FALSE, interval = c("none", "confidence"), level = 0.95, ...){
+fitted.lmvar <- function( object, mu = TRUE, sigma = TRUE, log = FALSE, interval = c("none", "confidence", "prediction"), level = 0.95, ...){
+
+  # Check interval
+  if (missing(interval)){
+    interval = interval[1]
+  }
+  else{
+    interval = match.arg(interval)
+  }
 
   return(predict.lmvar( object, mu = mu, sigma = sigma, log = log, interval = interval, level = level, ...))
-
 }

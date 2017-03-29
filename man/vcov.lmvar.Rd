@@ -22,8 +22,8 @@ of \eqn{\beta_\mu} and \eqn{\beta_\sigma} in \code{object}.
 \description{
 Variance-covarience matrix (also simply called the 'covariance matrix') for the
 maximum-likelihood estimators of \eqn{\beta_\mu} and \eqn{\beta_\sigma}.
-The matrix is calculated using an expression which is only valid in the limit of a large number of
-observations.
+The matrix is calculated with the assumption of asymptotic normality of maximum likelihood estimators.
+This assumption is only valid in the limit of a large number of observations.
 }
 \details{
 The variance-covariance matrix is calculated as \eqn{I^{-1} / n} where \eqn{I} is the Fisher

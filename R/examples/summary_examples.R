@@ -16,5 +16,11 @@ fit = lmvar(attenu$accel, X, X_s)
 # Print a summary of the fit
 summary(fit)
 
+# Include only the coefficients beta for the expected values
+summary(fit, sigma = FALSE)
+
+# Include only the coefficients beta for the standard deviations
+summary(fit, mu = FALSE)
+
 # Extract the matrix of coefficients from the summary
 coef(summary(fit))

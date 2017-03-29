@@ -17,16 +17,13 @@ X_s = cbind(attenu$mag, 1 / attenu$dist)
 colnames(X_s) = c("mag", "dist_inv")
 
 # Carry out the fit
-fit_lmvar  = lmvar(attenu$accel, X, X_s)
+fit = lmvar(attenu$accel, X, X_s)
 
-# Inspect the results. Note from the p-value for the difference in
-# deviance that this fit appears to be significantly better than
-# a classical linear fit
-summary(fit_lmvar)
+# Inspect the results
+summary(fit)
 
-# Carry out a classical linear fit for comparison
-fit_lm = lm(attenu$accel ~ mag + dist, attenu)
-
-# A comparison of the AIC values also favours the fit with 'lmvar'
-AIC(fit_lm)
-AIC(fit_lmvar)
+# Carry out the fit with an inital estimate for beta and ask for
+# a report of the solver-routine
+beta_sigma_start = c(-4, 0, 0)
+fit = lmvar(attenu$accel, X, X_s, slvr_options = list(start = beta_sigma_start), slvr_log = TRUE)
+fit$slvr_log

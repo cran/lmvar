@@ -7,22 +7,26 @@ vignette: >
   %\VignetteIndexEntry{Introduction to the package}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
+bibliography: bibliography.bib
 ---
+```{r, include=FALSE}
+knitr::opts_chunk$set(fig.width=6, fig.height=6)
+```
 
 ## The package
-The 'lmvar' package fits a linear model in which the assumption of homoscedasticity (i.e., the variance is independent of the expectation value) is dropped. Instead, the variance has its own model, comparable to the model for the expectation value.
+The 'lmvar' package fits a Gaussian linear model. It differs from a classical linear model in that the variance is not constant. Instead, the variance has its own model, comparable to the model for the expected value. The classical linear model is provided by the function 'lm' in the package 'stats'. 
 
-The fit results in an 'lmvar' object, which is a list of class 'lmvar'. Accessor functions are provided to extract the list members such as the fitted betas and the log-likelihood for the model. Various utility functions such as `residuals` to calculate residuals, `AIC` to calculate the AIC, `fitted` to obtain expected values and standard deviations, etc., are also provided by the package.
+Working with the package is a lot like working with 'lm'. A fit with 'lmvar' results in an 'lmvar' object, which is a list. Accessor functions are provided to extract the list members, such as the fitted coefficients $\beta$ and the log-likelihood. Various utility functions such as `residuals` to calculate residuals, `AIC` to calculate the AIC, `fitted` to obtain expected values, standard deviations and confidence intervals, etc., are also provided by the package.
 
-The package lacks much of the sophistication of the 'lm' and 'glm' packages. On the bright side, this means it is simple to use. It is intended for people who run a classical linear model and want to see what happens if the restriction of a constant variance is dropped. Questions in this context are: does the allowance of heteroscedasticity result in a better fit, lower values for the AIC or BIC, smaller errors from a cross-validation, etc.? 
+The package is intended for people who run a classical linear model and want to see what happens if the restriction of a constant variance is dropped. Questions in this context are: does the allowance of heteroscedasticity result in a better fit, lower values for the AIC or BIC, smaller prediction errors, etc.? 
 
 ## The model
-The package fits the following model. A vector $Y$ of observations (sometimes called 'responses') of length $n$ is a stochastic vector. It is distributed according to a multivariate Gaussian distribution:
+The package fits the following model. A vector $Y$ of observations (also called 'responses') of length $n$ is a stochastic vector. It is distributed according to a multivariate Gaussian distribution:
 
 \begin{equation}
 Y \sim \mathcal{N}_n( \mu, \Sigma),
 \end{equation}
-where $\mu$ is the vector of expectation values and $\Sigma$ the covariance matrix (also called the 'variance-covariance matrix'). Just like in the standard linear model, the covariance is taken to be a $n \times n$ diagonal matrix but contrary to the standard linear model, the diagonal entries need not be all the same:
+where $\mu$ is the vector of expected values and $\Sigma$ the covariance matrix (also called the 'variance-covariance matrix'). Just like in the standard linear model, the covariance matrix is taken to be a $n \times n$ diagonal matrix but contrary to the standard linear model, the diagonal entries need not be all the same:
 \begin{equation}
 \Sigma_{ij} =
 \begin{cases}
@@ -49,15 +53,15 @@ where $\log \sigma$ stands for the vector $(\log\sigma_1, \dots, \log\sigma_n)$,
 
 ### Also know that...
 
-The vector of observations $Y$ and the matrices $X_\mu$ and $X_\sigma$ are specified by the user. They must contain real values. The fit returns  the maximum-likelihood estimators for $\beta_\mu$ and $\beta_\sigma$. They are also real-valued vectors.
+The vector of observations $Y$ and the matrices $X_\mu$ and $X_\sigma$ are specified by the user. They must contain real values. The fit returns  the maximum-likelihood estimators for $\beta_\mu$ and $\beta_\sigma$.
 
-The model for both $\mu$ and $\sigma$ contains an intercept term. That means that the first column of both matrices is a column in which each matrix-element equals 1. The package will add this column to the user-suppplied matrices to ensure that the intercept term is always present. There is no need for a user to include such a column in a user-supplied model-matrix.
+The model for both $\mu$ and $\sigma$ contains an intercept term by default. That means that the first column of both matrices is a column in which each matrix-element equals 1. The package will add this column to the user-suppplied matrices to ensure that the intercept term is present. There is no need for a user to include such a column in a user-supplied model-matrix. Intercept terms can be suppressed with the arguments `intercept_mu = FALSE` and `intercept_sigma = FALSE` of the function `lmvar`.
 
-After adding the intercept column, the package will check whether the resulting matrices are full rank. If not, columns will be removed from each matrix until it is full rank.
+After adding the intercept columns (if not suppressed), the package will check whether the resulting matrices are full rank. If not, columns will be removed from each matrix until it is full rank.
 
 The addition of an intercept column and, possibly, the removal of columns to obtain a full-rank matrix, imply that the actual matrices used in the fit can be different from the user-specified matrices. The matrices that are actually used in the fit are returned as members of the `lmvar` object.
 
-Carrying out the fit boils down to solving a set of non-linear equations. This is carried out by the function `nleqslv` from the package with the same name.
+Carrying out the fit boils down to solving a set of non-linear equations. This is carried out in the background by the function `maxNR` from the package 'maxLik'.
 
 More mathematical details about the model can be found in the vignette 'Math' which comes with this package. It can be viewed with `vignette("Math")` or `vignette("Math", package="lmvar")`.
 
@@ -65,111 +69,215 @@ More mathematical details about the model can be found in the vignette 'Math' wh
 
 The main function in the package is `lmvar`. It carries out a fit and returns an `lmvar` object. 
 
-The user must specify a vector of observations and two model-matrices when calling `lmvar`. They must meet the following conditions:
+The user must specify a vector of observations and two model-matrices when calling `lmvar`. They must meet a number of conditions, which are described in detail in the on-line help for `lmvar`, to be viewed with the command `?lmvar`. The most important conditions to keep in mind are:
 
 * All observations and matrix elements must be real-valued.
 * Missing values, values that are `NaN` etc.,  are not allowed.
-* A matrix either has column names for all columns or no column names at all. The same column name can appear for both $X_\mu$ and $X_\sigma$ but column names should be unique within each matrix. The intercept column that is added automatically by `lmvar` is called `(Intercept)` for $X_\mu$ and `(Intercept_s)` for $X_\sigma$. In case no column-names are specified, the second, third, etc. columns are called `v1`, `v2` etc. for $X_\mu$ and  `v1_s`, `v2_s` etc. for $X_\sigma$.
-* When the user-supplied matrix $X_\mu$ has column names, none of those should be `(Intercept)`. This is a reserved name, as we explained above. Likewise, a user-supplied matrix $X_\sigma$ must not have a column named `(Intercept_s)`.
+* A matrix either has column names for all columns, or no column names at all. The same column name can appear for both $X_\mu$ and $X_\sigma$ but column names should be unique within each matrix. The intercept column that is added by `lmvar` (although one can suppress it), is called `(Intercept)` for $X_\mu$ and `(Intercept_s)` for $X_\sigma$. 
 
 With each column in $X_\mu$ corresponds an element in $\beta_\mu$.
 The name of that element is the corresponding column name. The same is true for $X_\sigma$ and $\beta_\sigma$.
 
-It can happen that `nleqslv` fails to solve the maximum-likelihood equations. Sometimes the problem can be traced back to columns in $X_\sigma$ with many zero's. I.e., covariates (or factor-levels) for $\sigma$ which affect only few observations. Removal of these columns may remedy the issue.
+It can happen that `maxNR` fails to solve the maximum-likelihood equations. Sometimes the problem can be traced back to columns in $X_\sigma$ with many zero's. I.e., covariates (or factor-levels) for $\sigma$ which affect only few observations. Removal of these columns may remedy the issue.
 
 An `lmvar` object is a list whose members are intended to be extracted with the supplied accessor and utility functions. The only members for which no such functions have been implemented are:
 
 * `y`: the user-supplied vector of observations
-* `X_mu`: the actual, full-rank matrix $X_\mu$ including the intercept term that is used in the fit
-* `X_sigma`: the actual, full-rank matrix $X_\sigma$ including the intercept term that is used in the fit
+* `X_mu`: the actual, full-rank matrix $X_\mu$ including the intercept term (if not suppressed) that is used in the fit
+* `X_sigma`: the actual, full-rank matrix $X_\sigma$ including the intercept term (if not suppressed) that is used in the fit
+* `slvr_log`: log-output from the function `maxNR`. Only added to the `lmvar` object when requested.
 
-Once `lmvar` has run and an `lmvar`-object created, one can obtain $\beta_\mu$ and $\beta_\sigma$ with the function `coef`. The function `fitted` allows one to obtain $\mu$ and $\sigma$. We refer to the package documentation (in particular the package index which can be viewed with `help(package = "lmvar")`) for a list of all available functions and function details.
+Once `lmvar` has run and an `lmvar`-object has been created, one can obtain $\beta_\mu$ and $\beta_\sigma$ with the function `coef`. The function `fitted` allows one to obtain $\mu$ and $\sigma$. We refer to the package documentation (in particular the package index which can be viewed with `help(package = "lmvar")`) for a list of all available functions and function details.
 
 ## Demonstration
 
-We demonstrate the package with the help of the dataframe `attenu` which can be found in the `datasets` package. 
-```{r}
-library(lmvar)
+We demonstrate the package with the help of the dataframe `cats` which can be found in the `MASS` package. 
+```{r, message = FALSE}
+# As example we use the dataset 'cats' from the library 'MASS'.  
+require(lmvar); require(MASS)
 
-# As example we use the dataset 'attenu' from the library 'datasets'. The dataset contains
-# the response variable 'accel' and two explanatory variables 'mag'  and 'dist'.
-library(datasets)
-
-# Create the model matrix for the expected values
-X = cbind(attenu$mag, attenu$dist)
-colnames(X) = c("mag", "dist")
-
-# Create the model matrix for the standard deviations.
-X_s = cbind(attenu$mag, 1 / attenu$dist)
-colnames(X_s) = c("mag", "dist_inv")
-
-# Carry out the fit
-fit = lmvar(attenu$accel, X, X_s)
+# A plot of the heart weight versus the body weight in the data set
+plot(cats$Bwt, cats$Hwt, xlab = "Body weight", ylab = "Heart weight")
 ```
-We have now created the object `fit` which is our object of class `lmvar`. To obtain a first impression of the fit, we look at the summary
+
+We want to regress the cats heart weight 'Hwt' onto the body weight 'Bwt'.
+```{r}
+# Create the model matrix. It only contains the body weight. An intercept term will be added by 'lmvar'. 
+X = model.matrix(~ Bwt - 1, cats)
+
+# Carry out the fit with the same model matrix for mu (the expected heart weight) and for log sigma (the standard deviation)
+fit = lmvar(cats$Hwt, X_mu = X, X_sigma = X)
+```
+
+We have now created the object `fit`, which is our object of class `lmvar`. To obtain a first impression of the fit, we look at the summary
 ```{r}
 summary(fit)
 ```
-The first line shows the call that created `fit`. Next, we are told something about the distribution of the standardized residuals. Ideally, the first quarter (`1Q`) must be approximately -0.67, the `median` 0 and the third quarter (`3Q`) 0.67. 
+The first line shows the call that created `fit`. Then, we are told something about the distribution of the standardized residuals. 
 
-Next, the summary shows the matrix with the coefficients $\beta_\mu$ and $\beta_\sigma$. The coefficients $\beta_\mu$ are `(Intercept)`, `mag` and `dist`. The coefficients $\beta_\sigma$ are `(Intercept_s)`, `mag_s` and `dist_inv_s`. They are called this way to distinguish them from the coefficients for $\beta_\mu$. In cases where there is no risk of confusion, their true names will be used, which are `(Intercept_s)`, `mag` and `dist_inv`.
+Next, the summary shows the matrix with the coefficients $\beta_\mu$ and $\beta_\sigma$. The coefficients $\beta_\mu$ are `(Intercept)`, and `Bwt`. The coefficients $\beta_\sigma$ are `(Intercept_s)`, and `Bwt_s`. They are called this way to distinguish them from the coefficients for $\beta_\mu$. In cases where there is no risk of confusion, the true names of the coefficients $\beta_\sigma$ will be used, which are `(Intercept_s)` and `Bwt`.
 
-The matrix with coefficients shows that all coefficients are statistically significant at the 5% level.
+The matrix with coefficients shows that `Bwt` and `Bwt_s` are statistically significant at the 5% level, but the intercept terms are not.
 
-The next piece of information gives an impression of the distribution of the standard deviations. They range from 0.0631 to 42.0983. 
+The next piece of information gives an impression of the distribution of the standard deviations $\sigma$. 
 
-Finally the model is compared to a classical linear model with the same model matrix $X_\mu$ but a fixed standard deviation. The summary shows the difference in log-likelihood between the two models and the difference in degrees of freedom. Twice the difference in log-likelihood is the difference in deviance, for which a p-value is calculated. The fact that the p-value in the summary is nearly zero, indicates that the `lmvar` fit is a better fit than the classical linear model. I.e., it makes sense to let the variance vary instead of keeping it fixed. 
+Finally the model is compared to a classical linear model with the same model matrix $X_\mu$ but a standard deviation that is the same for all observations. The summary shows the difference in log-likelihood between the two models and the difference in degrees of freedom. Twice the difference in log-likelihood is the difference in deviance, for which a p-value is calculated. The p-value of 0.00433, indicates that the `lmvar` fit is a better fit than the classical linear model at the 5% confidence level. I.e., it makes sense to let the standard deviation vary instead of keeping it fixed.
 
-Let's see how the standard deviations are distributed
+The number of observations in the fit and the log-likelihood are
 ```{r}
-sigma = fitted(fit, mu = FALSE)
-hist(sigma)
-```
-
-To check the distribution of the residuals, we make another histogram. 
-```{r}
-hist(residuals(fit))
+nobs(fit)
+logLik(fit)
 ```
 
 The rank of the matrix $X_\mu$ used in the fit is
 ```{r}
 dfree(fit, sigma = FALSE)
 ```
-The value 3 is correct: the user-supplied matrix had 2 columns and `lmvar` added an intercept column. Apparently all columns are linearly independent so no column had to be removed. 
+The value 2 is correct: the user-supplied matrix had 1 column and `lmvar` added an intercept column. The two columns are linearly independent so no column had to be removed.
 
-To see the number of observations in the fit, the log-likelihood and the AIC value, we run
+We run the regression again, but this time without intercept terms
 ```{r}
-nobs(fit)
-logLik(fit)
-AIC(fit)
+fit = lmvar(cats$Hwt, X_mu = X, X_sigma = X, intercept_mu = FALSE, intercept_sigma = FALSE)
 ```
-The coefficients $\beta_\mu$ and $\beta_\sigma$ that were displayed in the summary-overview are obtained by
+The rank of $X_\mu$ as used in the fit is now equal to 1:
+```{r}
+dfree(fit, sigma = FALSE)
+```
+The summary no longer shows the intercept terms:
+```{r}
+summary(fit)
+```
+The summary overview has left out the comparison with the classical linear model as well. The classical linear model and the model in `fit` are no longer nested models because of the absence on an intercept term in $X_\sigma$.
+
+Let's see whether the standardized residuals appear to be correlated with the body weight 
+```{r}
+sigma = fitted(fit, mu = FALSE)
+plot(cats$Bwt, residuals(fit) / sigma, xlab = "Body weight", ylab = "Standardized residual")
+abline(0, 0, col = "red")
+```
+
+Let's also plot the average heart weights versus the body weight, with a 95% confidence interval as error bar. 
+```{r}
+mu = fitted(fit, sigma = FALSE)
+
+plot(cats$Bwt, mu, xlab = "Body weight", ylab = "Average heart weight", ylim = c(7, 16))
+
+intervals = fitted(fit, interval = "confidence", level = 0.95)
+lwr = intervals[, "mu_lwr"]
+upr = intervals[, "mu_upr"]
+
+segments(cats$Bwt, lwr, cats$Bwt, upr)
+```
+
+We carry out a classical linear fit, without an intercept term in the model matrix
+```{r}
+fit_lm = lm(cats$Hwt ~ Bwt - 1, cats)
+```
+and we compare AIC and BIC values
+```{r}
+AIC(fit); AIC(fit_lm)
+BIC(fit); BIC(fit_lm)
+```
+Both AIC and BIC favor the fit with `lmvar` over the fit with `lm`. 
+
+We plot again the expected heart weight versus the body weight, but now we add the predictions of the classical linear fit as red points
+```{r}
+plot(cats$Bwt, mu, xlab = "Body weight", ylab = "Average heart weight", ylim = c(7, 16))
+segments(cats$Bwt, lwr, cats$Bwt, upr)
+points(cats$Bwt, fitted(fit_lm), col = "red")
+```
+
+Te plot shows that the predicted values from the classical linear model are nearly the same as the predictions from `lmvar`. We can also plot the fitted standard deviations with their 95% confidence interval:
+```{r}
+plot(cats$Bwt, sigma, xlab = "Body weight", ylab = "St dev of heart weight", ylim = c(1, 2))
+
+lwr = intervals[, "sigma_lwr"]
+upr = intervals[, "sigma_upr"]
+segments(cats$Bwt, lwr, cats$Bwt, upr)
+
+sigma_lm = summary(fit_lm)$sigma
+abline(sigma_lm, 0, col = "red")
+```
+
+The red line is the standard deviation that is returned from the classical linear model.
+
+The coefficients $\beta_\mu$ and $\beta_\sigma$ that were displayed in the summary-overview, are obtained by
 ```{r}
 coef(fit)
 ```
-If we only ask for $\beta_\sigma$,we see their real names
+The suffix '_s' is added to show that 'Bwt_s' is the coefficient $\beta_\sigma$. If we ask for $\beta_\sigma$ only, the real name of the coefficient is used
 ```{r}
 coef(fit, mu = FALSE)
 ```
-We conclude this demonstration with the covariance matrix for the coefficients $\beta_\mu$
+We conclude this demonstration with the covariance matrix for the combined coefficients $(\beta_\mu, \beta_\sigma)$
 ```{r}
-vcov(fit, sigma = FALSE)
+vcov(fit)
 ```
 Hopefully this demonstration has given an idea of how to work with the package. The documentation of the individual fuctions contains further examples.
 
 ## Functions in the package
 
-We refer to the package index for a list of all available functions. The index can be viewed with `help(package="lmvar")`.
+We refer to the package index for a list of all available functions. The index can be viewed with `help(package="lmvar")`. Various generic functions from the 'stats' package work for an 'lmvar' object as well. Examples are `BIC` and `confint`.
 
 ## Other packages
 
-The function `remlscore` in the package `statmod` fits precisely the same model as `lmvar`. However, `statmod` does not provide any utility function, which we believe are important to  foster the acceptance of this model as a step beyond classical linear regression.
+There are several other package that can fit the same model as 'lmvar'. Below, we mention the ones we are aware of. The 'lmvar' package has been developed as a relatively simple next step for users who typically run a linear regression, but want to gain experience with a heterscedastic model. Depending on one's taste and needs, one might need or prefer another package though.
 
-Other functions that allow for a model of the dispersion are, e.g., `hglm` in the package `hglm` and `geese` in the package `geepack`. These models are more complicated though, and require a level of expertise not required by `lmvar`.
+If we can, we demonstrate the alternatives with the same example we have used to demonstrate 'lmvar'.
+
+### The function 'remlscore'
+The function `remlscore` from the package 'statmod' [@statmod] fits our example as follows.
+```{r, eval=FALSE}
+require(statmod)
+
+# Run the regression including intercept terms
+intercept = rep(1, nrow(cats))
+
+fit = remlscore( cats$Hwt, cbind(intercept, X), cbind(intercept, X))
+```
+The coefficients $\beta$ for the expected value can be obtained as `fit$beta`. The coefficients for the logarithm of the standard deviation as `fit$gamma`. By definition, the latter coefficients are twice the value calculated by `lmvar`.
+
+### The function 'crch'
+The function `crch` from the package 'crch' [@crch] fits our example as follows.
+```{r, eval=FALSE}
+require(crch)
+
+# Run the regression including intercept terms
+fit = crch(Hwt ~ Bwt | Bwt , data = cats)
+```
+All coefficients $\beta$ can be obtained with `coef(fit)`.
+
+### The function 'gam'
+The function `gam` from the package 'mgcv' [@mgcv] fits our example as follows.
+```{r, eval=FALSE}
+require(mgcv)
+
+# Run the regression including intercept terms
+fit = gam(list(Hwt ~ Bwt, ~ Bwt) , data = cats, family = gaulss())
+```
+All coefficients $\beta$ can be obtained with `coef(fit)`.
+
+### The function 'gamlss'
+The function `gamlss` from the package 'gamlss' [@gamlss] fits our example as follows.
+```{r, eval=FALSE}
+require(gamlss)
+
+# Run the regression including intercept terms
+fit = gamlss(Hwt ~ Bwt, ~ Bwt, data = cats)
+```
+The coefficients $\beta$ for the expected value can be obtained as `coef(fit)`. The coefficients for the log of the standard deviation are obtained by `coef(fit, what = "sigma")`.
+
+### Other options
+Other functions that allow for a model of the dispersion are, e.g., `hglm` in the package `hglm` [@hglm] and `geese` in the package `geepack` [@geepack]. These models are more complicated though, and require a level of expertise not required by `lmvar`.
 
 ## Acknowledgements
 
-We thank prof. dr. Eric Cator for his valuable comments and suggestions.
+We thank Prof. Dr. Eric Cator for his valuable comments and suggestions. Prof. Dr. Achim Zeileis brought the packages 'crch, 'mgcv' and 'gamlss' to our attention.
+
+This package uses the package `maxLik` [@maxLik] to find the maximum likelihood. The package `matrixcalc` is used to check
+properties of the Hessian. The package `Matrix` is used to support matrices of class 'Matrix'.
+
+## References
 
 <script type="text/x-mathjax-config">
    MathJax.Hub.Config({  "HTML-CSS": { minScaleAdjust: 125, availableFonts: [] }  });

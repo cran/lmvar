@@ -4,10 +4,14 @@
 \alias{summary.lmvar}
 \title{Summary overview for an object of class 'lmvar'}
 \usage{
-\method{summary}{lmvar}(object, ...)
+\method{summary}{lmvar}(object, mu = TRUE, sigma = TRUE, ...)
 }
 \arguments{
 \item{object}{Object of class 'lmvar'}
+
+\item{mu}{Boolean, specifies whether or not to include the coefficients \eqn{\beta_\mu} in the table of coefficients}
+
+\item{sigma}{Boolean, specifies whether or not to include the coefficients \eqn{\beta_\sigma} in the table of coefficients}
 
 \item{...}{For compatibility with \code{\link[base]{summary}} generic}
 }
@@ -22,8 +26,8 @@ with one row for each element of \eqn{\beta_\mu} and \eqn{\beta_\sigma} and the 
 \item \code{Estimate} maximum-likelihood estimate
 \item \code{Std. Error} standard error, defined as \eqn{\sqrt(var(\beta))} with \eqn{var(\beta)} the estimated variance
 of \eqn{\beta}.
-\item \code{t value} t-statistic, defined as \eqn{\beta / \sqrt(var(\beta))}
-\item \code{Pr(>|t|)} p-value of the t-statistic, calculated from the normal distribution.
+\item \code{z value} z-statistic, defined as \eqn{\beta / \sqrt(var(\beta))}
+\item \code{Pr(>|z|)} p-value of the z-statistic, calculated from the standard normal distribution.
 }
 \item \code{residuals} A numeric vector with the minimum, the 25\% quartile, the median, the 75\% quartile and the maximum
 standardized residual. The standardized residual of an observation is defined as \eqn{(y - \mu) / \sigma} where \eqn{y} is the value
@@ -41,13 +45,16 @@ model with model matrix \eqn{X_\mu} and a constant variance for all observations
 model with model matrix \eqn{X_\mu} and a constant variance for all observations.
 \item \code{p_value} The p-value of \code{2 loglik_ratio}, calculated from a chi-squared distribution with \code{df}
 degrees of freedom.
+\item \code{options} A list of argument-values of the function call.
+\item \code{intercept_sigma} Boolean, if TRUE the model matrix for \eqn{\log \sigma} in \code{object} contains an intercept term.
 }
 }
 \description{
 Summary overview for an object of class 'lmvar'.
 }
 \details{
-Standard errors and t-statistics are calculated from the estimated covariance matrix and may not
+Standard errors and z-statistics are calculated under the assumption of asymptotic normality for maximum
+likelihood estimators. They may not
 be reliable when the number of observations in \code{object} is small.
 }
 \examples{
@@ -68,6 +75,12 @@ fit = lmvar(attenu$accel, X, X_s)
 
 # Print a summary of the fit
 summary(fit)
+
+# Include only the coefficients beta for the expected values
+summary(fit, sigma = FALSE)
+
+# Include only the coefficients beta for the standard deviations
+summary(fit, mu = FALSE)
 
 # Extract the matrix of coefficients from the summary
 coef(summary(fit))

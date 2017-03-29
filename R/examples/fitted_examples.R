@@ -32,6 +32,9 @@ fitted(fit)
 # Calculate the expected values, the standard deviations and their 95% confidence intervals
 fitted(fit, interval = "confidence")
 
+# Calculate the expected values and the 90% prediction intervals
+fitted(fit, interval = "prediction", level = 0.9)
+
 # Fit the log of 'accel'
 y = log(attenu$accel)
 fit_log = lmvar(y, X, X_s)
@@ -45,3 +48,5 @@ fitted(fit_log, log = TRUE)
 # Calculate the expected values and the standard deviations of 'accel',
 # as well as their 90% confidence intervals
 fitted(fit_log, log = TRUE, interval = "confidence", level = 0.9)
+
+

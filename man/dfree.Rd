@@ -58,6 +58,3 @@ dfree(fit, sigma = FALSE)
 # The degrees of freedom of the standard deviations are
 dfree(fit, mu = FALSE)
 }
-\seealso{
-\code{\link{df.residual.lmvar}} for the residual degrees of freedom for an object of class 'lmvar'
-}

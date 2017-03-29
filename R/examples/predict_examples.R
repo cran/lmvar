@@ -40,7 +40,10 @@ predict(fit, XP, XP_s, mu = FALSE)
 predict(fit, XP, XP_s, sigma = FALSE, interval = "confidence")
 
 # Calculate the standard deviations and their 90% confidence intervals
-predict(fit, XP, XP_s, sigma = FALSE, interval = "confidence", level = 0.9)
+predict(fit, XP, XP_s, mu = FALSE, interval = "confidence", level = 0.9)
+
+# Calculate the expected values and the 90% prediction intervals of 'accel'
+predict(fit, XP, XP_s, sigma = FALSE, interval = "prediction", level = 0.9)
 
 # Change the model and fit the log of 'accel'
 y = log(attenu$accel)

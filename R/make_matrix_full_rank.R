@@ -9,7 +9,13 @@ make_matrix_full_rank <- function( X){
 
   qX = qr(as.matrix(X))
 
-  X = X[, qX$pivot[1:qX$rank]]
-
+  if (qX$rank != 1){
+    X = X[, qX$pivot[1:qX$rank]]
+  }
+  else {
+    name = colnames(X)[qX$pivot[1]]
+    X = as.matrix(X[, qX$pivot[1]])
+    colnames(X) = name
+  }
   return(X)
 }

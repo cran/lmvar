@@ -22,8 +22,8 @@ X_sigma = as.matrix(cbind( intercept, X_sigma))
 
 rm( intercept, l)
 
-X_col_names = sapply( 1:ncol(X), function(x){paste( "v", as.character(x), sep="")})
-X_sigma_col_names = sapply( 1:ncol(X_sigma), function(x){paste( "v", as.character(x), sep="")})
+X_col_names = sapply( 1:ncol(X), function(x){paste( "v", as.character(x-1), sep="")})
+X_sigma_col_names = sapply( 1:ncol(X_sigma), function(x){paste( "v", as.character(x-1), sep="")})
 
 colnames(X) = X_col_names
 colnames(X_sigma) = X_sigma_col_names
@@ -49,7 +49,8 @@ colnames(X_sigma) = X_sigma_col_names
 rm( X_col_names, X_sigma_col_names)
 
 # Fit  model
-fit = suppressWarnings(lmvar( y, X, X_sigma))
-fit_log = suppressWarnings(lmvar( log(y_log), X, X_sigma))
+fit = lmvar( y, X, X_sigma)
+fit_log = lmvar( log(y_log), X, X_sigma)
+fit_no_intc = lmvar( y, X, X_sigma, intercept_mu = FALSE, intercept_sigma = FALSE)
 
 rm( X, y, y_log, X_sigma , n_obs)

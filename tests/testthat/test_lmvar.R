@@ -27,7 +27,7 @@ test_that("results compare with standard linear regression",{
 
   y = fit$y
   M_mu = fit$X_mu
-  M_mu = M_mu[, 2:ncol(M_mu)]
+  M_mu = M_mu[,-1]
 
   fitlm = lm( y~., as.data.frame(as.matrix(M_mu)))
   fitlmvar = lmvar( y, M_mu)
@@ -71,4 +71,27 @@ test_that("no errors occur when matrix becomes vector", {
 
   expect_error( suppressWarnings(lmvar( fit$y, M_mu, M_sigma)), NA)
 
+})
+
+test_that("coefficient names are as expected", {
+
+  X_mu = fit$X_mu[,-1]
+  X_sigma = fit$X_sigma[,-1]
+
+  names_mu = c("A", "B", "C")
+  names_sigma = c("D", "E")
+  colnames(X_mu) = names_mu
+  colnames(X_sigma) = names_sigma
+
+  fittest = lmvar( fit$y, X_mu, X_sigma)
+  expect_equal(names(coef( fittest, sigma = FALSE)), c( "(Intercept)", names_mu))
+  expect_equal(names(coef( fittest, mu = FALSE)), c( "(Intercept_s)", names_sigma))
+
+  fittest = lmvar( fit$y, X_mu, X_sigma, intercept_mu = FALSE, intercept_sigma = FALSE)
+  expect_equal(names(coef( fittest, sigma = FALSE)), names_mu)
+  expect_equal(names(coef( fittest, mu = FALSE)), names_sigma)
+
+  fittest = lmvar(fit$y)
+  expect_equal(names(coef( fittest, sigma = FALSE)), "(Intercept)")
+  expect_equal(names(coef( fittest, mu = FALSE)), "(Intercept_s)")
 })

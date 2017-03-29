@@ -59,4 +59,6 @@ coef(fit, mu = FALSE)
 }
 \seealso{
 \code{\link{beta_sigma_names}} for the adaptation of the names of the coefficients in \eqn{\beta_\sigma}.
+
+\code{\link[stats]{confint}} for the calculation of confidence intervals of \eqn{\beta_\mu} and \eqn{\beta_\sigma}.
 }

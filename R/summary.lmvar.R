@@ -3,6 +3,8 @@
 #' @description Summary overview for an object of class 'lmvar'.
 #'
 #' @param object Object of class 'lmvar'
+#' @param mu Boolean, specifies whether or not to include the coefficients \eqn{\beta_\mu} in the table of coefficients
+#' @param sigma Boolean, specifies whether or not to include the coefficients \eqn{\beta_\sigma} in the table of coefficients
 #' @param ... For compatibility with \code{\link[base]{summary}} generic
 #'
 #' @return An object of class 'summary_lmvar'. This is a list with the following members:
@@ -15,8 +17,8 @@
 #' \item \code{Estimate} maximum-likelihood estimate
 #' \item \code{Std. Error} standard error, defined as \eqn{\sqrt(var(\beta))} with \eqn{var(\beta)} the estimated variance
 #' of \eqn{\beta}.
-#' \item \code{t value} t-statistic, defined as \eqn{\beta / \sqrt(var(\beta))}
-#' \item \code{Pr(>|t|)} p-value of the t-statistic, calculated from the normal distribution.
+#' \item \code{z value} z-statistic, defined as \eqn{\beta / \sqrt(var(\beta))}
+#' \item \code{Pr(>|z|)} p-value of the z-statistic, calculated from the standard normal distribution.
 #' }
 #' \item \code{residuals} A numeric vector with the minimum, the 25\% quartile, the median, the 75\% quartile and the maximum
 #' standardized residual. The standardized residual of an observation is defined as \eqn{(y - \mu) / \sigma} where \eqn{y} is the value
@@ -34,9 +36,12 @@
 #' model with model matrix \eqn{X_\mu} and a constant variance for all observations.
 #' \item \code{p_value} The p-value of \code{2 loglik_ratio}, calculated from a chi-squared distribution with \code{df}
 #' degrees of freedom.
+#' \item \code{options} A list of argument-values of the function call.
+#' \item \code{intercept_sigma} Boolean, if TRUE the model matrix for \eqn{\log \sigma} in \code{object} contains an intercept term.
 #' }
 #'
-#' @details Standard errors and t-statistics are calculated from the estimated covariance matrix and may not
+#' @details Standard errors and z-statistics are calculated under the assumption of asymptotic normality for maximum
+#' likelihood estimators. They may not
 #' be reliable when the number of observations in \code{object} is small.
 #'
 #' @seealso \code{\link[stats]{coef}} to extract the matrix with estimates, standard-errors, t-statistics and
@@ -60,21 +65,36 @@
 #'
 #' @example R/examples/summary_examples.R
 #'
-summary.lmvar <- function(object, ...){
+summary.lmvar <- function(object, mu = TRUE, sigma = TRUE, ...){
 
-  beta_mu = coef.lmvar( object, sigma = FALSE)
-  beta_sigma = coef.lmvar( object, mu = FALSE)
+  # Calculate betas
+  beta_mu = numeric()
+  beta_sigma = numeric()
+  if (mu){
+    beta_mu = coef.lmvar( object, sigma = FALSE)
+  }
+  if (sigma){
+    beta_sigma = coef.lmvar( object, mu = FALSE)
+  }
 
   # get the names of the betas
   beta_sigma_names = beta_sigma_names( names(beta_mu), names(beta_sigma))
   beta_names = c( names(beta_mu), beta_sigma_names)
 
-  # Calculate varianve-covariance matrices
-  I_mu = vcov.lmvar( object, sigma = FALSE)
-  I_sigma = vcov.lmvar( object, mu = FALSE)
+  # Calculate variances
+  variances_mu = numeric()
+  variances_sigma = numeric()
+  if (mu){
+    M = vcov.lmvar( object, sigma = FALSE)
+    variances_mu = Matrix::diag(M)
+  }
+  if (sigma){
+    M = vcov.lmvar( object, mu = FALSE)
+    variances_sigma = Matrix::diag(M)
+  }
 
   # Calculate variance-related statistics
-  variances = c( Matrix::diag(I_mu), Matrix::diag(I_sigma))
+  variances = c( variances_mu, variances_sigma)
   sterr = sqrt(variances)
   z_values = c(beta_mu, beta_sigma) / sterr
   pr_z = 2 * stats::pnorm( abs(z_values), lower.tail = FALSE)
@@ -82,31 +102,34 @@ summary.lmvar <- function(object, ...){
   # calculate data-vectors for dataframe 'coefficients'
   estimate = c( beta_mu, beta_sigma)
 
-  coeff = data.frame( "Estimate"= estimate, "Std. Error"=sterr, "z value"=z_values, "Pr(>|z|)"=pr_z,
-                      row.names = beta_names, check.names = FALSE)
+  coeff = cbind( estimate, sterr, z_values, pr_z)
+  colnames(coeff) = c( "Estimate", "Std. Error", "z value", "Pr(>|z|)")
+  rownames(coeff) = beta_names
 
   # Retrieve sigmas
-  sigma = fitted.lmvar( object, mu=FALSE)
+  sigma_fit = fitted.lmvar( object, mu=FALSE)
 
   # Calculate standardized residuals
-  res = residuals.lmvar(object) / sigma
+  res = residuals.lmvar(object) / sigma_fit
   res = stats::quantile( res, c( 0, 0.25, 0.5, 0.75, 1))
   names(res) = c( "Min", "1Q", "Median", "3Q", "Max")
 
   # Summarize sigmas in quantiles
-  sigma = stats::quantile( sigma, c( 0, 0.25, 0.5, 0.75, 1))
-  names(sigma) = c( "Min", "1Q", "Median", "3Q", "Max")
+  sigma_fit = stats::quantile( sigma_fit, c( 0, 0.25, 0.5, 0.75, 1))
+  names(sigma_fit) = c( "Min", "1Q", "Median", "3Q", "Max")
 
 
   rlist = list( call = object$call,
                 residuals = res,
                 coefficients = coeff,
-                sigma = sigma,
+                sigma = sigma_fit,
                 aliased_mu = object$aliased_mu,
                 aliased_sigma = object$aliased_sigma,
                 logLik_ratio = object$logLik - object$logLik_lm,
                 df = dfree( object, mu = FALSE) - 1,
-                p_value = stats::pchisq(2 * (object$logLik - object$logLik_lm), dfree( object, mu = FALSE) - 1, lower.tail = FALSE))
+                p_value = stats::pchisq(2 * (object$logLik - object$logLik_lm), dfree( object, mu = FALSE) - 1, lower.tail = FALSE),
+                options = list(mu = mu, sigma = sigma),
+                intercept_sigma = object$intercept_sigma)
 
   class(rlist) = "summary_lmvar"
 

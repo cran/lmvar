@@ -24,11 +24,10 @@ require(MASS)
 require(lmvar)
 #> Loading required package: lmvar
 
-# Create the model matrix. Use the same matrix for the expected values and the standard deviations.
-X = matrix( cats$Bwt, ncol = 1)
-colnames(X) = "Bwt"
+# Create the model matrix. Do not include an intercept term: it will be added by 'lmvar'
+X = model.matrix( ~ Bwt - 1, cats)
 
-# Perform the fit
+# Perform the fit. Use the same matrix for the expected values and the standard deviations
 fit = lmvar( cats$Hwt, X, X)
 
 # Print a summary of the fit
@@ -38,10 +37,10 @@ summary(fit)
 #> 
 #> Standardized residuals: 
 #>     Min      1Q  Median      3Q     Max 
-#> -2.4220 -0.7276 -0.0656  0.6722  2.6313 
+#> -2.4159 -0.7261 -0.0655  0.6703  2.5998 
 #> 
 #> Coefficients:
-#>                Estimate Std. Error t value  Pr(>|t|)    
+#>                Estimate Std. Error z value  Pr(>|z|)    
 #> (Intercept)   -0.012179   0.679820 -0.0179  0.985707    
 #> Bwt            3.904310   0.258964 15.0766 < 2.2e-16 ***
 #> (Intercept_s) -0.522274   0.337044 -1.5496  0.121244    
@@ -51,7 +50,7 @@ summary(fit)
 #> 
 #> Standard deviations: 
 #>    Min     1Q Median     3Q    Max 
-#> 1.1094 1.2227 1.3892 1.5385 2.0087 
+#> 1.1156 1.2265 1.3916 1.5422 2.0330 
 #> 
 #> Comparison to model with constant variance (i.e. classical linear model)
 #> Log likelihood-ratio: 4.069774 
@@ -64,7 +63,7 @@ The low p-value in the summary is a strong indication that 'lmvar' does a better
 What is in the 'lmvar' package?
 -------------------------------
 
-The function `lmvar` produces an object of class 'lmvar'. In the example above, this is the object `fit`. The package provides a number of utility functions to extract information from an 'lmvar' object. The example above demonstrates the utility function `summary`. There are also utility functions to obtain the fitted coefficients, the expected values, the standard deviations, the log-likelihood, the degrees of freedom, the covariance matrix, the AIC value, and more. To view the whole list of functions, use `help(package = "lmvar")`.
+The function `lmvar` produces an object of class 'lmvar'. In the example above, this is the object `fit`. The package provides a number of utility functions to extract information from an 'lmvar' object. The example above demonstrates the utility function `summary`. There are also utility functions to obtain the fitted coefficients, the expected values, the standard deviations, the log-likelihood, the degrees of freedom, the covariance matrix, the AIC value, confidence intervals, and more. To view the whole list of functions, use `help(package = "lmvar")`.
 
 Further reading
 ---------------

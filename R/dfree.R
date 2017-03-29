@@ -22,8 +22,6 @@
 #'
 #' @export
 #'
-#' @seealso \code{\link{df.residual.lmvar}} for the residual degrees of freedom for an object of class 'lmvar'
-#'
 #' @example R/examples/dfree_examples.R
 #'
 

@@ -12,7 +12,7 @@
 
 <meta name="author" content="Posthuma Partners" />
 
-<meta name="date" content="2017-03-29" />
+<meta name="date" content="2017-06-13" />
 
 <title>A linear model with non-constant variances</title>
 
@@ -70,7 +70,7 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 
 <h1 class="title toc-ignore">A linear model with non-constant variances</h1>
 <h4 class="author"><em>Posthuma Partners</em></h4>
-<h4 class="date"><em>2017-03-29</em></h4>
+<h4 class="date"><em>2017-06-13</em></h4>
 
 
 
@@ -160,6 +160,9 @@ fit =<span class="st"> </span><span class="kw">lmvar</span>(cats$Hwt, <span clas
 <pre><code>## Call: 
 ##  lmvar(y = cats$Hwt, X_mu = X, X_sigma = X)
 ## 
+## Number of observations:  144 
+## Degrees of freedom    :  4 
+## 
 ## Standardized residuals: 
 ##     Min      1Q  Median      3Q     Max 
 ## -2.4159 -0.7261 -0.0655  0.6703  2.5998 
@@ -205,6 +208,9 @@ fit =<span class="st"> </span><span class="kw">lmvar</span>(cats$Hwt, <span clas
 <pre><code>## Call: 
 ##  lmvar(y = cats$Hwt, X_mu = X, X_sigma = X, intercept_mu = FALSE, 
 ##     intercept_sigma = FALSE)
+## 
+## Number of observations:  144 
+## Degrees of freedom    :  2 
 ## 
 ## Standardized residuals: 
 ##     Min      1Q  Median      3Q     Max 
@@ -371,7 +377,7 @@ fit =<span class="st"> </span><span class="kw">gamlss</span>(Hwt ~<span class="s
   (function () {
     var script = document.createElement("script");
     script.type = "text/javascript";
-    script.src  = "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
     document.getElementsByTagName("head")[0].appendChild(script);
   })();
 </script>

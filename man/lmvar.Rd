@@ -4,9 +4,9 @@
 \alias{lmvar}
 \title{Linear regression with non-constant variances}
 \usage{
-lmvar(y, X_mu = NULL, X_sigma = NULL, check_hessian = TRUE,
-  slvr_options = list(), slvr_log = FALSE, intercept_mu = TRUE,
-  intercept_sigma = TRUE, ...)
+lmvar(y, X_mu = NULL, X_sigma = NULL, intercept_mu = TRUE,
+  intercept_sigma = TRUE, slvr_options = list(method = "NR"),
+  control = list(), ...)
 }
 \arguments{
 \item{y}{Vector of observations}
@@ -15,18 +15,24 @@ lmvar(y, X_mu = NULL, X_sigma = NULL, check_hessian = TRUE,
 
 \item{X_sigma}{Model matrix for the logarithms of the standard deviations \eqn{\sigma}}
 
-\item{check_hessian}{Boolean, if TRUE it is checked whether the Hessian is negative-definite}
-
-\item{slvr_options}{A list with options to be passed on to the function
-\code{maxNR} from the package \code{maxLik} which maximizes the log-liklihood}
-
-\item{slvr_log}{Boolean, if TRUE the output of \code{maxNR} is added to the 'lmvar' object}
-
 \item{intercept_mu}{Boolean, if TRUE a column with the name '(Intercept)' is added to the matrix \code{X_mu}. This column
 represents the intercept term in the model for \eqn{\mu}.}
 
 \item{intercept_sigma}{Boolean, if TRUE a column with the name '(Intercept_s)' is added to the matrix \code{X_sigma}. This column
 represents the intercept term in the model for \eqn{\log \sigma}.}
+
+\item{slvr_options}{A list with options to be passed on to the function
+\code{\link[maxLik]{maxLik}} which maximizes the log-liklihood}
+
+\item{control}{A list with further options. The following options can be set.
+\itemize{
+\item \code{check_hessian} Boolean, if TRUE it is checked whether the Hessian is negative-definite, i.e., whether the
+log-likelihood is at a maximum. The default value is TRUE.
+\item \code{slvr_log} Boolean, if TRUE the output of \code{maxLik} is added to the 'lmvar' object.
+The default value is FALSE.
+\item \code{running_diagnostics} Boolean, if TRUE diagnostic messages about errors that occur will be
+printed during the run. The default value is FALSE.
+}}
 
 \item{...}{Additional arguments, not used in the current implementation}
 }
@@ -38,7 +44,7 @@ Performs a Gaussian regression with non-constant variances and outputs an 'lmvar
 }
 \details{
 If the matrix \code{X_mu} is not specified, the model for the expected values \eqn{\mu} will consist of an intercept term only.
-Likewise, the model for \eqn{\log \sigma} will consist of an intercept term only if \code{X_sigma} is not specified.
+The argument \code{intercept_mu} is ignored in this case. Likewise, the model for \eqn{\log \sigma} will consist of an intercept term only if \code{X_sigma} is not specified.
 In the latter case, the model reduces to a standard linear model.
 
 The input matrices can be of class \code{\link{matrix}} or of class \link[Matrix:Matrix-class]{Matrix}. They can also be of
@@ -66,25 +72,38 @@ gives the names \code{v1_s}, \code{v2_s} etc. to the columns.
 Matrix \code{X_mu} can not have a column with the name '(Intercept)'.
 Matrix \code{X_sigma} can not have a column with the name '(Intercept_s)'. Both names are reserved names.
 
-The function \code{maxNR} from the \code{maxLik} package, is used to maximize the (profile) log-likelihood.
-\code{maxNR} returns a
-termination code which reports whether a maximum was found, see \code{\link[maxLik]{maxNR}}.
-A potential problem is reported by a termination code different from \code{1}, \code{2} or \code{8}. In case of a different
-termination code, the message from \code{maxNR} is output as a warning.
+The function \code{\link[maxLik]{maxLik}} from the \code{maxLik} package, is used to maximize the (profile) log-likelihood.
+\code{maxLik} returns a
+termination code which reports whether a maximum was found, see \code{maxLik}.
+For the method "NR", a potential problem is reported by a \code{maxLik} return code different from \code{1}, \code{2} or \code{8}.
+For other methods, a code different from \code{0} flags a potential problem.
+In case the return code flags a potential problem, the message from \code{maxLik} is output as a warning.
 
-All list elements in \code{slvr_options} are passed on as arguments to \code{maxNR}. The name of the list element is
+All list elements in \code{slvr_options} are passed on as arguments to \code{maxLik}. The name of the list element is
 the argument name, the value of the list element is the argument value.
-It is not allowed to pass on the arguments \code{fn}, \code{grad}
-or \code{hess}.
+It is not allowed to pass on the arguments \code{fn}, \code{grad} or \code{hess}. In case the list does not contain an element
+\code{method}, it is set to "NR". In case the list does not contain an element \code{start}, an initial estimate for
+\eqn{\beta_\sigma} is set by \code{lmvar}.
 
 In case one wants to supply an initial estimate for the coefficients, one has to supply an initial estimate
-for \eqn{\beta_\sigma}. If \code{beta_sigma_initial} is the initial estimate, one pass on the argument
+for \eqn{\beta_\sigma}. If \code{beta_sigma_initial} is the initial estimate, one passes on the argument
 \code{slvr_options = list(start = beta_sigma_initial)}.
-The inital estimate \code{beta_sigma_initial} must be a numeric vector with a length equal to the number
-of columns of \code{X_sigma} plus one. The first element of the vector is the initial estimate of the intercept term for
-\eqn{sigma}, the second element is the inital estimate corresponding to the first column in \code{X_sigma}, etc.
+The inital estimate \code{beta_sigma_initial} must be a numeric vector. Its length must be as follows.
+\itemize{
+\item In case \code{X_sigma} is not specified or has the value \code{NULL}, the initial estimate must be
+a single value.
+\item In case \code{X_sigma} is specified and \code{intercept_sigma = TRUE}: the length must be equal to the number
+of columns of \code{X_sigma} plus one. The first element of the vector is the initial estimate of the
+intercept term for \eqn{\log \sigma}, the second element is the inital estimate corresponding to the first
+column in \code{X_sigma}, the third element is the inital estimate corresponding to the second
+column in \code{X_sigma}, etc.
+\item  In case \code{X_sigma} is specified and \code{intercept_sigma = FALSE}: the length must be equal to the
+number of columns of \code{X_sigma}. The first element of the vector is the initial estimate corresponding to the
+first column in \code{X_sigma}, the second element is the inital estimate corresponding to the second
+column in \code{X_sigma}, etc.
+}
 
-It is not possible (and there is no need) to supply an inital estimate for \eqn{\beta_\mu}.
+There is no need to supply an inital estimate for \eqn{\beta_\mu}, see the vignette 'Math' for details.
 
 A \code{lmvar} object is a list. Users are discouraged to access list-members directly.
 Instead, list-members are to be accessed with the various accessor and utility functions in the package.
@@ -94,11 +113,16 @@ Exceptions are the following list members for which no accessor functions exist:
 \item \code{object$X_mu} the  model matrix for \eqn{\mu}. In general, it differs from the user-supplied \code{X_mu} because
 \code{lmvar} adds an intercept-column and makes the matrix full-rank.
 \item \code{object$X_sigma} the  model matrix for \eqn{\log \sigma}. In general, it differs from the user-supplied
-\code{X_sigma} because
-\code{lmvar} adds an intercept-column and makes the matrix full-rank.
-\item \code{slvr_log} the output of \code{maxNR} (the solver routine used to maximize the likelihood). Included only
+\code{X_sigma} because \code{lmvar} adds an intercept-column and makes the matrix full-rank.
+\item \code{intercept_mu} boolean which tells whether or not an intercept column \code{(Intercept)} has been added to the
+model matrix \eqn{X_\mu}
+\item \code{intercept_sigma} boolean which tells whether or not an intercept column \code{(Intercept_s)} has been added to the
+model matrix \eqn{X_\sigma}
+\item \code{slvr_options} the value of the argument \code{slvr_options} in the call of \code{lmvar}
+\item \code{control} the value of the argument \code{control} in the call of \code{lmvar}
+\item \code{slvr_log} the output of \code{maxLik} (the solver routine used to maximize the likelihood). Included only
 if the argument \code{slvr_log} has the value \code{TRUE}.
-See \code{\link[maxLik]{maxNR}} for details about this output.
+See \code{\link[maxLik]{maxLik}} for details about this output.
 }
 
 See the vignettes
@@ -132,6 +156,8 @@ summary(fit)
 # Carry out the fit with an inital estimate for beta and ask for
 # a report of the solver-routine
 beta_sigma_start = c(-4, 0, 0)
-fit = lmvar(attenu$accel, X, X_s, slvr_options = list(start = beta_sigma_start), slvr_log = TRUE)
+fit = lmvar(attenu$accel, X, X_s,
+            slvr_options = list(start = beta_sigma_start),
+            control = list(slvr_log = TRUE))
 fit$slvr_log
 }

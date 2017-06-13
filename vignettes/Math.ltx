@@ -17,7 +17,7 @@
 
 \begin{document}
 \section{LMVAR: a linear model with heteroscedasticity}
-This vignette describes in more detail the mathematical aspects of the model with which the \texttt{lmvar} package is concerned. A short description can be found in the vignette 'Intro' of this package.
+This vignette describes in more detail the mathematical aspects of the model with which the \texttt{lmvar} package is concerned. A short description can be found in the vignette 'Intro' of this package. The model has been discussed by various authors \cite{aitkin87,harvey76,verbyla93}.
 
 Assume that a stochastic vector $Y \in \mathbb{R}^n$ has a multivariate normal distribution as
 \begin{equation}
@@ -333,5 +333,8 @@ E[\hat{\sigma}_i] & = \sigma_i^\star \exp\left( \frac{(X_\sigma \left( X_\sigma^
 \qquad \text{ for } n \text{ large}.
 \end{equation}
 The function \texttt{fitted.lmvar} (with the option \texttt{log = FALSE}) returns $\hat{\mu}$ and $\hat{\sigma}$.
+
+\bibliographystyle{plain}
+\bibliography{bibliography}
  
 \end{document}

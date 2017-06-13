@@ -28,16 +28,18 @@
 #' standard deviation \eqn{\sigma} of all observations.
 #' \item \code{aliased_mu} A named logical vector. The names are the column names of the user-supplied model matrix
 #' \eqn{X_\mu}. The values (\code{TRUE} or \code{FALSE}) tell whether or not the column
-#' has removed by \code{lmvar} to make the matrix full-rank.
+#' has been removed by \code{lmvar} to make the matrix full-rank.
 #' \item \code{aliased_sigma} As \code{aliased_mu} but for the user-supplied model matrix \eqn{X_\sigma}.
 #' \item \code{logLik_ratio} The difference in log-likelihood between the model in \code{object} and a classical linear
 #' model with model matrix \eqn{X_\mu} and a constant variance for all observations.
-#' \item \code{df} The difference in degrees in freedom between the model in \code{object} and a classical linear
-#' model with model matrix \eqn{X_\mu} and a constant variance for all observations.
+#' \item \code{df_additional} The difference in degrees in freedom between the model in \code{object} and a classical linear
+#' model with model matrix \eqn{X_\mu} and a constant variance for all observations. Is equal to \code{NULL} if
+#' \eqn{X_\sigma} does not contain an intercept term.
 #' \item \code{p_value} The p-value of \code{2 loglik_ratio}, calculated from a chi-squared distribution with \code{df}
-#' degrees of freedom.
+#' degrees of freedom. Is equal to \code{NULL} if there are no additional degrees of freedom.
+#' \item \code{nobs} The number of observations in \code{object}.
+#' \item \code{df} The degrees of freedom of the fit in \code{object}.
 #' \item \code{options} A list of argument-values of the function call.
-#' \item \code{intercept_sigma} Boolean, if TRUE the model matrix for \eqn{\log \sigma} in \code{object} contains an intercept term.
 #' }
 #'
 #' @details Standard errors and z-statistics are calculated under the assumption of asymptotic normality for maximum
@@ -118,6 +120,21 @@ summary.lmvar <- function(object, mu = TRUE, sigma = TRUE, ...){
   sigma_fit = stats::quantile( sigma_fit, c( 0, 0.25, 0.5, 0.75, 1))
   names(sigma_fit) = c( "Min", "1Q", "Median", "3Q", "Max")
 
+  # Calculate additional degrees of freedom
+  if (object$intercept_sigma){
+    df_additional = dfree( object, mu = FALSE) - 1
+  }
+  else {
+    df_additional = NULL
+  }
+
+  # Calculate p-value for difference in deviance
+  if (is.null(df_additional)){
+    p_value = NULL
+  }
+  else {
+    p_value = stats::pchisq(2 * (object$logLik - object$logLik_lm), df_additional, lower.tail = FALSE)
+  }
 
   rlist = list( call = object$call,
                 residuals = res,
@@ -126,10 +143,11 @@ summary.lmvar <- function(object, mu = TRUE, sigma = TRUE, ...){
                 aliased_mu = object$aliased_mu,
                 aliased_sigma = object$aliased_sigma,
                 logLik_ratio = object$logLik - object$logLik_lm,
-                df = dfree( object, mu = FALSE) - 1,
-                p_value = stats::pchisq(2 * (object$logLik - object$logLik_lm), dfree( object, mu = FALSE) - 1, lower.tail = FALSE),
-                options = list(mu = mu, sigma = sigma),
-                intercept_sigma = object$intercept_sigma)
+                df_additional = df_additional,
+                p_value = p_value,
+                nobs = nobs(object),
+                df = dfree(object),
+                options = list(mu = mu, sigma = sigma))
 
   class(rlist) = "summary_lmvar"
 

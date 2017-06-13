@@ -37,16 +37,18 @@ the standard deviation of the observation.
 standard deviation \eqn{\sigma} of all observations.
 \item \code{aliased_mu} A named logical vector. The names are the column names of the user-supplied model matrix
 \eqn{X_\mu}. The values (\code{TRUE} or \code{FALSE}) tell whether or not the column
-has removed by \code{lmvar} to make the matrix full-rank.
+has been removed by \code{lmvar} to make the matrix full-rank.
 \item \code{aliased_sigma} As \code{aliased_mu} but for the user-supplied model matrix \eqn{X_\sigma}.
 \item \code{logLik_ratio} The difference in log-likelihood between the model in \code{object} and a classical linear
 model with model matrix \eqn{X_\mu} and a constant variance for all observations.
-\item \code{df} The difference in degrees in freedom between the model in \code{object} and a classical linear
-model with model matrix \eqn{X_\mu} and a constant variance for all observations.
+\item \code{df_additional} The difference in degrees in freedom between the model in \code{object} and a classical linear
+model with model matrix \eqn{X_\mu} and a constant variance for all observations. Is equal to \code{NULL} if
+\eqn{X_\sigma} does not contain an intercept term.
 \item \code{p_value} The p-value of \code{2 loglik_ratio}, calculated from a chi-squared distribution with \code{df}
-degrees of freedom.
+degrees of freedom. Is equal to \code{NULL} if there are no additional degrees of freedom.
+\item \code{nobs} The number of observations in \code{object}.
+\item \code{df} The degrees of freedom of the fit in \code{object}.
 \item \code{options} A list of argument-values of the function call.
-\item \code{intercept_sigma} Boolean, if TRUE the model matrix for \eqn{\log \sigma} in \code{object} contains an intercept term.
 }
 }
 \description{

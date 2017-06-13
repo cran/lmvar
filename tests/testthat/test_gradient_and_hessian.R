@@ -2,6 +2,8 @@ context("Gradient and Hessian")
 
 test_that("Gradient and Hessian are calculated correctly", {
 
+  skip_on_cran()
+
   # Define function loglhood exactly as in lmvar
   logLHood <- function(beta_sigma){
 

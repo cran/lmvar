@@ -3,7 +3,7 @@ context("lmvar constructor")
 test_that("missing arguments are handled correctly", {
 
   y = fit$y
-  fittest = suppressWarnings(lmvar(y))
+  fittest = lmvar(y)
   fitlm = lm( y~1, as.data.frame(fit$X_mu))
   expect_equal( coef(fittest)[1], coef(fitlm))
   expect_lt( abs(as.numeric(exp(coef(fittest)[2])) - summary(fitlm)$sigma), 0.002)
@@ -16,7 +16,7 @@ test_that("no errors occur when working with class Matrix",{
   M_mu = M_mu[, -1]
   M_sigma = Matrix::Matrix(fit$X_sigma)
   M_sigma = M_sigma[, -1]
-  fittest = suppressWarnings(lmvar( fit$y, M_mu, M_sigma))
+  fittest = lmvar( fit$y, M_mu, M_sigma)
   expect_equal( coef(fittest), coef(fit))
 
   expect_error( summary(fittest), NA)
@@ -94,4 +94,33 @@ test_that("coefficient names are as expected", {
   fittest = lmvar(fit$y)
   expect_equal(names(coef( fittest, sigma = FALSE)), "(Intercept)")
   expect_equal(names(coef( fittest, mu = FALSE)), "(Intercept_s)")
+})
+
+test_that("control options have effect", {
+
+  # Request solver log
+  y = fit$y
+  fittest = lmvar(y, control = list(slvr_log = TRUE))
+  expect_true("slvr_log" %in% names(fittest))
+
+  # Fit model without solution
+  c1 = rep(1, 7)
+  c2 = c( 0, 1, 1, 0, 0, 0, 0)
+  c3 = c( 0, 0, 0, 1, 1, 0, 0)
+  c4 = c( 0, 0, 0, 0, 0, 1, 1)
+  X = matrix( c( c1, c2, c3, c4), nrow = 7)
+
+  set.seed(5678)
+  y = rnorm( 7, mean = 1)
+  beta_start = c(1, -1, -1, -1)
+
+  # Test that warning about Hessian appears
+  fittest = capture_warnings(lmvar( y, X_sigma = X, intercept_sigma = FALSE, slvr_options = list(start = -10 * beta_start),
+                                    control = list(running_diagnostics = FALSE)))
+  expect_true(any(grepl( "Log-likelihood appears not to be at a maximum!", fittest)))
+
+  # Test that warning about Hessian does not appear
+  fittest = capture_warnings(lmvar( y, X_sigma = X, intercept_sigma = FALSE, slvr_options = list(start = -10 * beta_start),
+                            control = list( check_hessian = FALSE, running_diagnostics = FALSE)))
+  expect_false(any(grepl( "Log-likelihood appears not to be at a maximum!", fittest)))
 })

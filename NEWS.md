@@ -1,3 +1,20 @@
+Version 1.2.0
+-------------
+
+* The function 'cv.lmvar' is added to carry out cross-validations. For comparison with a classical linear model, 
+the analogous function 'cv.lm' is provided. 
+
+* Arguments of the function 'lmvar' not related to the definition of the model, are bundled in a single argument 'control' of class 'list'.
+
+* The function 'maxLik' from the package 'maxLik' is used to find the maximum likelihood. This allows one to use all methods (exept for 'BHHH') and options supported by 'maxLik'. 
+
+* Occurrence of errors in the calculation of the log-likelihood during the iterative search for the maximum log-liklihood, no longer stop the execution of the function 'lmvar'. Corrective measures and warnings are left to 'maxLik'.
+
+* All arguments of the function 'lmvar' are included in the output object.
+
+* The summary-overview prints the number of observations and the degrees of freedom of the fit.
+
+
 Version 1.1.0
 -------------
 

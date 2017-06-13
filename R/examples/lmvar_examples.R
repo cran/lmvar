@@ -25,5 +25,7 @@ summary(fit)
 # Carry out the fit with an inital estimate for beta and ask for
 # a report of the solver-routine
 beta_sigma_start = c(-4, 0, 0)
-fit = lmvar(attenu$accel, X, X_s, slvr_options = list(start = beta_sigma_start), slvr_log = TRUE)
+fit = lmvar(attenu$accel, X, X_s,
+            slvr_options = list(start = beta_sigma_start),
+            control = list(slvr_log = TRUE))
 fit$slvr_log

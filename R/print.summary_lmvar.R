@@ -18,6 +18,9 @@ print.summary_lmvar <- function( x, ...){
   print( x$call)
   cat("\n")
 
+  cat( "Number of observations: ", x$nobs, "\n")
+  cat( "Degrees of freedom    : ", x$df, "\n\n")
+
   cat ("Standardized residuals: \n")
   print( round( x$residuals, 4))
   cat("\n")
@@ -66,11 +69,11 @@ print.summary_lmvar <- function( x, ...){
   cat ("Standard deviations: \n")
   print( round( x$sigma, 4))
 
-  if (x$intercept_sigma){
+  if (!is.null(x$p_value)){
     cat("\n")
     cat("Comparison to model with constant variance (i.e. classical linear model)\n")
     cat("Log likelihood-ratio:", x$logLik_ratio, "\n")
-    cat("Additional degrees of freedom:", x$df, "\n")
+    cat("Additional degrees of freedom:", x$df_additional, "\n")
     cat("p-value for difference in deviance:", signif( x$p_value, 3), "\n")
   }
 }

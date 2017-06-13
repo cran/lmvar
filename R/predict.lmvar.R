@@ -25,7 +25,7 @@
 #' @return In the case \code{mu = FALSE} and \code{interval = "none"}: a numeric vector containing the estimators for
 #' the standard deviation.
 #'
-#' In the case code{sigma = FALSE} and \code{interval = "none"}: a numeric vector containing the estimators for
+#' In the case \code{sigma = FALSE} and \code{interval = "none"}: a numeric vector containing the estimators for
 #' the expected values.
 #'
 #' In all other cases: a matrix with one column for each requested feature and one row for each observation. The column names are

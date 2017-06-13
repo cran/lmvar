@@ -35,6 +35,9 @@ summary(fit)
 #> Call: 
 #>  lmvar(y = cats$Hwt, X_mu = X, X_sigma = X)
 #> 
+#> Number of observations:  144 
+#> Degrees of freedom    :  4 
+#> 
 #> Standardized residuals: 
 #>     Min      1Q  Median      3Q     Max 
 #> -2.4159 -0.7261 -0.0655  0.6703  2.5998 

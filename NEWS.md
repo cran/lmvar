@@ -1,3 +1,8 @@
+Version 1.2.1
+-------------
+
+* Fix show-stopper that prevents 'cv.lmvar' from running.
+
 Version 1.2.0
 -------------
 

@@ -134,9 +134,6 @@ cv.lmvar <- function( object, k = 10, ks_test = FALSE, log = FALSE, seed = NULL,
     set.seed(seed)
   }
 
-  # Set excluded rows
-  excluded_rows = is.element( 1:length(y), exclude)
-
   # Retrieve info from object
   y = object$y
   X_mu = object$X_mu
@@ -145,6 +142,9 @@ cv.lmvar <- function( object, k = 10, ks_test = FALSE, log = FALSE, seed = NULL,
   intercept_sigma = object$intercept_sigma
   slvr_options_object = object$slvr_options
   control = object$control
+
+  # Set excluded rows
+  excluded_rows = is.element( 1:length(y), exclude)
 
   # Set solver options
   for (option in names(slvr_options_object)){

@@ -4,8 +4,9 @@
 \alias{cv.lmvar}
 \title{Cross-validation for an object of class 'lmvar'}
 \usage{
-cv.lmvar(object, k = 10, ks_test = FALSE, log = FALSE, seed = NULL,
-  sigma_min = 0, exclude = NULL, slvr_options = list(), ...)
+cv.lmvar(object, k = 10, ks_test = FALSE, fun = NULL, log = FALSE,
+  seed = NULL, sigma_min = NULL, exclude = NULL, slvr_options = list(),
+  max_cores = NULL, ...)
 }
 \arguments{
 \item{object}{Object of class 'lmvar'}
@@ -14,12 +15,15 @@ cv.lmvar(object, k = 10, ks_test = FALSE, log = FALSE, seed = NULL,
 
 \item{ks_test}{Boolean, if \code{TRUE}, a Kolmogorov-Smirnov test is carried out. See details.}
 
+\item{fun}{User-specified function for which cross-validation results are to be obtained. See details.}
+
 \item{log}{Boolean, specifies whether \code{object} contains a fit to the response vector \eqn{Y} or its logarithm \eqn{\log Y}}
 
 \item{seed}{Integer, seed for the random number generator. The seed is not set when \code{seed} equals \code{NULL}.}
 
 \item{sigma_min}{Minimum value for the standard deviations. Can be a single number which applies to all
-observations, or a vector giving a minimum per observation.}
+observations, or a vector giving a minimum per observation. In case of the the default value \code{NULL}, the
+value is the same as the value in \code{object}.}
 
 \item{exclude}{Numeric vector with observations that must be excluded for error statistics. The default
 \code{NULL} means no observations are excluded. See 'Details' for more information.}
@@ -27,11 +31,14 @@ observations, or a vector giving a minimum per observation.}
 \item{slvr_options}{List of options passed on to the function \code{\link[maxLik]{maxLik}} which carries out the
 fits for the \eqn{k} folds. See 'Details' for more information.}
 
+\item{max_cores}{Integer, maximum number of CPU-cores that can be used. For the default value \code{NULL},
+the number is set to the number of available cores minus one.}
+
 \item{...}{Other parameters, not used in the current implementation.}
 }
 \value{
-In case none of the fits in the cross-validations returns an error, a 'cvlmvar' object is returned.
-This is a list with the following items:
+In case none of the fits in the cross-validations returns an error or a warning, a 'cvlmvar'
+object is returned. This is a list with the following items:
 \itemize{
 \item \code{MAE} a list with two items
 \itemize{
@@ -59,21 +66,28 @@ over the k folds
 \item \code{mean} the sample mean of the p-value of Kolmogorov-Smirnov distance over the k folds
 \item \code{sd} the sample standard deviation of the p-value of the Kolmogorov-Smirnov distance over the k folds
 }
+\item \code{fun} a list with two items
+\itemize{
+\item \code{mean} the sample mean of the user-specified function \code{fun}
+\item \code{sd} the sample standard deviation of the of the user-specified function over the k folds
+}
 }
 The items \code{KS_distance} and \code{KS_p.value} are added only in case \code{ks_test = TRUE}.
 
-In case a fit returns an error, the return value of \code{cv.lmvar}
-lists the arguments of the first call to \code{\link{lmvar}} which failed. In addition, it lists the rows of the
-full set of observations in \code{object} that were used in the fit. These items are returned as a list:
+In case a fit returns an error or a warning, the return value of \code{cv.lmvar}
+lists the arguments of the first call to \code{\link{lmvar}} which failed. In addition, it lists the row
+number of the observations in \code{object} that formed the training set for which the fit
+returned an error or warning. These items are returned as a list:
 \itemize{
 \item \code{y} the argument \code{y} of the failing call
 \item \code{X_mu} the argument \code{X_mu} of the failing call
 \item \code{X_sigma} the argument \code{X_sigma} of the failing call
 \item \code{intercept_mu} the argument \code{intercept_mu} of the failing call
 \item \code{intercept_sigma} the argument \code{intercept_sigma} of the failing call
+\item \code{sigma_min} the argument \code{sigma_min} of the failing call
 \item \code{slvr_options} the argument \code{slvr_options} of the failing call
 \item \code{control} the argument \code{control} of the failing call
-\item \code{training_rows} numeric vector containing the rows of all observations in \code{object} that were
+\item \code{training_rows} numeric vector containing the rows of the observations in \code{object} that were
 used in the failing fit
 }
 }
@@ -81,44 +95,96 @@ used in the failing fit
 k-fold cross-validation for an object of class 'lmvar'
 }
 \details{
-When \code{ks_test = TRUE}, a Kolmogorov-Smirnov (KS) test is carried out. The test checks whether the
-standardized residuals \eqn{(y - \mu) / \sigma} in a fold are distributed as a standard normal distribution. The
-KS-distance and the corresponding p-value are calculated for each fold. The test uses the function
-\code{\link[stats]{ks.test}}.
+\subsection{Cross-validations}{
+The function \code{cv.lmvar} carries out a k-fold cross-validation for an 'lmvar' model. For each fold, an 'lmvar'
+model is fit to all observations that are not in the fold (the 'training set') and prediction errors are calculated
+for the  observations in the fold (the 'test set'). The prediction errors are the  absolute error \eqn{|y - \mu|}
+and its square \eqn{(y - \mu)^2}. The average prediction errors over the observations in the fold are calculated,
+and the square root of the average of the squared errors is taken. Optionally, one can calculate a user-specified
+function \code{fun} for the test set and the 'lmvar' model resulting from the
+training set. Optionally, one can also calculate the Kolmogorov-Smirnov (KS) distance for the test set and its p-value.
 
+The results for the k folds are averaged over the folds and standard deviations are calculated from the k results.
+}
+
+\subsection{User defined function}{
+The argument \code{fun} allows a user to specify a function for which cross-validation results
+must be obtained. This function must meet the following requirements.
+\itemize{
+\item Its arguments are:
+\itemize{
+\item \code{object_t} an object of class 'lmvar',
+\item \code{y} a numerical vector of response values and
+\item \code{X_mu} the model matrix for the expected values of the response vector \code{y}.
+\item \code{X_sigma} the model matrix for the standard deviations of the response vector \code{y}.
+}
+\item It returns a single numerical value.
+}
+Carrying out a k-fold cross-validation, the function is called k times with \code{object_t} equal to the fit
+to the training set, \code{y} equal
+to the response vector of the test set, and
+\code{X_mu} and \code{X_sigma} the design matrices of the test set.
+
+If the evaluation of \code{fun} gives an error, \code{cv.lmvar} will give a warning and exclude that
+evaluation from the mean and the standard deviation of \code{fun} over the k folds. If the evaluation
+of \code{fun} gives a warning, it will be ignored.
+
+In the cross-validations, \code{object_t} contains the design matrices of the training set as
+\code{object_t$X_mu} and \code{object_t$X_sigma}. \code{object_t$X_mu} was formed by taking
+\code{object$X_mu} and removing the fold-rows. In addition, columns may have been removed to make the matrix
+full-rank. Therefore, \code{object_t$X_mu} may have fewer columns than \code{object$X_mu}. The same is true
+for \code{object_t$X_sigma} compared to \code{object$X_sigma}.
+}
+
+\subsection{Kolmogorov-Smirnov test}{
+When \code{ks_test = TRUE}, a Kolmogorov-Smirnov (KS) test is carried out for each fold. The test checks whether the
+standardized residuals \eqn{(y - \mu) / \sigma} in a fold are distributed as a standard normal distribution. The
+KS-distance and the corresponding p-value are calculated for each fold. The test uses the
+function \code{\link[stats]{ks.test}}. The expectation values \eqn{\mu} and standard deviations \eqn{\sigma} are
+calculated from the model matrices for the test set (the fold) and the 'lmvar' fit to the training set.
+}
+
+\subsection{Excluding observations}{
+The observations specified in the argument \code{exclude} are not used to calculate the error statistics MAE
+(mean absolute error), MSE (mean squared error) and the square root of MSE. They are also not used to calculate
+the statistics for the user-defined function \code{fun}. This is useful when there are a few observations
+with such large residuals that they dominate the error estimates. Note that the excluded observations are not
+excluded from the training sets. It is only in the calculation of the statistics of the test sets that the
+observations are
+excluded. They are not excluded from the KS-test: when observations have large residuals, they should have large
+standard deviations as well,
+to give the standardized residuals normal values.
+}
+
+\subsection{Minimum sigma}{
 The argument \code{sigma_min} gives the option to enforce a minimum standard deviation. This is
 useful when, in a cross-validation, a fit fails because the maximum likelihood occurs when the standard
 deviation of one or more observations becomes zero.
 When a minimum  standard deviation is specified, all fits are carried out under the
-boundary condition that the standard deviation is larger than the minimum.
+boundary condition that the standard deviation is larger than the minimum. If \code{sigma_min = NULL} the same value
+is used as was used to create \code{object}.
+}
 
+\subsection{Other}{
 The fits are carried out with the options \code{slvr_options} stored in the 'lmvar' object \code{object}.
 However, these options can be overwritten with an explicit argument \code{slvr_options} in the call of
-\code{cv.lmvar}.
+\code{cv.lmvar}. Some of the options are affected by a \code{sigma_min} larger than zero, see \code{\link{lmvar}} for
+details.
 
 The argument \code{slvr_options} is a list, members of which can be a list themselves.
 If  members of a sublist are overwritten, the other members of the sublist remain unchanged. E.g., the
 argument \code{slvr_options = list(control = list(iterlim = 600))} will set \code{control$iterlim} to 600 while
 leaving other members of the list \code{control} unchanged.
 
-If a minimum value larger than zero for the standard deviation is specified and the
-solver-option \code{method} is \code{"NR"}, the solve method used is \code{"BFGS"} and not \code{"NR"}. Also, the
-solver-option \code{constraints} (if present) is overridden when a minimum value larger than zero for
-the standard deviation is specified.
-
-The observations specified in the argument \code{exclude} are not used to calculate the error statistics MAE
-(mean absolute error),
-MSE (mean squared error) and the square root of MSE. This is useful when there are a few observations
-with such large residuals that they dominate these error estimates (these observations can have
-very large estimates for the standard deviation as well,
-in which case the standardized residuals have normal values). Note that the excluded observations are used
-in the fits carried out in the cross-validation. It is only in the calculation of the statistics that they are
-excluded. They are not excluded from the KS-test.
+The number of available CPU cores is detected with \code{\link[parallel]{detectCores}}.
+}
 }
 \examples{
 # Create an object of class 'lmvar'. We use a model matrix obtained from the 'cats' dataframe,
 # arbitrary parameter vectors beta and a generated response vector y for the purpose of the
 # example.
+
+\donttest{
 library(MASS)
 
 X = model.matrix(~ Sex + Bwt, cats)
@@ -133,24 +199,36 @@ y = rnorm( nrow(X), mean = mu, sd = exp(log_sigma))
 fit = lmvar(y, X_mu = X[,-1], X_sigma = X[,-1])
 
 # Carry out a cross-validation
-cv = cv.lmvar(fit)
+cv.lmvar(fit)     \dontshow{# will fail test on CRAN when using more than 2 CPU-cores}
 
-# Carry out a cross-validation including a Kolmogorov-Smirnov test
-cv = cv.lmvar(fit, ks_test = TRUE)
+# Carry out a cross-validation using a single CPU-core
+cv.lmvar(fit, max_cores = 1)
+
+# Carry out a cross-validation including a Kolmogorov-Smirnov test, using at most two CPU-cores
+cv.lmvar(fit, ks_test = TRUE, max_cores = 2)
 
 # Carry out a cross-validation with 5 folds and control the random numbers used
-cv = cv.lmvar(fit, k = 5, seed = 5483)
+cv.lmvar(fit, k = 5, seed = 5483, max_cores = 1)
 
 # Carry out a cross-validation and exclude observations 5, 11 and 20 from the calculation of
 # the error statistics
-cv = cv.lmvar(fit, exclude = c(5, 11, 20))
+cv.lmvar(fit, exclude = c(5, 11, 20), max_cores = 1)
+
+# Calculate cross-validation results for the fourth moment of the residuals, using a
+# user-specified function
+fourth = function(object, y, X_mu, X_sigma){
+  mu = predict(object, X_mu[,-1], X_sigma[,-1], sigma = FALSE)
+  residuals = y - mu
+  return(mean(residuals^4))
+}
+cv.lmvar(fit, fun = fourth)
+rm(fourth)
 
 # Carry out a cross-validation and specify the maximization routine and maximum number of iterations
-cv = cv.lmvar(fit, slvr_options = list( method = "NR", control = list(iterlim = 500)))
+cv.lmvar(fit, slvr_options = list( method = "NR", control = list(iterlim = 500)))
 
 # Use option 'log = TRUE' if you fit the log of the response vector and require error estimates for
 # the response vector itself
-
 fit = lmvar(log(y), X_mu = X[,-1], X_sigma = X[,-1])
 cv = cv.lmvar(fit, log = TRUE)
 
@@ -159,7 +237,7 @@ cv
 
 # Print 'cv' with a specified number of digits
 print(cv, digits = 2)
-
+}
 }
 \seealso{
 See \code{\link{lmvar}} for the options \code{slvr_options} stored in an 'lmvar' object.

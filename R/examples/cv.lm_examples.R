@@ -1,5 +1,6 @@
-# Create an object of class 'lm'. We use an arbitrary model matrix, an arbitrary parameter
-# vector beta and a generated response vector y for the purpose of the example.
+# Create an object of class 'lm'. We use a model matrix obtained from the 'cats' dataframe,
+# an arbitrary parameter vector beta and a generated response vector y for the purpose of the
+# example.
 library(MASS)
 
 X = model.matrix(~ Sex + Bwt, cats)
@@ -12,17 +13,30 @@ y = rnorm( nrow(X), mean = mu, sd = 0.5)
 fit = lm(y ~ ., as.data.frame(X[,-1]), x = TRUE, y = TRUE)
 
 # Carry out a cross-validation
-cv = cv.lm(fit)
+\donttest{cv.lm(fit)}   \dontshow{# will fail test on CRAN when using more than 2 CPU-cores}
 
-# Carry out a cross-validation including a Kolmogorov-Smirnov test
-cv = cv.lm(fit, ks_test = TRUE)
+# Carry out a cross-validation using a single CPU-core
+cv.lm(fit, max_cores = 1)
+
+# Carry out a cross-validation including a Kolmogorov-Smirnov test, using at most two CPU-cores
+cv.lm(fit, ks_test = TRUE, max_cores = 2)
 
 # Carry out a cross-validation with 5 folds and control the random numbers used
-cv = cv.lm(fit, k = 5, seed = 5483)
+cv.lm(fit, k = 5, seed = 5483, max_cores = 1)
+
+\donttest{
+# Calculate cross-validation results for the fourth moment of the residuals, using a
+# user-specified function
+fourth = function(object, y, X){
+  mu = predict(object, as.data.frame(X))
+  residuals = y - mu
+  return(mean(residuals^4))
+}
+cv.lm(fit, fun = fourth)
+rm(fourth)
 
 # Use option 'log = TRUE' if you fit the log of the response vector and require error estimates for
 # the response vector itself
-
 fit = lm(log(y) ~ ., as.data.frame(X[,-1]), x = TRUE, y = TRUE)
 cv = cv.lm(fit, log = TRUE)
 
@@ -31,3 +45,4 @@ cv
 
 # Print 'cv' with a specified number of digits
 print(cv, digits = 2)
+}

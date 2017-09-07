@@ -63,6 +63,10 @@ The addition of an intercept column and, possibly, the removal of columns to obt
 
 Carrying out the fit boils down to solving a set of non-linear equations. This is carried out in the background by the function `maxNR` from the package 'maxLik'.
 
+It is possible to solve the model under the constraint that each element $\sigma_i$ of the vector $\sigma$ must be 
+larger than a minimim value $\sigma_{i, min}$. This is useful in case an unconstrained fit attempts to make $\sigma_i$ equal to zero for one or more observations $i$. Such an attempt gives rise to extreme values of elements in 
+$\beta_\sigma$ and numerical instabilities.
+
 More mathematical details about the model can be found in the vignette 'Math' which comes with this package. It can be viewed with `vignette("Math")` or `vignette("Math", package="lmvar")`.
 
 ## Using the package
@@ -218,6 +222,13 @@ Hopefully this demonstration has given an idea of how to work with the package. 
 ## Functions in the package
 
 We refer to the package index for a list of all available functions. The index can be viewed with `help(package="lmvar")`. Various generic functions from the 'stats' package work for an 'lmvar' object as well. Examples are `BIC` and `confint`.
+
+The package provides the function `fwbw` for model-selection. It searches for an optimal subset of covariates by means of
+a forward / backward-stepping algorithm. The function works on a 'lmvar' object but also on a 'lm' object. See the function documentation of `fwbw`, `fwbw.lm` and `fwbw.lmvar` for details.
+
+The package provides the functions `cv.lm` and `cv.lmvar` for cross-validation of prediction errors or any other function
+of choice. The former function works on an 'lm' object, the latter on a 'lmvar' object. See the function documentation for
+details.
 
 ## Other packages
 

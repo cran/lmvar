@@ -1,3 +1,19 @@
+Version 1.3.0
+-------------
+
+* New functions 'fwbw.lm' and 'fwbw.lmvar' for model-selection by means of a forward- / backward-step algorithm. 
+
+* A user-specified function can be cross-validated in 'cv.lm' and 'cv.lmvar'.
+
+* The function 'lmvar' allows one to solve the model under the contraint of minimum standard deviations for all
+observations.
+
+* The k fits in a k-fold cross-validation are executed in parallel to boost performance in case of large models (in 'cv.lm' and 'cv.lmvar').
+
+* Performance improvements for large sparse model matrices of class 'dgCMatrix'
+
+* Fix bug in 'cv.lm' and 'cv.lmvar' in case model matrices have one column only.
+
 Version 1.2.1
 -------------
 

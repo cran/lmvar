@@ -5,8 +5,8 @@
 \title{Linear regression with non-constant variances}
 \usage{
 lmvar(y, X_mu = NULL, X_sigma = NULL, intercept_mu = TRUE,
-  intercept_sigma = TRUE, slvr_options = list(method = "NR"),
-  control = list(), ...)
+  intercept_sigma = TRUE, sigma_min = 0, slvr_options = list(method =
+  "NR"), control = list(), ...)
 }
 \arguments{
 \item{y}{Vector of observations}
@@ -20,6 +20,9 @@ represents the intercept term in the model for \eqn{\mu}.}
 
 \item{intercept_sigma}{Boolean, if TRUE a column with the name '(Intercept_s)' is added to the matrix \code{X_sigma}. This column
 represents the intercept term in the model for \eqn{\log \sigma}.}
+
+\item{sigma_min}{Numeric, the minimum value for the standard deviations sigma. Can be a single number which applies to all observations or
+a vector containing a separate minimum for each observation.}
 
 \item{slvr_options}{A list with options to be passed on to the function
 \code{\link[maxLik]{maxLik}} which maximizes the log-liklihood}
@@ -37,32 +40,51 @@ printed during the run. The default value is FALSE.
 \item{...}{Additional arguments, not used in the current implementation}
 }
 \value{
-An object of class 'lmvar'.
+An object of class 'lmvar', which is a list. Users are discouraged to access list-members directly.
+Instead, list-members are to be accessed with the various accessor and utility functions in the package.
+Exceptions are the following list members for which no accessor functions exist:
+\itemize{
+\item \code{object$y} the vector of observations
+\item \code{object$X_mu} the  model matrix for \eqn{\mu}. In general, it differs from the user-supplied \code{X_mu} because
+\code{lmvar} adds an intercept-column and makes the matrix full-rank.
+\item \code{object$X_sigma} the  model matrix for \eqn{\log \sigma}. In general, it differs from the user-supplied
+\code{X_sigma} because \code{lmvar} adds an intercept-column and makes the matrix full-rank.
+\item \code{intercept_mu} boolean which tells whether or not an intercept column \code{(Intercept)} has been added to the
+model matrix \eqn{X_\mu}
+\item \code{intercept_sigma} boolean which tells whether or not an intercept column \code{(Intercept_s)} has been added to the
+model matrix \eqn{X_\sigma}
+\item \code{sigma_min} the value of the argument \code{sigma_min} in the call of \code{lmvar}
+\item \code{slvr_options} the value of the argument \code{slvr_options} in the call of \code{lmvar}
+\item \code{control} the value of the argument \code{control} in the call of \code{lmvar}
+\item \code{slvr_log} the output of \code{maxLik} (the solver routine used to maximize the likelihood). Included only
+if the argument \code{slvr_log} has the value \code{TRUE}.
+See \code{\link[maxLik]{maxLik}} for details about this output.
+}
 }
 \description{
 Performs a Gaussian regression with non-constant variances and outputs an 'lmvar' object.
 }
 \details{
+\subsection{Response vector}{
+The vector \code{y} must be a numeric vector. It can not contain special values like \code{NULL}, \code{NaN}, etc.
+}
+\subsection{Model matrices}{
 If the matrix \code{X_mu} is not specified, the model for the expected values \eqn{\mu} will consist of an intercept term only.
-The argument \code{intercept_mu} is ignored in this case. Likewise, the model for \eqn{\log \sigma} will consist of an intercept term only if \code{X_sigma} is not specified.
+The argument \code{intercept_mu} is ignored in this case. Likewise, the model for \eqn{\log \sigma} will consist of an
+intercept term only if \code{X_sigma} is not specified.
 In the latter case, the model reduces to a standard linear model.
 
-The input matrices can be of class \code{\link{matrix}} or of class \link[Matrix:Matrix-class]{Matrix}. They can also be of
-class \code{\link{numeric}} in case they are matrices with one column only.
-
-When \code{check_hessian = TRUE}, it is checked whether the fitted log-likelihood is at a maximum. A warning will be issued if
-that is not the case.
-
-The vector \code{y} must be a numeric vector. It can not contain special values like \code{NULL}, \code{NaN}, etc.
-
 Both model matrices must be numeric matrices. They can not contain special values like \code{NULL}, \code{NaN}, etc.
+
+The model matrices can be of class \code{\link{matrix}} or of a class from the package \code{\link[Matrix]{Matrix}}.
+They can also be of class \code{\link{numeric}} in case they are matrices with one column only.
 
 All columns in the matrix \code{X_mu} must either have a name, or no column has a name at all. It is not allowed that some
 colums have a
 name while others don't. The same is true for \code{X_sigma}.
 
 If supplied, the column names
-must be unique for \code{X_mu}. The same is true for \code{X_sigma}. A column name can be used in both \code{X_mu} and
+must be unique within \code{X_mu}. The same is true for \code{X_sigma}. A column name can be used in both \code{X_mu} and
 \code{X_sigma} though.
 
 In case the matrix \code{X_mu} has no columns with a column name, \code{lmvar}  gives the names \code{v1},
@@ -71,7 +93,29 @@ gives the names \code{v1_s}, \code{v2_s} etc. to the columns.
 
 Matrix \code{X_mu} can not have a column with the name '(Intercept)'.
 Matrix \code{X_sigma} can not have a column with the name '(Intercept_s)'. Both names are reserved names.
+}
 
+\subsection{Minimum sigma}{
+The argument \code{sigma_min} allows one run a regression under the constraint of a minimum standard deviation for each
+observation. The argument can be a single number, which applies to all observations, or a vector which contains
+a separate
+minimum for each observation. In the latter case, all vector elements must be zero
+(in which case no constraint is applied) or all vector elements must be larger than zero.
+
+The option of a minimum sigma is intended for situations in which an unconstrained regression attempts to make
+sigma equal to zero for one or more observations. This will cause extreme values for the \eqn{\beta_\sigma} and
+numerical instabilities.Such a situation can be remedied by bounding sigma from below.
+
+In case \code{sigma_min} has a value (or a vector of values) larger than zero and the solve-method is "NR", the
+solve method is set to "BFGS". If the argument \code{constraints} is passed on to \code{maxlik} (as a list member of
+\code{slvr_options}), it is ignored.
+
+Error estimates and confidence intervals (e.g. such as given by \code{\link{summary.lmvar}} and
+\code{\link{predict.lmvar}}) can be unreliable
+if minimum sigmas are specified.
+}
+
+\subsection{Likelihood maximization}{
 The function \code{\link[maxLik]{maxLik}} from the \code{maxLik} package, is used to maximize the (profile) log-likelihood.
 \code{maxLik} returns a
 termination code which reports whether a maximum was found, see \code{maxLik}.
@@ -104,29 +148,14 @@ column in \code{X_sigma}, etc.
 }
 
 There is no need to supply an inital estimate for \eqn{\beta_\mu}, see the vignette 'Math' for details.
-
-A \code{lmvar} object is a list. Users are discouraged to access list-members directly.
-Instead, list-members are to be accessed with the various accessor and utility functions in the package.
-Exceptions are the following list members for which no accessor functions exist:
-\itemize{
-\item \code{object$y} the vector of observations
-\item \code{object$X_mu} the  model matrix for \eqn{\mu}. In general, it differs from the user-supplied \code{X_mu} because
-\code{lmvar} adds an intercept-column and makes the matrix full-rank.
-\item \code{object$X_sigma} the  model matrix for \eqn{\log \sigma}. In general, it differs from the user-supplied
-\code{X_sigma} because \code{lmvar} adds an intercept-column and makes the matrix full-rank.
-\item \code{intercept_mu} boolean which tells whether or not an intercept column \code{(Intercept)} has been added to the
-model matrix \eqn{X_\mu}
-\item \code{intercept_sigma} boolean which tells whether or not an intercept column \code{(Intercept_s)} has been added to the
-model matrix \eqn{X_\sigma}
-\item \code{slvr_options} the value of the argument \code{slvr_options} in the call of \code{lmvar}
-\item \code{control} the value of the argument \code{control} in the call of \code{lmvar}
-\item \code{slvr_log} the output of \code{maxLik} (the solver routine used to maximize the likelihood). Included only
-if the argument \code{slvr_log} has the value \code{TRUE}.
-See \code{\link[maxLik]{maxLik}} for details about this output.
 }
+\subsection{Other}{
+When \code{check_hessian = TRUE}, it is checked whether the fitted log-likelihood is at a maximum. A warning will be issued if
+that is not the case.
 
 See the vignettes
 that come with the \code{lmvar} package for more info. Run \code{vignette(package="lmvar")} to list the available vignettes.
+}
 }
 \examples{
 # As example we use the dataset 'attenu' from the library 'datasets'. The dataset contains

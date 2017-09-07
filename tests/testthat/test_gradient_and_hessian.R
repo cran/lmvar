@@ -85,6 +85,6 @@ test_that("Gradient and Hessian are calculated correctly", {
     comp = maxLik::compareDerivatives( logLHood, grad, hess = hess, t0 = beta_test, print = FALSE)
 
     expect_lt( comp$maxRelDiffGrad, 1e-8)
-    expect_lt( comp$maxRelDiffHess, 2e-7)
+    expect_lt( comp$maxRelDiffHess, 1e-6)
   })
 })

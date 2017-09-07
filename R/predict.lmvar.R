@@ -1,23 +1,27 @@
 #' @title Predictions for model matrices
 #'
-#' @description Estimators and confidence intervals for the expected values and standard deviations of the response vector \eqn{Y},
-#' given model matrices \code{X_mu} and \code{X_sigma}. Prediction intervals for \eqn{Y} as well.
-#' The estimators are based on the maximum likelihood-estimators for \eqn{\beta_\mu} and \eqn{\beta_\sigma}
-#' present in an 'lmvar' object. Alternatively, estimators and intervals can be for \eqn{e^Y}.
+#' @description Estimators and confidence intervals  for the expected values
+#' and standard deviations of the response vector \eqn{Y},
+#' given model matrices \code{X_mu} and \code{X_sigma}. Prediction intervals for \eqn{Y}.
+#' Alternatively, estimators and intervals can be for \eqn{e^Y}.
+#'
+#' The estimators and intervals are based on the maximum likelihood-estimators
+#' for \eqn{\beta_\mu} and \eqn{\beta_\sigma} and their covariance matrix
+#' present in an 'lmvar' object.
 #'
 #' @param object Object of class 'lmvar'
 #' @param X_mu Model matrix for the expected values
 #' @param X_sigma Model matrix for the logarithm of the standard deviations
-#' @param mu Boolean, specifies whether or not to include the predictions for the expected values
-#' @param sigma Boolean, specifies whether or not to include the predictions for the standard deviations
-#' @param log Boolean, specifies whether expected values, standard deviations (as well as their confidence intervals) and
-#' prediction intervals should be for \eqn{Y} (\code{log = FALSE}) or for \eqn{e^Y} (\code{log = TRUE}).
+#' @param mu Boolean, specifies whether or not to include the estimators and intervals for the expected values
+#' @param sigma Boolean, specifies whether or not to include the estimators and intervals for
+#' the standard deviations
+#' @param log Boolean, specifies whether estimators and
+#' intervals should be for \eqn{Y} (\code{log = FALSE}) or for \eqn{e^Y} (\code{log = TRUE}).
 #' @param interval Character string, specifying the type of interval. Possible values are
 #' \itemize{
 #' \item "none" No interval, this is the default
-#' \item "confidence" Confidence intervals for the expected values (if \code{mu = TRUE}) and the standard deviation
-#' (if \code{sigma = TRUE})
-#' \item "prediction" Prediction intervals for the response vector \eqn{Y} (\code{log = FALSE}) or for \eqn{e^Y} (\code{log = TRUE})
+#' \item "confidence" Confidence intervals for the estimators
+#' \item "prediction" Prediction intervals
 #' }
 #' @param level Numeric value between 0 and 1, specifying the confidence level
 #' @param ... For compatibility with \code{\link[stats]{predict}} generic
@@ -64,19 +68,24 @@
 #'
 #' If \code{log = TRUE}, \code{predict.lmvar} returns expected values and standard deviations for \eqn{e^Y}.
 #'
+#' The fit in \code{object} can be obtained under the constraint that the standard deviations \eqn{\sigma} are larger
+#' than a minimum value (see the documentation of \code{\link{lmvar}}). However, there is no guarantee that the
+#' values of \eqn{\sigma} given by \code{predict}, satisfy the same constraint. This depends entirely on
+#' \code{X_sigma}.
+#'
 #' Confidence intervals are calculated under the asumption of asymptotic normality. This asumption holds when the number
 #' of observations is large.
-#' Intervals must be treated cautiously in case of a small number of observations.
+#' Intervals must be treated cautiously in case of a small number of observations. Intervals can also be unreliable if
+#' \code{object} was created with a constraint on the minimum values of the standard deviations \eqn{\sigma}.
 #'
 #' \code{predict.lmvar} with \code{X_mu = NULL} and \code{X_sigma = NULL} is equivalent to the function
 #' \code{\link{fitted.lmvar}}.
 #'
-#' @seealso \code{\link{coef.lmvar}} and \code{\link[stats]{confint}} for maximum likelihood estimators and confidence intervals
-#' for \eqn{\beta_\mu} and \eqn{\beta_\sigma}.
+#' @seealso \code{\link{coef.lmvar}} and \code{\link[stats]{confint}} for maximum likelihood estimators
+#' and confidence intervals for \eqn{\beta_\mu} and \eqn{\beta_\sigma}.
 #'
-#' \code{\link{fitted.lmvar}} is equivalent to \code{predict.lmvar} with \code{X_mu = NULL} and \code{X_sigma = NULL}.
-#' I.e. \code{fitted.lmvar} gives estimators and confidence intervals for the expected values and standard deviations of
-#' the response vector of the fit in \code{object}.
+#' \code{\link{fitted.lmvar}} is equivalent to \code{predict.lmvar} with \code{X_mu = NULL} and
+#' \code{X_sigma = NULL}.
 #'
 #' @example R/examples/predict_examples.R
 #'
@@ -99,9 +108,6 @@ predict.lmvar <- function( object, X_mu = NULL, X_sigma = NULL, mu = TRUE, sigma
   else{
     interval = match.arg(interval)
   }
-  # if (!is.element( interval, c("none", "confidence"))){
-  #   stop("The value of 'interval' is invalid")
-  # }
 
   # Check level
   if (level <= 0 | level >=1){

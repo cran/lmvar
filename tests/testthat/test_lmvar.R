@@ -124,3 +124,12 @@ test_that("control options have effect", {
                             control = list( check_hessian = FALSE, running_diagnostics = FALSE)))
   expect_false(any(grepl( "Log-likelihood appears not to be at a maximum!", fittest)))
 })
+
+test_that("solve with constraint on sigma", {
+
+  fit_lmvar = lmvar( fit$y, fit$X_mu[,-1], fit$X_sigma[,-1], sigma_min = 0.2)
+  sigma_min = min(fitted( fit_lmvar, mu = FALSE))
+
+  expect_equal( sigma_min, 0.200009, tolerance = 1e-5)
+  expect_equal( fit_lmvar$sigma_min, 0.2)
+})

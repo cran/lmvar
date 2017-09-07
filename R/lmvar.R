@@ -11,6 +11,8 @@
 #' represents the intercept term in the model for \eqn{\mu}.
 #' @param intercept_sigma Boolean, if TRUE a column with the name '(Intercept_s)' is added to the matrix \code{X_sigma}. This column
 #' represents the intercept term in the model for \eqn{\log \sigma}.
+#' @param sigma_min Numeric, the minimum value for the standard deviations sigma. Can be a single number which applies to all observations or
+#' a vector containing a separate minimum for each observation.
 #' @param control A list with further options. The following options can be set.
 #' \itemize{
 #' \item \code{check_hessian} Boolean, if TRUE it is checked whether the Hessian is negative-definite, i.e., whether the
@@ -22,28 +24,27 @@
 #' }
 #' @param ... Additional arguments, not used in the current implementation
 #'
-#' @return An object of class 'lmvar'.
-#'
-#' @details If the matrix \code{X_mu} is not specified, the model for the expected values \eqn{\mu} will consist of an intercept term only.
-#' The argument \code{intercept_mu} is ignored in this case. Likewise, the model for \eqn{\log \sigma} will consist of an intercept term only if \code{X_sigma} is not specified.
+#' @details
+#' \subsection{Response vector}{
+#' The vector \code{y} must be a numeric vector. It can not contain special values like \code{NULL}, \code{NaN}, etc.
+#' }
+#' \subsection{Model matrices}{
+#' If the matrix \code{X_mu} is not specified, the model for the expected values \eqn{\mu} will consist of an intercept term only.
+#' The argument \code{intercept_mu} is ignored in this case. Likewise, the model for \eqn{\log \sigma} will consist of an
+#' intercept term only if \code{X_sigma} is not specified.
 #' In the latter case, the model reduces to a standard linear model.
 #'
-#' The input matrices can be of class \code{\link{matrix}} or of class \link[Matrix:Matrix-class]{Matrix}. They can also be of
-#' class \code{\link{numeric}} in case they are matrices with one column only.
-#'
-#' When \code{check_hessian = TRUE}, it is checked whether the fitted log-likelihood is at a maximum. A warning will be issued if
-#' that is not the case.
-#'
-#' The vector \code{y} must be a numeric vector. It can not contain special values like \code{NULL}, \code{NaN}, etc.
-#'
 #' Both model matrices must be numeric matrices. They can not contain special values like \code{NULL}, \code{NaN}, etc.
+#'
+#' The model matrices can be of class \code{\link{matrix}} or of a class from the package \code{\link[Matrix]{Matrix}}.
+#' They can also be of class \code{\link{numeric}} in case they are matrices with one column only.
 #'
 #' All columns in the matrix \code{X_mu} must either have a name, or no column has a name at all. It is not allowed that some
 #' colums have a
 #' name while others don't. The same is true for \code{X_sigma}.
 #'
 #' If supplied, the column names
-#' must be unique for \code{X_mu}. The same is true for \code{X_sigma}. A column name can be used in both \code{X_mu} and
+#' must be unique within \code{X_mu}. The same is true for \code{X_sigma}. A column name can be used in both \code{X_mu} and
 #' \code{X_sigma} though.
 #'
 #' In case the matrix \code{X_mu} has no columns with a column name, \code{lmvar}  gives the names \code{v1},
@@ -52,7 +53,29 @@
 #'
 #' Matrix \code{X_mu} can not have a column with the name '(Intercept)'.
 #' Matrix \code{X_sigma} can not have a column with the name '(Intercept_s)'. Both names are reserved names.
+#' }
 #'
+#' \subsection{Minimum sigma}{
+#' The argument \code{sigma_min} allows one run a regression under the constraint of a minimum standard deviation for each
+#' observation. The argument can be a single number, which applies to all observations, or a vector which contains
+#' a separate
+#' minimum for each observation. In the latter case, all vector elements must be zero
+#' (in which case no constraint is applied) or all vector elements must be larger than zero.
+#'
+#' The option of a minimum sigma is intended for situations in which an unconstrained regression attempts to make
+#' sigma equal to zero for one or more observations. This will cause extreme values for the \eqn{\beta_\sigma} and
+#' numerical instabilities.Such a situation can be remedied by bounding sigma from below.
+#'
+#' In case \code{sigma_min} has a value (or a vector of values) larger than zero and the solve-method is "NR", the
+#' solve method is set to "BFGS". If the argument \code{constraints} is passed on to \code{maxlik} (as a list member of
+#' \code{slvr_options}), it is ignored.
+#'
+#' Error estimates and confidence intervals (e.g. such as given by \code{\link{summary.lmvar}} and
+#' \code{\link{predict.lmvar}}) can be unreliable
+#' if minimum sigmas are specified.
+#' }
+#'
+#' \subsection{Likelihood maximization}{
 #' The function \code{\link[maxLik]{maxLik}} from the \code{maxLik} package, is used to maximize the (profile) log-likelihood.
 #' \code{maxLik} returns a
 #' termination code which reports whether a maximum was found, see \code{maxLik}.
@@ -85,8 +108,16 @@
 #' }
 #'
 #' There is no need to supply an inital estimate for \eqn{\beta_\mu}, see the vignette 'Math' for details.
+#' }
+#' \subsection{Other}{
+#' When \code{check_hessian = TRUE}, it is checked whether the fitted log-likelihood is at a maximum. A warning will be issued if
+#' that is not the case.
 #'
-#' A \code{lmvar} object is a list. Users are discouraged to access list-members directly.
+#' See the vignettes
+#' that come with the \code{lmvar} package for more info. Run \code{vignette(package="lmvar")} to list the available vignettes.
+#' }
+#'
+#' @return An object of class 'lmvar', which is a list. Users are discouraged to access list-members directly.
 #' Instead, list-members are to be accessed with the various accessor and utility functions in the package.
 #' Exceptions are the following list members for which no accessor functions exist:
 #' \itemize{
@@ -99,6 +130,7 @@
 #' model matrix \eqn{X_\mu}
 #' \item \code{intercept_sigma} boolean which tells whether or not an intercept column \code{(Intercept_s)} has been added to the
 #' model matrix \eqn{X_\sigma}
+#' \item \code{sigma_min} the value of the argument \code{sigma_min} in the call of \code{lmvar}
 #' \item \code{slvr_options} the value of the argument \code{slvr_options} in the call of \code{lmvar}
 #' \item \code{control} the value of the argument \code{control} in the call of \code{lmvar}
 #' \item \code{slvr_log} the output of \code{maxLik} (the solver routine used to maximize the likelihood). Included only
@@ -106,15 +138,13 @@
 #' See \code{\link[maxLik]{maxLik}} for details about this output.
 #' }
 #'
-#' See the vignettes
-#' that come with the \code{lmvar} package for more info. Run \code{vignette(package="lmvar")} to list the available vignettes.
-#'
 #' @export
 #'
 #' @example R/examples/lmvar_examples.R
 #'
 lmvar <- function( y, X_mu = NULL, X_sigma = NULL,
-                   intercept_mu = TRUE, intercept_sigma = TRUE, slvr_options = list(method = "NR"), control = list(), ...){
+                   intercept_mu = TRUE, intercept_sigma = TRUE, sigma_min = 0,
+                   slvr_options = list(method = "NR"), control = list(), ...){
 
   print_diagnostics <- function( beta_sigma, sigma_inv){
 
@@ -159,17 +189,17 @@ lmvar <- function( y, X_mu = NULL, X_sigma = NULL,
       return (NA)
     }
 
-    beta_mu = M %*% Matrix::t(X_mu) %*% (y * sigma_inv * sigma_inv)
+    beta_mu = M %*% Matrix::t(X_mu) %*% (y * sigma_inv^2)
     mu = as.numeric(X_mu %*% beta_mu)
     res = (y - mu) * sigma_inv
 
     # Calculate log-likelihood
-    logLik= -0.5*n*log(2*pi) + sum(log(sigma_inv)) - 0.5*sum(res*res)
+    logLik= -0.5*n*log(2*pi) + sum(log(sigma_inv)) - 0.5*sum(res^2)
 
     # Calculate gradient
     if(!(slvr_options$method %in% c( "NM", "SANN"))){
 
-      dBeta_sigma = as.numeric(Matrix::t(X_sigma) %*% (res*res - 1))  # gradient of log-likelihood w.r.t. beta_sigma
+      dBeta_sigma = as.numeric(Matrix::t(X_sigma) %*% (res^2 - 1))  # gradient of log-likelihood w.r.t. beta_sigma
 
       # Set attribute
       attr( logLik, "gradient") = dBeta_sigma
@@ -204,6 +234,11 @@ lmvar <- function( y, X_mu = NULL, X_sigma = NULL,
 
     return(logLik)
   }
+
+  # store argument values
+  sigma_min_call = sigma_min
+  slvr_options_call = slvr_options
+  control_call = control
 
   # Set whether or not matrices have been specified
   isnull_X = FALSE
@@ -246,7 +281,7 @@ lmvar <- function( y, X_mu = NULL, X_sigma = NULL,
 
   # Check inputs
   if (!isnull_X){
-    if (nrow(as.matrix(X_mu)) != length(y)){
+    if (nrow(X_mu) != length(y)){
       stop("Number of rows of matrix X_mu not equal to length of response vector y")
     }
     if (is.element( "(Intercept)", colnames(X_mu))){
@@ -255,12 +290,20 @@ lmvar <- function( y, X_mu = NULL, X_sigma = NULL,
   }
   if
   (!isnull_X_sigma){
-    if (nrow(as.matrix(X_sigma)) != length(y)){
+    if (nrow(X_sigma) != length(y)){
       stop("Number of rows of matrix X_sigma not equal to length of response vector y")
     }
     if (is.element( "(Intercept_s)", colnames(X_sigma))){
       stop("Matrix X_sigma can not have a column with the name '(Intercept_s)'")
     }
+  }
+
+  if (length(sigma_min) > 1 & length(sigma_min) != length(y)){
+    stop("The length of 'sigma_min' must be 1, or equal to the length of the response vector y")
+  }
+
+  if(any(sigma_min > 0) & any(sigma_min <= 0)){
+    stop("All values in 'sigma_min' must be strictly positive, or all values must be zero")
   }
 
   n = length(y)
@@ -288,14 +331,15 @@ lmvar <- function( y, X_mu = NULL, X_sigma = NULL,
   names(aliased_mu) = names$colnames_X
   names(aliased_sigma) = names$colnames_X_sigma
 
-  # Turn matrices into a full-rank matrices
-  X_mu = make_matrix_full_rank(X_mu)
-  X_sigma = make_matrix_full_rank(X_sigma)
-
   # Give matrices column names if there are none
   names = matrix_column_names( X_mu, X_sigma, intercept_mu, intercept_sigma)
   colnames(X_mu) = names$colnames_X
   colnames(X_sigma) = names$colnames_X_sigma
+
+  # Turn matrices into a full-rank matrices
+  qX = Matrix::qr(X_mu)
+  X_mu = make_matrix_full_rank( qX, X_mu)
+  X_sigma = make_matrix_full_rank(X_sigma)
 
   # set aliased columns
   names = names(aliased_mu)
@@ -310,10 +354,8 @@ lmvar <- function( y, X_mu = NULL, X_sigma = NULL,
   }
 
   # Likelihood of model with ordinary linear regression
-  fit = stats::lm( y ~ .+0, as.data.frame(as.matrix(X_mu)), model = FALSE)
-  sigma2 = fit$residuals %*% fit$residuals / n
+  sigma2 = sum(Matrix::qr.resid( qX, y)^2) / n
   logLik_lm = -n * (log(2*pi*sigma2) + 1) / 2
-  logLik_lm = as.numeric(logLik_lm)
 
   # Set inital estimate of betas
   if ("start" %in% names(slvr_options)){
@@ -323,13 +365,30 @@ lmvar <- function( y, X_mu = NULL, X_sigma = NULL,
   }
   else {
 
-    sigma = summary(fit)$sigma
-    beta_sigma = log(sigma) * solve( Matrix::t(X_sigma) %*% X_sigma) %*% Matrix::colSums(X_sigma)  # Minimize sum over all elements of (X_sigma %*% beta_sigma - log(sigma))^2
+    sigma = sqrt(sigma2)
+    if (intercept_sigma){
+      beta_sigma = c( log(sigma), rep.int( 0, ncol(X_sigma) - 1))
+    }
+    else{
+      beta_sigma = log(sigma) * solve( Matrix::t(X_sigma) %*% X_sigma) %*% Matrix::colSums(X_sigma)  # Minimize sum over all elements of (X_sigma %*% beta_sigma - log(sigma))^2
+    }
     slvr_default_start = list(start = as.numeric(beta_sigma))
   }
 
   # set function
   slvr_default_fn = list(logLik = logLHood)
+
+  # Set options to solve under boundary condition of minimum value for sigma
+  if (all(sigma_min > 0)){
+    if (length(sigma_min) == 1){
+      sigma_min = rep( sigma_min, times = length(y))
+    }
+    slvr_options$constraints = list( ineqA = as.matrix(X_sigma), ineqB = - log(sigma_min))
+
+    if (slvr_options$method == "NR"){
+      slvr_options$method = "BFGS"
+    }
+  }
 
   # Calculate beta for standard deviation sigma
   solve_result = do.call(maxLik::maxLik, c( slvr_default_fn, slvr_default_start, slvr_options))
@@ -351,7 +410,7 @@ lmvar <- function( y, X_mu = NULL, X_sigma = NULL,
   sigma = as.numeric(exp( X_sigma %*% beta_sigma))
   M = X_mu * (1/sigma)
   M = solve(Matrix::t(M) %*% M)
-  beta = as.numeric(M %*% Matrix::t(X_mu) %*% (y / (sigma * sigma)))
+  beta = as.numeric(M %*% Matrix::t(X_mu) %*% (y / (sigma^2)))
 
   # Check Hessian
   if (control$check_hessian){
@@ -386,8 +445,9 @@ lmvar <- function( y, X_mu = NULL, X_sigma = NULL,
                 X_sigma = X_sigma,
                 intercept_mu = intercept_mu,
                 intercept_sigma = intercept_sigma,
-                slvr_options = slvr_options,
-                control = control)
+                sigma_min = sigma_min_call,
+                slvr_options = slvr_options_call,
+                control = control_call)
 
   # Add ouput of solver routine
   if (control$slvr_log){

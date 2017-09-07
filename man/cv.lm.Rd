@@ -4,7 +4,8 @@
 \alias{cv.lm}
 \title{Cross-validation for an object of class 'lm'}
 \usage{
-cv.lm(object, k = 10, ks_test = FALSE, log = FALSE, seed = NULL, ...)
+cv.lm(object, k = 10, ks_test = FALSE, fun = NULL, log = FALSE,
+  seed = NULL, max_cores = NULL, ...)
 }
 \arguments{
 \item{object}{Object of class 'lm'}
@@ -13,9 +14,14 @@ cv.lm(object, k = 10, ks_test = FALSE, log = FALSE, seed = NULL, ...)
 
 \item{ks_test}{Boolean, if \code{TRUE}, a Kolmogorov-Smirnov test is carried out. See details.}
 
+\item{fun}{User-specified function for which cross-validation results are to be obtained. See details.}
+
 \item{log}{Boolean, specifies whether \code{object} contains a fit to the response vector \eqn{Y} or its logarithm \eqn{\log Y}}
 
 \item{seed}{Integer, seed for the random number generator. The seed is not set when \code{seed} equals \code{NULL}.}
+
+\item{max_cores}{Integer, maximum number of CPU-cores that can be used. For the default value \code{NULL},
+the number is set to the number of available cores minus one.}
 
 \item{...}{Other parameters, not used in the current implementation.}
 }
@@ -48,24 +54,77 @@ over the k folds
 \item \code{mean} the sample mean of the p-value of Kolmogorov-Smirnov distance over the k folds
 \item \code{sd} the sample standard deviation of the p-value of the Kolmogorov-Smirnov distance over the k folds
 }
+\item \code{fun} a list with two items
+\itemize{
+\item \code{mean} the sample mean of the user-specified function \code{fun}
+\item \code{sd} the sample standard deviation of the of the user-specified function over the k folds
 }
-The items \code{KS_distance} and \code{KS_p.value} are added only in case \code{ks_test = TRUE}.
+}
+The items \code{KS_distance} and \code{KS_p.value} are added only in case \code{ks_test = TRUE}. The item
+\code{fun} is added only in case a function \code{fun} has been specified.
 }
 \description{
 k-fold cross-validation for an object of class 'lm'
 }
 \details{
+\subsection{Cross-validations}{
+The function \code{cv.lm} carries out a k-fold cross-validation for a linear model (i.e. a 'lm' model).
+For each fold, an 'lm'
+model is fit to all observations that are not in the fold (the 'training set') and prediction errors are calculated
+for the  observations in the fold (the 'test set'). The prediction errors are the  absolute error \eqn{|y - \mu|}
+and its square \eqn{(y - \mu)^2}. The average prediction errors over the observations in the fold are calculated,
+and the square root of the average of the squared errors is taken. Optionally, one can calculate a user-specified
+function \code{fun} for the test set and the 'lmvar' model resulting from the
+training set. Optionally, one can also calculate the Kolmogorov-Smirnov (KS) distance for the test set and its p-value.
+
+The results for the k folds are averaged over the folds and standard deviations are calculated from the k results.
+}
+\subsection{Requirements on the 'lm' object}{
 \code{object} must contain the list-members \code{x} and \code{y}. I.e., it must be created by running
 \code{\link[stats]{lm}} with the options \code{x = TRUE} and \code{y = TRUE}.
+}
 
-When \code{ks_test = TRUE}, a Kolmogorov-Smirnov (KS) test is carried out. The test checks whether the
+\subsection{User defined function}{
+The argument \code{fun} allows a user to specify a function for which cross-validation results
+must be obtained. This function must meet the following requirements.
+\itemize{
+\item Its arguments are:
+\itemize{
+\item \code{object_t} an object of class 'lm',
+\item \code{y} a numerical vector of response values and
+\item \code{X} the model matrix for the response vector \code{y}.
+}
+\item It returns a single numerical value.
+}
+Carrying out a k-fold cross-validation, the function is called k times with \code{object_t} equal to the fit
+to the training set, \code{y} equal
+to the response vector of the test set, and
+\code{X_mu} the design matrix of the test set.
+
+If the evaluation of \code{fun} gives an error, \code{cv.lm} will give a warning and exclude that
+evaluation from the mean and the standard deviation of \code{fun} over the k folds. If the evaluation
+of \code{fun} gives a warning, it will be ignored.
+
+In the cross-validations, \code{object_t} contains the design matrix used in the fit to the training set as
+\code{object_t$x}.
+}
+
+\subsection{Kolmogorov-Smirnov test}{
+When \code{ks_test = TRUE}, a Kolmogorov-Smirnov (KS) test is carried out for each fold. The test checks whether the
 standardized residuals \eqn{(y - \mu) / \sigma} in a fold are distributed as a standard normal distribution. The
-KS-distance and the corresponding p-value are calculated for each fold. The test uses the function
-\code{\link[stats]{ks.test}}.
+KS-distance and the corresponding p-value are calculated for each fold. The test uses the
+function \code{\link[stats]{ks.test}}. The expectation values \eqn{\mu} and standard deviation \eqn{\sigma} are
+calculated from the model matrices for the test set (the fold) and the 'lm' fit to the training set.
+}
+
+\subsection{Other}{
+The number of available CPU cores is detected with \code{\link[parallel]{detectCores}}.
+}
 }
 \examples{
-# Create an object of class 'lm'. We use an arbitrary model matrix, an arbitrary parameter
-# vector beta and a generated response vector y for the purpose of the example.
+# Create an object of class 'lm'. We use a model matrix obtained from the 'cats' dataframe,
+# an arbitrary parameter vector beta and a generated response vector y for the purpose of the
+# example.
 library(MASS)
 
 X = model.matrix(~ Sex + Bwt, cats)
@@ -78,17 +137,30 @@ y = rnorm( nrow(X), mean = mu, sd = 0.5)
 fit = lm(y ~ ., as.data.frame(X[,-1]), x = TRUE, y = TRUE)
 
 # Carry out a cross-validation
-cv = cv.lm(fit)
+\donttest{cv.lm(fit)}   \dontshow{# will fail test on CRAN when using more than 2 CPU-cores}
 
-# Carry out a cross-validation including a Kolmogorov-Smirnov test
-cv = cv.lm(fit, ks_test = TRUE)
+# Carry out a cross-validation using a single CPU-core
+cv.lm(fit, max_cores = 1)
+
+# Carry out a cross-validation including a Kolmogorov-Smirnov test, using at most two CPU-cores
+cv.lm(fit, ks_test = TRUE, max_cores = 2)
 
 # Carry out a cross-validation with 5 folds and control the random numbers used
-cv = cv.lm(fit, k = 5, seed = 5483)
+cv.lm(fit, k = 5, seed = 5483, max_cores = 1)
+
+\donttest{
+# Calculate cross-validation results for the fourth moment of the residuals, using a
+# user-specified function
+fourth = function(object, y, X){
+  mu = predict(object, as.data.frame(X))
+  residuals = y - mu
+  return(mean(residuals^4))
+}
+cv.lm(fit, fun = fourth)
+rm(fourth)
 
 # Use option 'log = TRUE' if you fit the log of the response vector and require error estimates for
 # the response vector itself
-
 fit = lm(log(y) ~ ., as.data.frame(X[,-1]), x = TRUE, y = TRUE)
 cv = cv.lm(fit, log = TRUE)
 
@@ -98,9 +170,10 @@ cv
 # Print 'cv' with a specified number of digits
 print(cv, digits = 2)
 }
+}
 \seealso{
 \code{\link{cv.lmvar}} is the equivalent function for an object of class 'lmvar'. It is supplied in
-case one wants to compare an  'lmvar' fit with an 'lm' fit.
+case one wants to compare an 'lmvar' fit with an 'lm' fit.
 
 \code{\link{print.cvlmvar}} provides a print-method for an object of class 'cvlmvar'.
 }

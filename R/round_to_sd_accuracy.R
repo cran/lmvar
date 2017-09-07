@@ -11,7 +11,11 @@ round_to_sd_accuracy <- function( values, sd, digits){
   #
   # Output: Numeric vector with the rounded values of 'values'.
 
-  n = - order_10(sd)
-
-  return(round( values, n + digits - 1))
+  if (is.na(sd)){
+    return(rep( NA, length(values)))
+  }
+  else {
+    n = - order_10(sd)
+    return(round( values, n + digits - 1))
+  }
 }

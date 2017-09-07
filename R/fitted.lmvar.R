@@ -1,19 +1,18 @@
 #' @title Fitted values for an 'lmvar' object
 #'
-#' @description Estimators and confidence intervals for the expected values and standard deviations of the response vector \eqn{Y} of
-#' an 'lmvar' model. Prediction intervals for \eqn{Y} as well. Alternatively, estimators and intervals can be for \eqn{e^Y}.
+#' @description Estimators and confidence intervals for the expected values and standard deviations of the response vector \eqn{Y}.
+#' Prediction intervals for \eqn{Y}. Alternatively, estimators and intervals can be for \eqn{e^Y}.
 #'
 #' @param object An 'lmvar' object
-#' @param mu Boolean, specifies whether or not to return the expected values
-#' @param sigma Boolean, specifies whether or not to return the standard deviations
-#' @param log Boolean, specifies whether expected values, standard deviations (as well as their confidence intervals) and
-#' prediction intervals should be for \eqn{Y} (\code{log = FALSE}) or for \eqn{e^Y} (\code{log = TRUE}).
+#' @param mu Boolean, specifies whether or not to return estimators and intervals for the expected values
+#' @param sigma Boolean, specifies whether or not to return estimators and intervals for the standard deviations
+#' @param log Boolean, specifies whether estimators and intervals should be for \eqn{Y} (\code{log = FALSE}) or
+#' for \eqn{e^Y} (\code{log = TRUE}).
 #' @param interval Character string, specifying the type of interval. Possible values are
 #' \itemize{
 #' \item "none" No interval, this is the default
-#' \item "confidence" Confidence intervals for the expected values (if \code{mu = TRUE}) and the standard deviation
-#' (if \code{sigma = TRUE})
-#' \item "prediction" Prediction intervals for the response vector \eqn{Y} (\code{log = FALSE}) or for \eqn{e^Y} (\code{log = TRUE})
+#' \item "confidence" Confidence intervals for the estimators
+#' \item "prediction" Prediction intervals
 #' }
 #' @param level Numeric value between 0 and 1, specifying the confidence level
 #' @param ... For compatibility with \code{\link[stats]{fitted}} generic.
@@ -38,14 +37,15 @@
 #'
 #' @export
 #'
-#' @details If \code{log = FALSE} and \eqn{Y} the vector of observations stored in \code{object}, \code{fitted.lmvar} returns
-#' expected values and standard deviations for the observations \eqn{Y}.
+#' @details If \code{log = FALSE}, \code{fitted.lmvar} returns
+#' estimators and intervals for the observations \eqn{Y} stored in \code{object}.
 #'
-#' If \code{log = TRUE} and \eqn{Y} the vector of observations stored in \code{object}, \code{fitted.lmvar} returns expected
-#' values and standard deviations for \eqn{e^Y}.
+#' If \code{log = TRUE}, \code{fitted.lmvar} returns estimators and intervals for \eqn{e^Y}.
 #'
-#' Confidence intervals are calculated with an approximation that is valid when the number of observations is large.
-#' Intervals must be treated cautiously in case of a small number of observations.
+#' Confidence intervals are calculated under teh assumption of asymptotic normality. This assumption holds when the number of observations is
+#' large. Intervals must be treated cautiously in case of a small number of observations.
+#' Intervals can also be unreliable if
+#' \code{object} was created with a constraint on the minimum values of the standard deviations sigma.
 #'
 #' This function is identical to the function \code{\link{predict.lmvar}} in which the parameters \code{X_mu} and
 #' \code{X_sigma} are left unspecified.

@@ -35,8 +35,8 @@
 #' }
 #' \item \code{MSE_sqrt} a list with two items
 #' \itemize{
-#' \item \code{mean} the sample mean of the square root of the mean squared prediction error over the k folds
-#' \item \code{sd} the sample standard deviation of the square root of the mean squared prediction error
+#' \item \code{mean} the sample mean of the root mean squared prediction error over the k folds
+#' \item \code{sd} the sample standard deviation of the root mean squared prediction error
 #' over the k folds
 #' }
 #' \item \code{KS_distance} a list with two items

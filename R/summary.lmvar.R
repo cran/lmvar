@@ -59,7 +59,7 @@
 #'
 #' \code{\link{logLik.lmvar}} for the log-likelihood of a fit in an object of class 'lmvar'.
 #'
-#' \code{\link{alias.lmvar}} to obtain the aliased columns of the user-supplied model matrices in the call of \code{\link{lmvar}}.
+#' \code{\link{alias.lmvar_no_fit}} to obtain the aliased columns of the user-supplied model matrices in the call of \code{\link{lmvar}}.
 #'
 #' @method summary lmvar
 #'

@@ -7,7 +7,7 @@
 dfree(object, mu = TRUE, sigma = TRUE, ...)
 }
 \arguments{
-\item{object}{Object of class 'lmvar'}
+\item{object}{Object of class 'lmvar_no_fit' (hence it can also be of class 'lmvar')}
 
 \item{mu}{Boolean, specifies whether the degrees of freedom for the model for the expectation values must be included.}
 
@@ -57,4 +57,8 @@ dfree(fit, sigma = FALSE)
 
 # The degrees of freedom of the standard deviations are
 dfree(fit, mu = FALSE)
+
+# Function also works on object of class 'lmvar_no_fit'
+no_fit = lmvar_no_fit(attenu$accel, X, X_s)
+dfree(no_fit)
 }

@@ -66,7 +66,7 @@ The low p-value in the summary is a strong indication that 'lmvar' does a better
 What is in the 'lmvar' package?
 -------------------------------
 
-The function `lmvar` produces an object of class 'lmvar'. In the example above, this is the object `fit`. The package provides a number of utility functions to extract information from an 'lmvar' object. The example above demonstrates the utility function `summary`. There are also utility functions to obtain the fitted coefficients, the expected values, the standard deviations, the log-likelihood, the degrees of freedom, the covariance matrix, the AIC value, confidence intervals, and more. To view the whole list of functions, use `help(package = "lmvar")`.
+The function `lmvar` produces an object of class 'lmvar'. In the example above, this is the object `fit`. The package provides a number of utility functions to extract information from an 'lmvar' object. The example above demonstrates the utility function `summary`. There are also utility functions to obtain the fitted coefficients, the expected values, the standard deviations, the log-likelihood, the degrees of freedom, the covariance matrix, the AIC value, confidence intervals, and more. There are also functions to carry out cross-validations and to optimize the set independent variables. To view the whole list of functions, use `help(package = "lmvar")`.
 
 Further reading
 ---------------

@@ -5,7 +5,7 @@
 \title{Forward / backward-step model selection for an object of class 'lm'}
 \usage{
 \method{fwbw}{lm}(object, fun, fw = FALSE, counter = TRUE,
-  removal_percentage = 0.05, control = list(), ...)
+  df_percentage = 0.05, control = list(), ...)
 }
 \arguments{
 \item{object}{Object of class 'lm'}
@@ -19,8 +19,8 @@ the search will start with the full model ('backward search').}
 remove degrees of freedom) while searching for the optimal subset. If \code{FALSE} and \code{fw = TRUE}, the algorithm will only carry out
 forward steps (attempts to insert degrees if freedom). The effect of \code{counter} is opposite if \code{fw = FALSE}.}
 
-\item{removal_percentage}{Percentage of degrees of freedom that the algorithm attempts to remove at a backward-step.
-Must be a number between 0 and 1.}
+\item{df_percentage}{Percentage of degrees of freedom that the algorithm attempts to remove at a backward-step,
+or insert at a forward_step. Must be a number between 0 and 1.}
 
 \item{control}{List of control options. The following options can be set
 \itemize{
@@ -61,16 +61,15 @@ The start set depends on the argument \code{fw}. If \code{fw = TRUE}, the algori
 for the expected values \eqn{\mu}. This degree is the intercept term, if the model in \code{object} contains an intercept term.
 If \code{fw = FALSE} (the default), the algorithm starts with all degrees of freedom present in \code{object}.
 
-At a backward step, the model removes \code{removal_percentage} of the degrees of freedom of the current-best subset (with a minimum
+At a backward step, the model removes \code{df_percentage} of the degrees of freedom of the current-best subset (with a minimum
 of 1 degree of freedom). The degrees
 that are removed are the ones with the largest p-value (p-values can be seen with the function \code{\link[stats]{summary.lm}}). If the removal
 results in a larger value of \code{fun}, the algorithm will try again by halving the degrees of freedom it removes.
 
-At a forward step, the algorithm goes through all degrees of freedom that have
-been removed from \code{object} so far. For each degree of freedom, the algorithm estimates the increase of the log-likelihood if the
-degree were to be inserted. It inserts the one which is estimated to increase the log-likelihood the most, followed by the one with
-the second-largest estimated increase, etc. After each insertion, the value of \code{fun} is calculated. As long as \code{fun} decreases,
-the insertion process continues.
+At a forward step, inserts \code{df_percentage} of the degrees of freedom that are present in \code{object} but left out in the
+current-best subset (with a minimum of 1 degree of freedom). It inserts those degees of freedom which are estimated to
+increase the likelihood most. If the insertion
+results in a larger value of \code{fun}, the algorithm will try again by halving the degrees of freedom it inserts.
 
 If \code{counter = FALSE}, the algorithm is 'greedy': it will only carry out forward-steps in case \code{fw = TRUE} or backward-steps
 in case \code{fw = FALSE}.
@@ -152,5 +151,5 @@ names(coef(fwbw$object))
 \seealso{
 \code{\link{fwbw}} for the generic method
 
-\code{\link{fwbw.lmvar}} for the corresponding function for an 'lmvar' object
+\code{\link{fwbw.lmvar_no_fit}} for the corresponding function for an 'lmvar_no_fit' (or an 'lmvar') object
 }

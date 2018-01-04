@@ -75,7 +75,7 @@ We are looking for $\hat{\beta_\mu} \in \mathbb{R}^{k_\mu}$ and $\hat{\beta_\sig
 (\hat{\beta}_\mu, \, \hat{\beta}_\sigma) = \underset{(\beta_\mu, \beta_\sigma) \in \mathbb{R}^{k_\mu} \times \mathbb{R}^{k_\sigma}} {\text{argmax}} \log \mathcal{L} (\beta_\mu, \beta_\sigma).
 \end{equation}
 These maximum likelihood estimators are taken to be the estimators of $\beta_\mu^\star$ and $\beta_\sigma^\star$.
-We assume that  $\hat{\beta}_{\mu}$ and $\hat{\beta}_\sigma$ thus defined, exist and are unique. 
+We assume that  $\hat{\beta}_{\mu}$ and $\hat{\beta}_\sigma$ thus defined, exist and are unique. See section \ref{sec:logl undefined} however for a situation in which the maximum log-likelihood is undefined.
 
 Given $\hat{\beta}_\sigma$, this is true for $\hat{\beta}_\mu$. Namely, given any $\beta_\sigma$, $\log \mathcal{L}$ is maximized by the $\beta_\mu$ which is the solution of
 \begin{equation} \label{eq:mle mu}
@@ -151,23 +151,8 @@ X_\sigma^T \lambda_\sigma = 0.
 The estimate $\mu$ of the expectation value that appears in $\lambda_\sigma$ depends on $\beta_\sigma$ as
 \begin{align}
 \mu & = X_\mu \beta_\mu \nonumber\\
-& = X_\mu \left( X_\mu^T \Sigma^{-1} X_\mu \right)^{-1} X_\mu^T \Sigma^{-1} y \nonumber\\
-& = \Sigma^{-1/2} X_\mu \left( X_\mu^T \Sigma^{-1} X_\mu \right)^{-1} X_\mu^T \Sigma^{-1/2} y
+& = X_\mu \left( X_\mu^T \Sigma^{-1} X_\mu \right)^{-1} X_\mu^T \Sigma^{-1} y .
 \end{align}
-where the latter form is the more symmetric, with
-\begin{equation}
-\left( \Sigma^{-1/2} \right)_{ij} =
-\begin{cases}
-0 & i \neq j \\
-\dfrac{1}{\sigma_i} & i=j.
-\end{cases}
-.
-\end{equation}
-The vector $(y - \mu) / \sigma$, which $i$-th element is $(y_i - \mu_i) / \sigma_i$, can be written as
-\begin{equation}
-\frac{y-\mu}{\sigma} = \Sigma^{-1/2} \left[ I - \Sigma^{-1/2} X_\mu \left( X_\mu^T \Sigma^{-1} X_\mu \right)^{-1} X_\mu^T \Sigma^{-1/2} \right] y 
-\end{equation}
-in which $I \in \mathbb{R}^{n,n}$ is the identity matrix.
 
 \subsection{Profile-likelihood Hessian}
 Numerical procedures to solve the maximum-likelihood equations $X_\sigma^T \lambda_\sigma=0$ involve the calculation of the Hessian $H_P$ of the profile log-likelihood. $H_P$ is the matrix of second-order derivatives of $\log \mathcal{L}_P$:
@@ -333,6 +318,32 @@ E[\hat{\sigma}_i] & = \sigma_i^\star \exp\left( \frac{(X_\sigma \left( X_\sigma^
 \qquad \text{ for } n \text{ large}.
 \end{equation}
 The function \texttt{fitted.lmvar} (with the option \texttt{log = FALSE}) returns $\hat{\mu}$ and $\hat{\sigma}$.
+
+\section{A case in which the maximum log-likelihood is not defined} \label{sec:logl undefined}
+It happens in practice that the maximum log-likelihood can not be determined. The routine which calculates it runs into numerical instabilities and exits with warning messages.
+
+If that happens, the following might be the case. Suppose the full set of $n$ observations can be split in two subsets $S_1$, with $n_1$ observations, and $S_2$, with $n_2$ observations, such that $n = n_1 + n_2$. For simplicity and without loss of generality, we assume that the first $n_1$ observations form the set $S_1$ and the remaining observations the set $S_2$. Correspondingly, we split the response vector $y$ in a vector $y_1 \in \mathbb{R}^{n_1}$ and a vector $y_2 \in \mathbb{R}^{n_2}$, the model matrix $X_\mu$ in $X_{\mu 1} \in \mathbb{R}^{n_1 k_\mu}$ and $X_{\mu 2} \in \mathbb{R}^{n_2 k_\mu}$, and likewise for the model matrix $X_\sigma$:
+\begin{equation}
+y = \begin{pmatrix} y_1 \\ y_2 \end{pmatrix}, \quad
+X_\mu = \begin{pmatrix} X_{\mu 1} \\ X_{\mu 2} \end{pmatrix}, \quad
+X_\sigma = \begin{pmatrix} X_{\sigma 1} \\ X_{\sigma 2} \end{pmatrix}.
+\end{equation}
+The split is made such that:
+\begin{itemize}
+	\item $y_1$ is an element of the range of $X_{\mu 1}$, i.e., there exists a vector $\beta_1$ such that $X_{\mu 1} \beta_1 = y_1$, and
+	\item $\ker(X_{\sigma 2}) \neq \emptyset$.
+\end{itemize}
+Because $X_\sigma$ is full rank there exists a $\beta_2 \in \ker(X_{\sigma 2})$ such that $X_{\sigma 1} \beta_2 \neq 0$. Moreover, if $v = X_{\sigma 1} \beta_2$ we can choose $\beta_2$ such that $\sum_{k = 1}^{n_1} v_k > 0$.
+
+Now consider the log-likelihood $\log \mathcal{L}(\beta_\mu, \beta_\sigma)$ with $\beta_\mu = \beta_1$ and $\beta_\sigma = - L \beta_2$ with $L > 0$:
+\begin{equation}
+\log \mathcal{L}(\beta_1, - L \beta_2) = - \frac{n}{2} \log(2 \pi) + L \sum_{k=1}^{n_1} v_k - \frac{1}{2} \sum_{k = n_1 + 1}^{n} (y_k - \mu_k)^2 \\
+\end{equation}
+which shows
+\begin{equation}
+\log \mathcal{L}(\beta_1, - L \beta_2) \to \infty \quad \text{as } L \to \infty.
+\end{equation}
+The option \texttt{remove\_df\_sigma = TRUE} of the function \texttt{lmvar} tries to recognize this situation. It identifies the set of observations $S_1$ as the observations for which the standard deviation becomes very small. It then removes columns from $X_\sigma$ to make $X_{\sigma 2}$ full-rank. 
 
 \bibliographystyle{plain}
 \bibliography{bibliography}

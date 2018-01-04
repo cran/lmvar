@@ -12,7 +12,7 @@
 
 <meta name="author" content="Posthuma Partners" />
 
-<meta name="date" content="2017-09-07" />
+<meta name="date" content="2018-01-04" />
 
 <title>A linear model with non-constant variances</title>
 
@@ -70,7 +70,7 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 
 <h1 class="title toc-ignore">A linear model with non-constant variances</h1>
 <h4 class="author"><em>Posthuma Partners</em></h4>
-<h4 class="date"><em>2017-09-07</em></h4>
+<h4 class="date"><em>2018-01-04</em></h4>
 
 
 
@@ -116,8 +116,7 @@ Let <span class="math inline">\(\sigma\)</span> denotes the vector <span class="
 <p>The model for both <span class="math inline">\(\mu\)</span> and <span class="math inline">\(\sigma\)</span> contains an intercept term by default. That means that the first column of both matrices is a column in which each matrix-element equals 1. The package will add this column to the user-suppplied matrices to ensure that the intercept term is present. There is no need for a user to include such a column in a user-supplied model-matrix. Intercept terms can be suppressed with the arguments <code>intercept_mu = FALSE</code> and <code>intercept_sigma = FALSE</code> of the function <code>lmvar</code>.</p>
 <p>After adding the intercept columns (if not suppressed), the package will check whether the resulting matrices are full rank. If not, columns will be removed from each matrix until it is full rank.</p>
 <p>The addition of an intercept column and, possibly, the removal of columns to obtain a full-rank matrix, imply that the actual matrices used in the fit can be different from the user-specified matrices. The matrices that are actually used in the fit are returned as members of the <code>lmvar</code> object.</p>
-<p>Carrying out the fit boils down to solving a set of non-linear equations. This is carried out in the background by the function <code>maxNR</code> from the package ‘maxLik’.</p>
-<p>It is possible to solve the model under the constraint that each element <span class="math inline">\(\sigma_i\)</span> of the vector <span class="math inline">\(\sigma\)</span> must be larger than a minimim value <span class="math inline">\(\sigma_{i, min}\)</span>. This is useful in case an unconstrained fit attempts to make <span class="math inline">\(\sigma_i\)</span> equal to zero for one or more observations <span class="math inline">\(i\)</span>. Such an attempt gives rise to extreme values of elements in <span class="math inline">\(\beta_\sigma\)</span> and numerical instabilities.</p>
+<p>Carrying out the fit boils down to solving a set of non-linear equations. By default this is carried out in the background by the function <code>maxNR</code> from the package ‘maxLik’ but it is possible to use another function from teh same package.</p>
 <p>More mathematical details about the model can be found in the vignette ‘Math’ which comes with this package. It can be viewed with <code>vignette(&quot;Math&quot;)</code> or <code>vignette(&quot;Math&quot;, package=&quot;lmvar&quot;)</code>.</p>
 </div>
 </div>
@@ -131,7 +130,7 @@ Let <span class="math inline">\(\sigma\)</span> denotes the vector <span class="
 <li>A matrix either has column names for all columns, or no column names at all. The same column name can appear for both <span class="math inline">\(X_\mu\)</span> and <span class="math inline">\(X_\sigma\)</span> but column names should be unique within each matrix. The intercept column that is added by <code>lmvar</code> (although one can suppress it), is called <code>(Intercept)</code> for <span class="math inline">\(X_\mu\)</span> and <code>(Intercept_s)</code> for <span class="math inline">\(X_\sigma\)</span>.</li>
 </ul>
 <p>With each column in <span class="math inline">\(X_\mu\)</span> corresponds an element in <span class="math inline">\(\beta_\mu\)</span>. The name of that element is the corresponding column name. The same is true for <span class="math inline">\(X_\sigma\)</span> and <span class="math inline">\(\beta_\sigma\)</span>.</p>
-<p>It can happen that <code>maxNR</code> fails to solve the maximum-likelihood equations. Sometimes the problem can be traced back to columns in <span class="math inline">\(X_\sigma\)</span> with many zero’s. I.e., covariates (or factor-levels) for <span class="math inline">\(\sigma\)</span> which affect only few observations. Removal of these columns may remedy the issue.</p>
+<p>It can happen that <code>lmvar</code> fails to solve the maximum-likelihood equations and exits with warnings. See <a href="#notconverge">here</a> for the options you have in this case.</p>
 <p>An <code>lmvar</code> object is a list whose members are intended to be extracted with the supplied accessor and utility functions. The only members for which no such functions have been implemented are:</p>
 <ul>
 <li><code>y</code>: the user-supplied vector of observations</li>
@@ -283,13 +282,34 @@ sigma_lm =<span class="st"> </span><span class="kw">summary</span>(fit_lm)$sigma
 <pre><code>##              Bwt        Bwt_s
 ## Bwt   0.00196053 0.0000000000
 ## Bwt_s 0.00000000 0.0004537699</code></pre>
-<p>Hopefully this demonstration has given an idea of how to work with the package. The documentation of the individual fuctions contains further examples.</p>
+<p>Hopefully this demonstration has given an idea of how to work with the package. The documentation of the individual functions contains further examples.</p>
 </div>
 <div id="functions-in-the-package" class="section level2">
 <h2>Functions in the package</h2>
 <p>We refer to the package index for a list of all available functions. The index can be viewed with <code>help(package=&quot;lmvar&quot;)</code>. Various generic functions from the ‘stats’ package work for an ‘lmvar’ object as well. Examples are <code>BIC</code> and <code>confint</code>.</p>
-<p>The package provides the function <code>fwbw</code> for model-selection. It searches for an optimal subset of covariates by means of a forward / backward-stepping algorithm. The function works on a ‘lmvar’ object but also on a ‘lm’ object. See the function documentation of <code>fwbw</code>, <code>fwbw.lm</code> and <code>fwbw.lmvar</code> for details.</p>
+<div id="variable-selection" class="section level3">
+<h3>Variable selection</h3>
+<p>The package provides the function <code>fwbw</code> for a selection of the independent model-variables (also called the ‘predictors’ or ‘covariates’). It searches for an optimal subset of variables by means of a forward / backward-stepping algorithm. The function works on a ‘lmvar’ object but also on a ‘lm’ object. See the function documentation of <code>fwbw</code> for details.</p>
+</div>
+<div id="cross-validation" class="section level3">
+<h3>Cross-validation</h3>
 <p>The package provides the functions <code>cv.lm</code> and <code>cv.lmvar</code> for cross-validation of prediction errors or any other function of choice. The former function works on an ‘lm’ object, the latter on a ‘lmvar’ object. See the function documentation for details.</p>
+</div>
+</div>
+<div id="the-class-lmvar_no_fit" class="section level2">
+<h2>The class ‘lmvar_no_fit’</h2>
+<p>The package ‘lmvar’is concerned mostly with objects of class ’lmvar’. However, it also contains the function <code>lmvar_no_fit</code> which creates an object of class ‘lmvar_no_fit’. This class is like the class ‘lmvar’ but misses any information that is the result of a model fit.</p>
+<p>The class ‘lmvar’ is an extension of the class ‘lmvar_no_fit’. This means that whenever an object of class ‘lmvar_no_fit’ is required, an object of class ‘lmvar’ can be used as well. An example is the version of the function <code>nobs</code> supplied by this package. It takes as input an object of class ‘lmvar_no_fit’. Therefore it will also accept an object of class ‘lmvar’.</p>
+</div>
+<div id="notconverge" class="section level2">
+<h2>What if the fit does not converge?</h2>
+<p>It can happen that the function <code>lmvar</code> exits with a warning that it had trouble carrying out the model fit. The warning will be like ‘Last step could not find a value above the current’ or ‘Log-likelihood appears not to be at a maximum!’. This is means that the iterative fitting procedure did not converge in a satisfactory manner. In our experience, this is most likely to happen when the model for <span class="math inline">\(\sigma\)</span> has many degrees of freedom, i.e., the model matrix <span class="math inline">\(X_\sigma\)</span> has many columns.</p>
+<p>What are your options if this happens? You can try the following strategies.</p>
+<ul>
+<li><p>Check whether the model for <span class="math inline">\(\sigma\)</span> contains factor levels which occur only a few times, or which occur almost always. Such levels are columns in <span class="math inline">\(X_\sigma\)</span> where nearly all elements are equal to 0 and a few equal to 1, or nearly all elements are equal to 1 and a few equal to zero. Remove these columns from <span class="math inline">\(X_\sigma\)</span> and run <code>lmvar</code> again.</p></li>
+<li><p>Run <code>lmvar</code> with the argument <code>control = list(remove_df_sigma = TRUE)</code>. With this option, <code>lmvar</code> tries to remove degrees of freedom from the model for <span class="math inline">\(\sigma\)</span> that prevent the fit to converge. See the vignette ‘Math’ for a mathematical background of this option.</p></li>
+<li><p>Create the model by starting with a model with only 2 degrees of freedom and gradually adding degrees of freedom, avoiding ones that prevent the fit to converge. This can be done by first running <code>lmvar_no_fit</code> (with the same arguments as <code>lmvar</code>). The resulting object is then input for the function <code>fwbw</code>. This function must be run with argument <code>fw = TRUE</code>. The function <code>fwbw</code> requires one to select a function that measures the goodness of fit. Reasonable choices for this function are e.g. <code>AIC</code> or <code>BIC</code>. The output of <code>fwbw</code> contains a model-fit which is hopefully one you can work with.</p></li>
+</ul>
 </div>
 <div id="other-packages" class="section level2">
 <h2>Other packages</h2>

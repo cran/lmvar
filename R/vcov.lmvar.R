@@ -27,7 +27,7 @@
 #'
 #' @seealso \code{\link{summary.lmvar}} for standard errors for \eqn{\beta_\mu} and \eqn{\beta_\mu}.
 #'
-#' \code{\link{nobs.lmvar}} for the number of observations in an object of class 'lmvar'.
+#' \code{\link{nobs.lmvar_no_fit}} for the number of observations in an object of class 'lmvar'.
 #'
 #' \code{\link{fisher}} for the Fisher information matrix of an object of class 'lmvar'.
 #'

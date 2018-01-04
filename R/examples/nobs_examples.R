@@ -18,3 +18,8 @@ nobs(fit)
 
 # Check that this is equal to the number of observations in the dataset
 nobs(fit) == nrow(attenu)
+
+# Function also works on object of class 'lmvar_no_fit'
+no_fit = lmvar_no_fit(attenu$accel, X, X_s)
+nobs(no_fit)
+

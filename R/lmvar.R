@@ -19,8 +19,12 @@
 #' log-likelihood is at a maximum. The default value is TRUE.
 #' \item \code{slvr_log} Boolean, if TRUE the output of \code{maxLik} is added to the 'lmvar' object.
 #' The default value is FALSE.
-#' \item \code{running_diagnostics} Boolean, if TRUE diagnostic messages about errors that occur will be
+#' \item \code{monitor} Boolean, if TRUE diagnostic messages about errors that occur will be
 #' printed during the run. The default value is FALSE.
+#' \item \code{remove_df_sigma} Boolean, if TRUE the algorithm will reduce the degrees of freedom of the model for \eqn{\sigma}
+#' if this is necessary to achieve
+#' a satisfactory fit. This option has no effect if \code{sigma_min} (or one of its elements) is larger than zero.
+#' See 'Details'. The default value is FALSE.
 #' }
 #' @param ... Additional arguments, not used in the current implementation
 #'
@@ -56,7 +60,7 @@
 #' }
 #'
 #' \subsection{Minimum sigma}{
-#' The argument \code{sigma_min} allows one run a regression under the constraint of a minimum standard deviation for each
+#' The argument \code{sigma_min} allows one to run a regression under the constraint of a minimum standard deviation for each
 #' observation. The argument can be a single number, which applies to all observations, or a vector which contains
 #' a separate
 #' minimum for each observation. In the latter case, all vector elements must be zero
@@ -109,6 +113,25 @@
 #'
 #' There is no need to supply an inital estimate for \eqn{\beta_\mu}, see the vignette 'Math' for details.
 #' }
+#' \subsection{Reducing the degrees of freedom to improve fit}{
+#' When \code{maxLik} exits with return code 3 (and corresponding warning 'Last step could not find a value
+#' above the current. Boundary of parameter space?'), it
+#' somehow did not succeed to fit an 'lmvar' model properly. The same is true if the the Hessian if the log-likelihood is not
+#' negative-definite.
+#'
+#' In this situation, a proper fit can sometimes be achieved if one drops a few extra columns (sometimes just one column) from
+#' \code{X_sigma}. See the vignette 'Math' for details. The option
+#' \code{control = list(remove_df_sigma = TRUE)}) does just that. It attempts to achieve a proper fit by dropping
+#' columns (i.e., reducing the degrees of freedom of the model for \eqn{\sigma}) if necessary.
+#'
+#' The option \code{remove_df_sigma = TRUE} attempts to achieve a proper fit in the following two cases.
+#' \itemize{
+#' \item \code{maxLik} uses the solve-method
+#' "NR" (the default method) or "BFGSR" and exits with return code 3. Note that this not the case when \code{sigma_min} (or one
+#' of its elements) has been set to a value larger than zero because then the method "BFGS" is used.
+#' \item The option \code{check_hessian} is \code{TRUE} and the Hessian of the log-likelihood is not negative-definite.
+#' }
+#' }
 #' \subsection{Other}{
 #' When \code{check_hessian = TRUE}, it is checked whether the fitted log-likelihood is at a maximum. A warning will be issued if
 #' that is not the case.
@@ -121,11 +144,12 @@
 #' Instead, list-members are to be accessed with the various accessor and utility functions in the package.
 #' Exceptions are the following list members for which no accessor functions exist:
 #' \itemize{
-#' \item \code{object$y} the vector of observations
-#' \item \code{object$X_mu} the  model matrix for \eqn{\mu}. In general, it differs from the user-supplied \code{X_mu} because
-#' \code{lmvar} adds an intercept-column and makes the matrix full-rank.
-#' \item \code{object$X_sigma} the  model matrix for \eqn{\log \sigma}. In general, it differs from the user-supplied
-#' \code{X_sigma} because \code{lmvar} adds an intercept-column and makes the matrix full-rank.
+#' \item \code{y} the vector of observations
+#' \item \code{X_mu} the  model matrix for \eqn{\mu}. In general, it differs from the user-supplied \code{X_mu} because
+#' \code{lmvar} adds an intercept-column (unless \code{intercept_mu} is \code{FALSE}) and makes the matrix full-rank.
+#' \item \code{X_sigma} the  model matrix for \eqn{\log \sigma}. In general, it differs from the user-supplied
+#' \code{X_sigma} because \code{lmvar} adds an intercept-column (unless \code{intercept_sigma} is \code{FALSE}) and makes
+#' the matrix full-rank.
 #' \item \code{intercept_mu} boolean which tells whether or not an intercept column \code{(Intercept)} has been added to the
 #' model matrix \eqn{X_\mu}
 #' \item \code{intercept_sigma} boolean which tells whether or not an intercept column \code{(Intercept_s)} has been added to the
@@ -146,15 +170,15 @@ lmvar <- function( y, X_mu = NULL, X_sigma = NULL,
                    intercept_mu = TRUE, intercept_sigma = TRUE, sigma_min = 0,
                    slvr_options = list(method = "NR"), control = list(), ...){
 
-  print_diagnostics <- function( beta_sigma, sigma_inv){
+  print_diagnostics <- function( beta_sigma, sigma_inv, beta_sigma_names){
 
     i = which.min(beta_sigma)
-    name = colnames(X_sigma)[i]
+    name = beta_sigma_names[i]
     value = beta_sigma[i]
     message( "    beta_sigma smallest: '", name, "' = ", signif( value, 3))
 
     i = which.max(beta_sigma)
-    name = colnames(X_sigma)[i]
+    name = beta_sigma_names[i]
     value = beta_sigma[i]
     message( "                largest: '", name, "' = ", signif( value, 3))
     cat("\n")
@@ -169,7 +193,7 @@ lmvar <- function( y, X_mu = NULL, X_sigma = NULL,
     cat("\n")
   }
 
-  logLHood <- function(beta_sigma, return_hessian = FALSE){
+  logLHood <- function(beta_sigma, y, X_mu, X_sigma, return_hessian = FALSE){
 
     sigma_inv = as.numeric(exp(- X_sigma %*% beta_sigma))
     M = X_mu * sigma_inv
@@ -177,10 +201,10 @@ lmvar <- function( y, X_mu = NULL, X_sigma = NULL,
 
                   error = function(e){
 
-                    if (control$running_diagnostics){
+                    if (control$monitor){
                       message (e)
                       cat("\n")
-                      print_diagnostics( beta_sigma, sigma_inv)
+                      print_diagnostics( beta_sigma, sigma_inv, colnames(X_sigma))
                     }
                     return(NA)
                   })
@@ -212,10 +236,10 @@ lmvar <- function( y, X_mu = NULL, X_sigma = NULL,
 
                     error = function(e){
 
-                      if (control$running_diagnostics){
+                      if (control$monitor){
                         message(e)
                         cat("\n")
-                        print_diagnostics( beta_sigma, sigma_inv)
+                        print_diagnostics( beta_sigma, sigma_inv, colnames(X_sigma))
                       }
                       return(NA)
                    })
@@ -233,6 +257,18 @@ lmvar <- function( y, X_mu = NULL, X_sigma = NULL,
     }
 
     return(logLik)
+  }
+
+  checkHessian <- function(solve_result){
+
+    # Function returns TRUE if Hessian is negative-definite, FALSE otherwise
+    if (slvr_options$method == "NR"){
+      hessian = maxLik::hessian(solve_result)
+    }
+    else {
+      hessian = attr( logLHood( solve_result$estimate, y = y, X_mu = X_mu, X_sigma = X_sigma, return_hessian = TRUE), "hessian")
+    }
+    return(matrixcalc::is.negative.definite(hessian))
   }
 
   # store argument values
@@ -275,8 +311,11 @@ lmvar <- function( y, X_mu = NULL, X_sigma = NULL,
   if (!("slvr_log" %in% names(control))){
     control$slvr_log = FALSE
   }
-  if (!("running_diagnostics" %in% names(control))){
-    control$running_diagnostics = FALSE
+  if (!("monitor" %in% names(control))){
+    control$monitor = FALSE
+  }
+  if (!("remove_df_sigma" %in% names(control))){
+    control$remove_df_sigma = FALSE
   }
 
   # Check inputs
@@ -391,14 +430,80 @@ lmvar <- function( y, X_mu = NULL, X_sigma = NULL,
   }
 
   # Calculate beta for standard deviation sigma
-  solve_result = do.call(maxLik::maxLik, c( slvr_default_fn, slvr_default_start, slvr_options))
+  solve_result = do.call(maxLik::maxLik, c( slvr_default_fn, slvr_default_start, slvr_options,
+                                            list( y = y, X_mu = X_mu, X_sigma = X_sigma)))
 
-  # Check on errors and warnings from solver
+  # Classify error codes
   if (slvr_options$method == "NR")
     ok_codes = c( 1, 2, 8)
   else {
     ok_codes = 0
+  }
+
+  # Check if attempt to improve fit is needed
+  improve_fit = FALSE
+  if (control$remove_df_sigma){
+    # Check return code of maxLik
+    if(solve_result$code == 3 & slvr_options$method %in% c( "NR", "BFGSR")){
+      improve_fit = TRUE
     }
+    else {
+      # Check Hessian
+      if(control$check_hessian & !checkHessian(solve_result)){
+        improve_fit = TRUE
+      }
+    }
+  }
+
+  # Check if failed convergence can be solved by removing observations
+  if(improve_fit){
+
+    # Check if exists a set of sigmas much smaller than other sigmas
+    log_sigma_sorted = sort( as.numeric(X_sigma %*% solve_result$estimate), index.return = TRUE)
+    indices = log_sigma_sorted$ix
+    log_sigma_sorted = log_sigma_sorted$x
+    i = which( log_sigma_sorted < c( log_sigma_sorted[-1], log_sigma_sorted[n]) + log(0.01))[1]
+    rank = ncol(X_sigma)
+    if (!is.na(i) & i <= rank){
+
+      # Check if removing observations lowers rank
+      rank_try = Matrix::rankMatrix( X_sigma[-indices[1:i],], method = "qr")
+
+      # Repeat the calculation of beta for standard deviation sigma with columns X_sigma dropped
+      if (rank_try < rank){
+        XX_sigma = make_matrix_full_rank(X_sigma[-indices[1:i],])
+        XX_sigma = X_sigma[, colnames(XX_sigma)]
+
+        # Adjust start value for beta_sigma
+        i = which(!(colnames(X_sigma) %in% colnames(XX_sigma)))
+        if ("start" %in% names(slvr_options)){
+          slvr_options$start = slvr_options$start[-i]
+        }
+        else {
+          slvr_default_start = list(start = slvr_default_start[[1]][-i])
+        }
+
+        solve_result_again = do.call(maxLik::maxLik, c( slvr_default_fn, slvr_default_start, slvr_options,
+                                                        list( y = y, X_mu = X_mu,
+                                                              X_sigma = XX_sigma)))
+        # Check if dropping columns fom X_sigma was helpful
+        if (solve_result_again$code %in% ok_codes & (!control$check_hessian | checkHessian(solve_result_again))){
+
+          # set matrices
+          X_sigma = X_sigma[, colnames(XX_sigma)]
+
+          solve_result = solve_result_again
+
+          # set aliased columns
+          names = names(aliased_sigma)
+          aliased_sigma = !is.element( names, colnames(X_sigma))
+          names(aliased_sigma) = names
+        }
+      }
+    }
+  }
+
+  # Check on errors and warnings from solver
   if (!(solve_result$code %in% ok_codes)){
     warning(solve_result$message)
   }
@@ -409,18 +514,18 @@ lmvar <- function( y, X_mu = NULL, X_sigma = NULL,
   # Calculate beta for expectation value mu
   sigma = as.numeric(exp( X_sigma %*% beta_sigma))
   M = X_mu * (1/sigma)
-  M = solve(Matrix::t(M) %*% M)
+  M = tryCatch( chol2inv(chol(Matrix::t(M) %*% M)),
+                error = function(e){
+                  message (e)
+                  cat("\n")
+                  print_diagnostics( beta_sigma, 1 / sigma, colnames(X_sigma))
+                  stop()
+                })
   beta = as.numeric(M %*% Matrix::t(X_mu) %*% (y / (sigma^2)))
 
   # Check Hessian
   if (control$check_hessian){
-    if (slvr_options$method == "NR"){
-      hessian = maxLik::hessian(solve_result)
-    }
-    else {
-      hessian = attr( logLHood( beta_sigma, return_hessian = TRUE), "hessian")
-    }
-    if(!matrixcalc::is.negative.definite(hessian)){
+    if(!checkHessian(solve_result)){
       warning("Log-likelihood appears not to be at a maximum!")
     }
   }
@@ -454,7 +559,7 @@ lmvar <- function( y, X_mu = NULL, X_sigma = NULL,
     rlist$slvr_log = solve_result
   }
 
-  class(rlist) = "lmvar"
+  class(rlist) = c( "lmvar", "lmvar_no_fit")
 
   return(rlist)
 }

@@ -27,5 +27,5 @@ subset for which a user-specified function reaches its minimum. The search is ca
 alternately attempting to remove and insert degrees of freedom.
 }
 \seealso{
-\code{\link{fwbw.lm}} and \code{\link{fwbw.lmvar}}
+\code{\link{fwbw.lm}} and \code{\link{fwbw.lmvar_no_fit}}
 }

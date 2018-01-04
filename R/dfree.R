@@ -3,7 +3,7 @@
 #' @description Degrees of freedom for the model in an object of class 'lmvar'. The degrees of freedom are defined as the rank of the
 #' model matrix \eqn{X_\mu} for the expectation values, plus the rank of the model matrix \eqn{X_\sigma} for the standard deviations.
 #'
-#' @param object Object of class 'lmvar'
+#' @param object Object of class 'lmvar_no_fit' (hence it can also be of class 'lmvar')
 #' @param mu Boolean, specifies whether the degrees of freedom for the model for the expectation values must be included.
 #' @param sigma Boolean, specifies whether the degrees of freedom for the model for the standard deviations must be included.
 #' @param ... Additional arguments, not used in the current implementation
@@ -27,8 +27,8 @@
 
 dfree <- function( object, mu = TRUE, sigma = TRUE, ...){
 
-  if (class(object) != 'lmvar'){
-    stop("Object must be an 'lmvar' object")
+  if (!('lmvar_no_fit' %in% class(object))){
+    stop("Object must be an 'lmvar_no_fit' (or 'lmvar') object")
   }
 
   if (mu & sigma){

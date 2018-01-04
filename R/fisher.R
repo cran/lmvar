@@ -29,7 +29,7 @@
 #' @seealso \code{\link{vcov.lmvar}} calculates the covariance matrix for the maximum-likelihood estimators of
 #' \eqn{\beta_\mu} and \eqn{\beta_\mu}
 #'
-#' \code{\link{nobs.lmvar}} for the number of observations in an object of class 'lmvar'
+#' \code{\link{nobs.lmvar_no_fit}} for the number of observations in an object of class 'lmvar'
 #'
 #' \code{\link{coef.lmvar}} for the coefficients \eqn{\beta_\mu} and \eqn{\beta_\sigma}
 #'

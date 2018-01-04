@@ -11,8 +11,8 @@
 #' @param counter Boolean, if \code{TRUE} and \code{fw = TRUE}, the algorithm will carry out backward steps (attempts to
 #' remove degrees of freedom) while searching for the optimal subset. If \code{FALSE} and \code{fw = TRUE}, the algorithm will only carry out
 #' forward steps (attempts to insert degrees if freedom). The effect of \code{counter} is opposite if \code{fw = FALSE}.
-#' @param removal_percentage Percentage of degrees of freedom that the algorithm attempts to remove at a backward-step.
-#' Must be a number between 0 and 1.
+#' @param df_percentage Percentage of degrees of freedom that the algorithm attempts to remove at a backward-step,
+#' or insert at a forward_step. Must be a number between 0 and 1.
 #' @param control List of control options. The following options can be set
 #' \itemize{
 #' \item \code{monitor} Boolean, if \code{TRUE} information about the attempted removals and insertions will be printed during the run.
@@ -45,16 +45,15 @@
 #' for the expected values \eqn{\mu}. This degree is the intercept term, if the model in \code{object} contains an intercept term.
 #' If \code{fw = FALSE} (the default), the algorithm starts with all degrees of freedom present in \code{object}.
 #'
-#' At a backward step, the model removes \code{removal_percentage} of the degrees of freedom of the current-best subset (with a minimum
+#' At a backward step, the model removes \code{df_percentage} of the degrees of freedom of the current-best subset (with a minimum
 #' of 1 degree of freedom). The degrees
 #' that are removed are the ones with the largest p-value (p-values can be seen with the function \code{\link[stats]{summary.lm}}). If the removal
 #' results in a larger value of \code{fun}, the algorithm will try again by halving the degrees of freedom it removes.
 #'
-#' At a forward step, the algorithm goes through all degrees of freedom that have
-#' been removed from \code{object} so far. For each degree of freedom, the algorithm estimates the increase of the log-likelihood if the
-#' degree were to be inserted. It inserts the one which is estimated to increase the log-likelihood the most, followed by the one with
-#' the second-largest estimated increase, etc. After each insertion, the value of \code{fun} is calculated. As long as \code{fun} decreases,
-#' the insertion process continues.
+#' At a forward step, inserts \code{df_percentage} of the degrees of freedom that are present in \code{object} but left out in the
+#' current-best subset (with a minimum of 1 degree of freedom). It inserts those degees of freedom which are estimated to
+#' increase the likelihood most. If the insertion
+#' results in a larger value of \code{fun}, the algorithm will try again by halving the degrees of freedom it inserts.
 #'
 #' If \code{counter = FALSE}, the algorithm is 'greedy': it will only carry out forward-steps in case \code{fw = TRUE} or backward-steps
 #' in case \code{fw = FALSE}.
@@ -97,14 +96,14 @@
 #' @seealso
 #' \code{\link{fwbw}} for the generic method
 #'
-#' \code{\link{fwbw.lmvar}} for the corresponding function for an 'lmvar' object
+#' \code{\link{fwbw.lmvar_no_fit}} for the corresponding function for an 'lmvar_no_fit' (or an 'lmvar') object
 #'
 #' @export
 #'
 #' @example R/examples/fwbw.lm_examples.R
 #'
 
-fwbw.lm <- function( object, fun, fw = FALSE, counter = TRUE, removal_percentage = 0.05, control = list(), ...){
+fwbw.lm <- function( object, fun, fw = FALSE, counter = TRUE, df_percentage = 0.05, control = list(), ...){
 
   hessian <- function(iterobject){
 
@@ -228,7 +227,7 @@ fwbw.lm <- function( object, fun, fw = FALSE, counter = TRUE, removal_percentage
   if (missing(fun)){
     stop("a function must be specified to measure the goodness-of-fit")
   }
-  if (removal_percentage<=0 | removal_percentage>=1){
+  if (df_percentage<=0 | df_percentage>=1){
     stop("the removal percentage must be between 0 and 1")
   }
 
@@ -295,7 +294,7 @@ fwbw.lm <- function( object, fun, fw = FALSE, counter = TRUE, removal_percentage
     if (remove & df_remove > 0){
 
       # iterate over attempts to remove degrees of freedom
-      removal_percentage_iter = removal_percentage
+      df_percentage_iter = df_percentage
       proceed_remove = TRUE
       while(proceed_remove){
 
@@ -313,7 +312,7 @@ fwbw.lm <- function( object, fun, fw = FALSE, counter = TRUE, removal_percentage
         z_values = z_values[-i]
 
         # number of degrees of freedom to remove
-        n_remove = max( 1, trunc(removal_percentage_iter * df_remove))
+        n_remove = max( 1, trunc(df_percentage_iter * df_remove))
 
         # calculate columns to keep
         z_sorted = sort( abs(z_values), index.return = TRUE)
@@ -372,7 +371,7 @@ fwbw.lm <- function( object, fun, fw = FALSE, counter = TRUE, removal_percentage
         }
         else {
           if (n_remove > 1){
-            removal_percentage_iter = removal_percentage_iter / 2
+            df_percentage_iter = df_percentage_iter / 2
           }
           else {
             proceed_remove = FALSE
@@ -380,6 +379,7 @@ fwbw.lm <- function( object, fun, fw = FALSE, counter = TRUE, removal_percentage
         }
       }
     }
+
     # Insert degrees of freedom
 
     success_insert = FALSE
@@ -390,14 +390,18 @@ fwbw.lm <- function( object, fun, fw = FALSE, counter = TRUE, removal_percentage
 
       if (length(effect_sorted) > 0){
         proceed_insert = TRUE
+        df_percentage_iter = df_percentage
       }
       else {
         proceed_insert = FALSE
       }
       while (proceed_insert){
 
+        # number of degrees of freedom to insert
+        n_insert = max( 1, trunc(df_percentage_iter * length(effect_sorted)))
+
         # add new degree of freedom to model matrix
-        col = names(effect_sorted[1])
+        col = names(effect_sorted[1:n_insert])
 
         # add column to model matrix for mu
         cols = colnames(object$x) %in% c( itercols, col)
@@ -422,24 +426,30 @@ fwbw.lm <- function( object, fun, fw = FALSE, counter = TRUE, removal_percentage
 
         # monitor
         if (control$monitor){
-          monitor( iter, 1, fun_iter, insert = TRUE)
+          monitor( iter, n_insert, fun_iter, insert = TRUE)
         }
 
         if (fun_iter < iterlist[[iter]]$fun){
           success_insert = TRUE
+          proceed_insert = FALSE
           iterlist[[iter + 1]] = list(fun = fun_iter)
           iterobject = fit
           itercols = cols_fit
         }
         else {
-          proceed_insert = FALSE
+          if (n_insert > 1){
+            df_percentage_iter = df_percentage_iter / 2
+          }
+          else {
+            proceed_insert = FALSE
+          }
         }
 
-        # proceed with next degree of freedom
-        effect_sorted = effect_sorted[-1]
-        if (length(effect_sorted) == 0){
-          proceed_insert = FALSE
-        }
+        # # proceed with next degree of freedom
+        # effect_sorted = effect_sorted[-1]
+        # if (length(effect_sorted) == 0){
+        #   proceed_insert = FALSE
+        # }
       }
     }
 

@@ -61,11 +61,7 @@ After adding the intercept columns (if not suppressed), the package will check w
 
 The addition of an intercept column and, possibly, the removal of columns to obtain a full-rank matrix, imply that the actual matrices used in the fit can be different from the user-specified matrices. The matrices that are actually used in the fit are returned as members of the `lmvar` object.
 
-Carrying out the fit boils down to solving a set of non-linear equations. This is carried out in the background by the function `maxNR` from the package 'maxLik'.
-
-It is possible to solve the model under the constraint that each element $\sigma_i$ of the vector $\sigma$ must be 
-larger than a minimim value $\sigma_{i, min}$. This is useful in case an unconstrained fit attempts to make $\sigma_i$ equal to zero for one or more observations $i$. Such an attempt gives rise to extreme values of elements in 
-$\beta_\sigma$ and numerical instabilities.
+Carrying out the fit boils down to solving a set of non-linear equations. By default this is carried out in the background by the function `maxNR` from the package 'maxLik' but it is possible to use another function from teh same package.
 
 More mathematical details about the model can be found in the vignette 'Math' which comes with this package. It can be viewed with `vignette("Math")` or `vignette("Math", package="lmvar")`.
 
@@ -82,7 +78,7 @@ The user must specify a vector of observations and two model-matrices when calli
 With each column in $X_\mu$ corresponds an element in $\beta_\mu$.
 The name of that element is the corresponding column name. The same is true for $X_\sigma$ and $\beta_\sigma$.
 
-It can happen that `maxNR` fails to solve the maximum-likelihood equations. Sometimes the problem can be traced back to columns in $X_\sigma$ with many zero's. I.e., covariates (or factor-levels) for $\sigma$ which affect only few observations. Removal of these columns may remedy the issue.
+It can happen that `lmvar` fails to solve the maximum-likelihood equations and exits with warnings. See [here](#notconverge) for the options you have in this case.
 
 An `lmvar` object is a list whose members are intended to be extracted with the supplied accessor and utility functions. The only members for which no such functions have been implemented are:
 
@@ -217,18 +213,40 @@ We conclude this demonstration with the covariance matrix for the combined coeff
 ```{r}
 vcov(fit)
 ```
-Hopefully this demonstration has given an idea of how to work with the package. The documentation of the individual fuctions contains further examples.
+Hopefully this demonstration has given an idea of how to work with the package. The documentation of the individual functions contains further examples.
 
 ## Functions in the package
 
 We refer to the package index for a list of all available functions. The index can be viewed with `help(package="lmvar")`. Various generic functions from the 'stats' package work for an 'lmvar' object as well. Examples are `BIC` and `confint`.
 
-The package provides the function `fwbw` for model-selection. It searches for an optimal subset of covariates by means of
-a forward / backward-stepping algorithm. The function works on a 'lmvar' object but also on a 'lm' object. See the function documentation of `fwbw`, `fwbw.lm` and `fwbw.lmvar` for details.
+### Variable selection
+
+The package provides the function `fwbw` for a selection of the independent model-variables (also called the 'predictors' or 'covariates'). It searches for an optimal subset of variables by means of
+a forward / backward-stepping algorithm. The function works on a 'lmvar' object but also on a 'lm' object. See the function documentation of `fwbw` for details.
+
+### Cross-validation
 
 The package provides the functions `cv.lm` and `cv.lmvar` for cross-validation of prediction errors or any other function
 of choice. The former function works on an 'lm' object, the latter on a 'lmvar' object. See the function documentation for
 details.
+
+## The class 'lmvar_no_fit'
+
+The package 'lmvar'is concerned mostly with objects of class 'lmvar'. However, it also contains the function `lmvar_no_fit` which creates an object of class 'lmvar_no_fit'. This class is like the class 'lmvar' but misses any information that is the result of a model fit. 
+
+The class 'lmvar' is an extension of the class 'lmvar_no_fit'. This means that whenever an object of class 'lmvar_no_fit' is required, an object of class 'lmvar' can be used as well. An example is the version of the function `nobs` supplied by this package. It takes as input an object of class 'lmvar_no_fit'. Therefore it will also accept an object of class 'lmvar'.
+
+## What if the fit does not converge? {#notconverge}
+
+It can happen that the function `lmvar` exits with a warning that it had trouble carrying out the model fit. The warning will be like 'Last step could not find a value above the current' or 'Log-likelihood appears not to be at a maximum!'. This is means that the iterative fitting procedure did not converge in a satisfactory manner. In our experience, this is most likely to happen when the model for $\sigma$ has many degrees of freedom, i.e., the model matrix $X_\sigma$ has many columns.
+
+What are your options if this happens? You can try the following strategies.
+
+* Check whether the model for $\sigma$ contains factor levels which occur only a few times, or which occur almost always. Such levels are columns in $X_\sigma$ where nearly all elements are equal to 0 and a few equal to 1, or nearly all elements are equal to 1 and a few equal to zero. Remove these columns from $X_\sigma$ and run `lmvar` again.
+
+* Run `lmvar` with the argument `control = list(remove_df_sigma = TRUE)`. With this option, `lmvar` tries to remove degrees of freedom from the model for $\sigma$ that prevent the fit to converge. See the vignette 'Math' for a mathematical background of this option. 
+
+* Create the model by starting with a model with only 2 degrees of freedom and gradually adding degrees of freedom, avoiding ones that prevent the fit to converge. This can be done by first running `lmvar_no_fit` (with the same arguments as `lmvar`). The resulting object is then input for the function `fwbw`. This function must be run with argument `fw = TRUE`. The function `fwbw` requires one to select a function that measures the goodness of fit. Reasonable choices for this function are e.g. `AIC` or `BIC`. The output of `fwbw` contains a model-fit which is hopefully one you can work with.
 
 ## Other packages
 

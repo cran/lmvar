@@ -41,3 +41,7 @@ names(coef(fwbw$object))
 fwbw = fwbw(fit, BIC, fw = TRUE)
 names(coef(fwbw$object))
 
+# It also works on an object of class 'lmvar_no_fit'
+no_fit = lmvar_no_fit(y, X_mu, X_sigma)
+fwbw( no_fit, AIC, control = list(monitor = TRUE))
+

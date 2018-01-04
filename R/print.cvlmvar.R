@@ -87,20 +87,20 @@ print.cvlmvar <- function( x, digits = NULL, ...){
     v1 = mean_values[1]
     v2 = x$MAE$sd
     f = format_info( v1, v2, digits)
-    cat("Mean absolute error              : ", format_here( v1, format = f$format, digits = f$digits_mean), "\n")
-    cat("Sample standard deviation        : ", format_here( v2, format = f$format, digits = f$digits_sd), "\n\n")
+    cat("Mean absolute error        : ", format_here( v1, format = f$format, digits = f$digits_mean), "\n")
+    cat("Sample standard deviation  : ", format_here( v2, format = f$format, digits = f$digits_sd), "\n\n")
 
     v1 = mean_values[2]
     v2 = x$MSE$sd
     f = format_info( v1, v2, digits)
-    cat("Mean squared error               : ", format_here( v1, format = f$format, digits = f$digits_mean), "\n")
-    cat("Sample standard deviation        : ", format_here( v2, format = f$format, digits = f$digits_sd), "\n\n")
+    cat("Mean squared error         : ", format_here( v1, format = f$format, digits = f$digits_mean), "\n")
+    cat("Sample standard deviation  : ", format_here( v2, format = f$format, digits = f$digits_sd), "\n\n")
 
     v1 = mean_values[3]
     v2 = x$MSE_sqrt$sd
     f = format_info( v1, v2, digits)
-    cat("Square root of mean squared error: ", format_here( v1, format = f$format, digits = f$digits_mean), "\n")
-    cat("Sample standard deviation        : ", format_here( v2, format = f$format, digits = f$digits_sd), "\n\n")
+    cat("Root mean squared error    : ", format_here( v1, format = f$format, digits = f$digits_mean), "\n")
+    cat("Sample standard deviation  : ", format_here( v2, format = f$format, digits = f$digits_sd), "\n\n")
 
     index = 4
 
@@ -109,14 +109,14 @@ print.cvlmvar <- function( x, digits = NULL, ...){
       v1 = mean_values[index]
       v2 = x$KS_distance$sd
       f = format_info( v1, v2, digits)
-      cat("Kolmogorov-Smirnov distance      : ", format_here( v1, format = f$format, digits = f$digits_mean), "\n")
-      cat("Sample standard deviation        : ", format_here( v2, format = f$format, digits = f$digits_sd), "\n\n")
+      cat("Kolmogorov-Smirnov distance: ", format_here( v1, format = f$format, digits = f$digits_mean), "\n")
+      cat("Sample standard deviation  : ", format_here( v2, format = f$format, digits = f$digits_sd), "\n\n")
 
       v1 = mean_values[index + 1]
       v2 = x$KS_p.value$sd
       f = format_info( v1, v2, digits)
-      cat("Kolmogorov-Smirnov p-value       : ", format_here( v1, format = f$format, digits = f$digits_mean), "\n")
-      cat("Sample standard deviation        : ", format_here( v2, format = f$format, digits = f$digits_sd), "\n\n")
+      cat("Kolmogorov-Smirnov p-value : ", format_here( v1, format = f$format, digits = f$digits_mean), "\n")
+      cat("Sample standard deviation  : ", format_here( v2, format = f$format, digits = f$digits_sd), "\n\n")
 
       index = index + 2
     }
@@ -125,36 +125,36 @@ print.cvlmvar <- function( x, digits = NULL, ...){
       v1 = mean_values[index]
       v2 = x$fun$sd
       f = format_info( v1, v2, digits)
-      cat("User supplied function           : ", format_here( v1, format = f$format, digits = f$digits_mean), "\n")
-      cat("Sample standard deviation        : ", format_here( v2, format = f$format, digits = f$digits_sd), "\n\n")
+      cat("User supplied function     : ", format_here( v1, format = f$format, digits = f$digits_mean), "\n")
+      cat("Sample standard deviation  : ", format_here( v2, format = f$format, digits = f$digits_sd), "\n\n")
     }
   }
   else {
 
     # Print without rounding
 
-    cat("Mean absolute error              : ", x$MAE$mean, "\n")
-    cat("Sample standard deviation        : ", x$MAE$sd, "\n\n")
+    cat("Mean absolute error        : ", x$MAE$mean, "\n")
+    cat("Sample standard deviation  : ", x$MAE$sd, "\n\n")
 
-    cat("Mean squared error               : ", x$MSE$mean, "\n")
-    cat("Sample standard deviation        : ", x$MSE$sd, "\n\n")
+    cat("Mean squared error         : ", x$MSE$mean, "\n")
+    cat("Sample standard deviation  : ", x$MSE$sd, "\n\n")
 
-    cat("Square root of mean squared error: ", x$MSE_sqrt$mean, "\n")
-    cat("Sample standard deviation        : ", x$MSE_sqrt$sd, "\n\n")
+    cat("Root mean squared error    : ", x$MSE_sqrt$mean, "\n")
+    cat("Sample standard deviation  : ", x$MSE_sqrt$sd, "\n\n")
 
     if (ks_test){
 
-      cat("Kolmogorov-Smirnov distance      : ", x$KS_distance$mean, "\n")
-      cat("Sample standard deviation        : ", x$KS_distance$sd, "\n\n")
+      cat("Kolmogorov-Smirnov distance: ", x$KS_distance$mean, "\n")
+      cat("Sample standard deviation  : ", x$KS_distance$sd, "\n\n")
 
-      cat("Kolmogorov-Smirnov p-value       : ", x$KS_p.value$mean, "\n")
-      cat("Sample standard deviation        : ", x$KS_p.value$sd, "\n\n")
+      cat("Kolmogorov-Smirnov p-value : ", x$KS_p.value$mean, "\n")
+      cat("Sample standard deviation  : ", x$KS_p.value$sd, "\n\n")
     }
 
     if (fun){
 
-      cat("User supplied function           : ", x$fun$mean, "\n")
-      cat("Sample standard deviation        : ", x$fun$sd, "\n\n")
+      cat("User supplied function     : ", x$fun$mean, "\n")
+      cat("Sample standard deviation  : ", x$fun$sd, "\n\n")
     }
   }
 }

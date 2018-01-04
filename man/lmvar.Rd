@@ -33,8 +33,12 @@ a vector containing a separate minimum for each observation.}
 log-likelihood is at a maximum. The default value is TRUE.
 \item \code{slvr_log} Boolean, if TRUE the output of \code{maxLik} is added to the 'lmvar' object.
 The default value is FALSE.
-\item \code{running_diagnostics} Boolean, if TRUE diagnostic messages about errors that occur will be
+\item \code{monitor} Boolean, if TRUE diagnostic messages about errors that occur will be
 printed during the run. The default value is FALSE.
+\item \code{remove_df_sigma} Boolean, if TRUE the algorithm will reduce the degrees of freedom of the model for \eqn{\sigma}
+if this is necessary to achieve
+a satisfactory fit. This option has no effect if \code{sigma_min} (or one of its elements) is larger than zero.
+See 'Details'. The default value is FALSE.
 }}
 
 \item{...}{Additional arguments, not used in the current implementation}
@@ -44,11 +48,12 @@ An object of class 'lmvar', which is a list. Users are discouraged to access lis
 Instead, list-members are to be accessed with the various accessor and utility functions in the package.
 Exceptions are the following list members for which no accessor functions exist:
 \itemize{
-\item \code{object$y} the vector of observations
-\item \code{object$X_mu} the  model matrix for \eqn{\mu}. In general, it differs from the user-supplied \code{X_mu} because
-\code{lmvar} adds an intercept-column and makes the matrix full-rank.
-\item \code{object$X_sigma} the  model matrix for \eqn{\log \sigma}. In general, it differs from the user-supplied
-\code{X_sigma} because \code{lmvar} adds an intercept-column and makes the matrix full-rank.
+\item \code{y} the vector of observations
+\item \code{X_mu} the  model matrix for \eqn{\mu}. In general, it differs from the user-supplied \code{X_mu} because
+\code{lmvar} adds an intercept-column (unless \code{intercept_mu} is \code{FALSE}) and makes the matrix full-rank.
+\item \code{X_sigma} the  model matrix for \eqn{\log \sigma}. In general, it differs from the user-supplied
+\code{X_sigma} because \code{lmvar} adds an intercept-column (unless \code{intercept_sigma} is \code{FALSE}) and makes
+the matrix full-rank.
 \item \code{intercept_mu} boolean which tells whether or not an intercept column \code{(Intercept)} has been added to the
 model matrix \eqn{X_\mu}
 \item \code{intercept_sigma} boolean which tells whether or not an intercept column \code{(Intercept_s)} has been added to the
@@ -96,7 +101,7 @@ Matrix \code{X_sigma} can not have a column with the name '(Intercept_s)'. Both 
 }
 
 \subsection{Minimum sigma}{
-The argument \code{sigma_min} allows one run a regression under the constraint of a minimum standard deviation for each
+The argument \code{sigma_min} allows one to run a regression under the constraint of a minimum standard deviation for each
 observation. The argument can be a single number, which applies to all observations, or a vector which contains
 a separate
 minimum for each observation. In the latter case, all vector elements must be zero
@@ -148,6 +153,25 @@ column in \code{X_sigma}, etc.
 }
 
 There is no need to supply an inital estimate for \eqn{\beta_\mu}, see the vignette 'Math' for details.
+}
+\subsection{Reducing the degrees of freedom to improve fit}{
+When \code{maxLik} exits with return code 3 (and corresponding warning 'Last step could not find a value
+above the current. Boundary of parameter space?'), it
+somehow did not succeed to fit an 'lmvar' model properly. The same is true if the the Hessian if the log-likelihood is not
+negative-definite.
+
+In this situation, a proper fit can sometimes be achieved if one drops a few extra columns (sometimes just one column) from
+\code{X_sigma}. See the vignette 'Math' for details. The option
+\code{control = list(remove_df_sigma = TRUE)}) does just that. It attempts to achieve a proper fit by dropping
+columns (i.e., reducing the degrees of freedom of the model for \eqn{\sigma}) if necessary.
+
+The option \code{remove_df_sigma = TRUE} attempts to achieve a proper fit in the following two cases.
+\itemize{
+\item \code{maxLik} uses the solve-method
+"NR" (the default method) or "BFGSR" and exits with return code 3. Note that this not the case when \code{sigma_min} (or one
+of its elements) has been set to a value larger than zero because then the method "BFGS" is used.
+\item The option \code{check_hessian} is \code{TRUE} and the Hessian of the log-likelihood is not negative-definite.
+}
 }
 \subsection{Other}{
 When \code{check_hessian = TRUE}, it is checked whether the fitted log-likelihood is at a maximum. A warning will be issued if

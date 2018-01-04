@@ -21,3 +21,7 @@ dfree(fit, sigma = FALSE)
 
 # The degrees of freedom of the standard deviations are
 dfree(fit, mu = FALSE)
+
+# Function also works on object of class 'lmvar_no_fit'
+no_fit = lmvar_no_fit(attenu$accel, X, X_s)
+dfree(no_fit)

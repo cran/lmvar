@@ -23,4 +23,7 @@ test_that("dfree works correctly", {
   expect_identical( dfree(fit), ncol(fit$X_mu) + ncol(fit$X_sigma))
   expect_identical( dfree( fit, sigma = FALSE), ncol(fit$X_mu))
   expect_identical( dfree( fit, mu = FALSE), ncol(fit$X_sigma))
+
+  no_fit = lmvar_no_fit( fit$y, fit$X_mu[,-1], fit$X_sigma[,-1])
+  expect_identical( dfree(fit), dfree(no_fit))
 })

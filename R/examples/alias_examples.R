@@ -29,3 +29,7 @@ alias(fit, sigma = FALSE)
 
 # Only return the aliased colums in the model matrix for the standard deviations
 alias(fit, mu = FALSE)
+
+# It also works on an object of class 'lmvar_no_fit'
+no_fit = lmvar_no_fit(y, X, X_s)
+alias(no_fit, mu = FALSE)

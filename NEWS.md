@@ -1,3 +1,32 @@
+Version 1.4.0
+-------------
+
+* Introduce the class 'lmvar_no_fit'. This class is like the class 'lmvar', but without members that
+are the result of a model fit. The constructor of an object of class 'lmvar_no_fit' is the function 'lmvar_no_fit()'.  
+  The class 'lmvar' is an extension of the class 'lmvar_no_fit'. This means that wherever an object of class 'lmvar_no_fit' is required, an object of class 'lmvar' can be used as well.   
+  The class 'lmvar_no_fit' was motivated by situations in which 'lmvar()' does not converge for a model with many degrees of freedom
+and one wants to resort to 'fwbw()' to obtain a subset of degrees of freedom which does converge.  
+
+* Modify appropriate functions (such as 'dfree()' and 'fwbw.lmvar()') such that they take a 'lmvar_no_fit' object as input.
+
+* Add control option 'remove_df_sigma' to function 'lmvar()'. In cases where the 'lmvar' fit does not converge, switching on this option
+may restore convergence. Update both vingettes to give information about this option. 
+
+* Change the algorithm of the functions 'fwbw.lm()' and 'fwbw.lmvar_no_fit()'. The change makes the insert and remove step of the algorithm symmetric. Rather than inserting degrees of freedom one-by-one, it will attempt to insert a percentage of the left-out degrees of freedom, just like the algorithm attempts to remove a percentage of the degrees of freedom that are included.  
+  This makes it feasible to run the functions with the option `fw = TRUE`, even for models with potentially many degrees of freedom. However, the outcome of the functions can be different compared to previous versions of the 'lmvar' package.
+
+* Rename control option 'running_diagnostics' to 'monitor' for function 'lmvar()'. This is consistent with the function 'fwbw()'. 
+
+* Make calculation of $\beta_\mu$ in 'lmvar()' more robust.
+ 
+* Minor change in print format of object of class 'cvlmvar' to be more consistent with accepted terminology.
+
+* Fix bug which can cause intercept term to be removed when matrix of class 'Matrix' is made full-rank. 
+
+* Fix bug in 'lmvar()' which can cause wrong beta to be reported during run when control option 'monitor' is set to TRUE.
+
+* Fix bug in 'fwbw.lmvar_no_fit()' which causes an error when an initial estimate for $\beta_\sigma$ was specified in `object`.
+
 Version 1.3.0
 -------------
 

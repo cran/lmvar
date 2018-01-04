@@ -116,12 +116,12 @@ test_that("control options have effect", {
 
   # Test that warning about Hessian appears
   fittest = capture_warnings(lmvar( y, X_sigma = X, intercept_sigma = FALSE, slvr_options = list(start = -10 * beta_start),
-                                    control = list(running_diagnostics = FALSE)))
+                                    control = list(monitor = FALSE)))
   expect_true(any(grepl( "Log-likelihood appears not to be at a maximum!", fittest)))
 
   # Test that warning about Hessian does not appear
   fittest = capture_warnings(lmvar( y, X_sigma = X, intercept_sigma = FALSE, slvr_options = list(start = -10 * beta_start),
-                            control = list( check_hessian = FALSE, running_diagnostics = FALSE)))
+                            control = list( check_hessian = FALSE, monitor = FALSE)))
   expect_false(any(grepl( "Log-likelihood appears not to be at a maximum!", fittest)))
 })
 
@@ -132,4 +132,32 @@ test_that("solve with constraint on sigma", {
 
   expect_equal( sigma_min, 0.200009, tolerance = 1e-5)
   expect_equal( fit_lmvar$sigma_min, 0.2)
+})
+
+test_that("Option to remove degrees of freedom to improve fit", {
+
+  set.seed(1349)
+
+  n = 1000
+  X_sigma = fit$X_sigma[1:n,]
+
+  col = X_sigma[,1] + X_sigma[,2]
+
+  # Make sure col is not a strict linear combination of the first two columns of X_sigma
+  rows = which(col != 0)
+  rows = sample( rows, 2)
+  col[rows] = -col[rows]
+
+  X_sigma = cbind( X_sigma, col)
+
+  # Kernel of matrix X_sigma[-rows,] is vector (1,1,0,-1)
+  start = 10 * c( 1, 1, 0, -1)
+
+  # Check that warning appears
+  fit_test = capture_warnings(lmvar( fit$y[1:n], fit$X_mu[1:n,-1], X_sigma[,-1], slvr_options = list(start = start)))
+  expect_true(any(grepl( "Last step could not find a value above the current.", fit_test)))
+
+  # Check that no warning appears
+  expect_warning(lmvar( fit$y[1:n], fit$X_mu[1:n,-1], X_sigma[,-1], slvr_options = list(start = start),
+                    control = list(remove_df_sigma = TRUE)), NA)
 })

@@ -15,7 +15,7 @@
 #' \item \code{fun} the minimum value of the user-specified function \code{fun}.
 #' }
 #'
-#' @seealso \code{\link{fwbw.lm}} and \code{\link{fwbw.lmvar}}
+#' @seealso \code{\link{fwbw.lm}} and \code{\link{fwbw.lmvar_no_fit}}
 #'
 #' @export
 #'

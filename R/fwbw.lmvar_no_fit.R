@@ -4,14 +4,15 @@
 #' 'lmvar' object. It searches for the subset of degrees of freedom that results in an optimal goodness-of-fit. This is the
 #' subset for which a user-specified function reaches its minimum.
 #'
-#' @param object Object of class 'lmvar'
+#' @param object Object of class 'lmvar_no_fit' (hence it can also be of class 'lmvar')
 #' @param fun User-specified function which measures the goodness-of-fit. See 'Details'.
 #' @param fw Boolean, if \code{TRUE} the search will start with a minimum degrees of freedom ('forward search'). If \code{FALSE}
 #' the search will start with the full model ('backward search').
 #' @param counter Boolean, if \code{TRUE} and \code{fw = TRUE}, the algorithm will carry out backward steps (attempts to
 #' remove degrees of freedom) while searching for the optimal subset. If \code{FALSE} and \code{fw = TRUE}, the algorithm will only carry out
 #' forward steps (attempts to insert degrees if freedom). The effect of \code{counter} is opposite if \code{fw = FALSE}.
-#' @param removal_percentage Percentage of degrees of freedom that the algorithm attempts to remove at a backward-step.
+#' @param df_percentage Percentage of degrees of freedom that the algorithm attempts to remove at a backward-step,
+#' or insert at a forward-step.
 #' Must be a number between 0 and 1.
 #' @param control List of control options. The following options can be set
 #' \itemize{
@@ -30,12 +31,13 @@
 #'
 #' @details
 #' \subsection{Description of the algorithm}{
-#' The function \code{fwbw.lmvar} selects the subset of all the degrees of freedom present in \code{object} for which the user-specified function
-#' \code{fun} is minimized. This function is supposed to be a measure for the foodness-of-fit. Typical examples would be
-#' \code{fun=AIC} or \code{fun=BIC}. The function \code{fun} can also be a measure of the prediction error,
-#' determined by cross-validation.
+#' The function \code{fwbw} selects the subset of all the degrees of freedom present in \code{object} for which the user-specified function
+#' \code{fun} is minimized. This function is supposed to be a measure for the goodness-of-fit. Typical examples would be
+#' \code{fun=AIC} or \code{fun=BIC}. Another example is where \code{fun} is a measure of the prediction error,
+#' determined by cross-validation or otherwise.
 #'
-#' This function is intended for situations in which the degrees of freedom in \code{object} is so large that it is not feasible to go
+#' The function \code{fwbw} is intended for situations in which the degrees of freedom in \code{object} is so large that it is not
+#' feasible to go
 #' through all possible subsets systematically to find the smallest value of \code{fun}. Instead, the algorithm generates subsets by removing
 #' degrees of freedom from the current-best subset (a 'backward' step) and reinserting degrees of freedom that were previously removed
 #' (a 'forward' step). Whenever a backward or forward step results in a subset for which \code{fun} is smaller than for the current-best
@@ -46,16 +48,18 @@
 #' These degrees are the intercept terms, if the model in \code{object} contains them.
 #' If \code{fw = FALSE} (the default), the algorithm starts with all degrees of freedom present in \code{object}.
 #'
-#' At a backward step, the model removes \code{removal_percentage} of the degrees of freedom of the current-best subset (with a minimum
-#' of 1 degree of freedom). The degrees
-#' that are removed are the ones with the largest p-value (p-values can be seen with the function \code{\link{summary.lmvar}}). If the removal
+#' At a backward step, the model removes degrees of freedom of the current-best subset. It removes at least 1 degree of freeedom
+#' and at most \code{df_percentage} of the degrees in the current-best subset. The degrees
+#' that are removed are the ones with the largest p-value (p-values can be seen with the function
+#' \code{\link{summary.lmvar}}). If the removal
 #' results in a larger value of \code{fun}, the algorithm will try again by halving the degrees of freedom it removes.
 #'
-#' At a forward step, the algorithm goes through all degrees of freedom that have
-#' been removed from \code{object} so far. For each degree of freedom, the algorithm estimates the increase of the log-likelihood if the
-#' degree were to be inserted. It inserts the one which is estimated to increase the log-likelihood the most, followed by the one with
-#' the second-largest estimated increase, etc. After each insertion, the value of \code{fun} is calculated. As long as \code{fun} decreases,
-#' the insertion process continues.
+#' At a forward step, the algorithm inserts degrees of freedom that are present in
+#' \code{object} but left out in the current-best subset. It inserts at least 1 degree of freedom and at most \code{df_percentage} of
+#' the  current-best subset. It inserts those
+#' degees of freedom which are estimated to
+#' increase the likelihood most. If the insertion
+#' results in a larger value of \code{fun}, the algorithm will try again by halving the degrees of freedom it inserts.
 #'
 #' If \code{counter = FALSE}, the algorithm is 'greedy': it will only carry out forward-steps in case \code{fw = TRUE} or backward-steps
 #' in case \code{fw = FALSE}.
@@ -100,15 +104,19 @@
 #'
 #' \code{\link{fwbw.lm}} for the corresponding function for an 'lm' object
 #'
-#' The degrees of freedom of an 'lmvar' model are given by \code{\link{dfree}}.
+#' \code{\link{lmvar}} for the constructor of a 'lmvar' object
+#'
+#' \code{\link{lmvar_no_fit}} for the constructor of a 'lmvar_no_fit' object
+#'
+#' The number of degrees of freedom is given by \code{\link{dfree}}.
 #'
 #' @export
 #'
-#' @example R/examples/fwbw.lmvar_examples.R
+#' @example R/examples/fwbw.lmvar_no_fit_examples.R
 
-fwbw.lmvar <- function( object, fun, fw = FALSE, counter = TRUE, removal_percentage = 0.05, control = list(), ...){
+fwbw.lmvar_no_fit <- function( object, fun, fw = FALSE, counter = TRUE, df_percentage = 0.05, control = list(), ...){
 
-  hessian <- function(iterobject){
+  prep_for_mu <- function(iterobject){
 
     # Calculate Hessian
 
@@ -133,6 +141,32 @@ fwbw.lmvar <- function( object, fun, fw = FALSE, counter = TRUE, removal_percent
     return(outlist)
   }
 
+  prep_for_sigma <- function(iterobject){
+
+    res = residuals.lmvar( iterobject)
+    sigma = fitted.lmvar( iterobject, mu = FALSE)
+    lambda = 1 / sigma
+
+    X = iterobject$X_mu * lambda
+    M = Matrix::t(X) %*% X
+    M = chol2inv(chol(M))
+    M = chol(M)
+
+    vec = 2 * res * lambda^2
+    M_1 = M %*% Matrix::t(iterobject$X_mu * vec)
+    H_base_1 = M_1 %*% iterobject$X_sigma
+
+    vec = res * lambda
+    M_2 = iterobject$X_sigma * vec
+    H_base_2 = -2 * (Matrix::t(M_2) %*% M_2)
+    M_2 = M_2 * (-2 * vec)
+
+    outlist = list( H_base_1 = H_base_1, M_1 = M_1,
+                    H_base_2 = H_base_2, M_2 = M_2,
+                    lambda = vec^2 - 1, lambda_2 = vec)
+    return(outlist)
+  }
+
   sort_logl <- function(iterobject){
 
     # sort degrees of freedom on estomated effect on likelihood
@@ -148,99 +182,111 @@ fwbw.lmvar <- function( object, fun, fw = FALSE, counter = TRUE, removal_percent
     }
     else {
 
-      # calculate Hessian
-      hessian = hessian(iterobject)
-      lambda_1 = 1 / hessian$sigma
-      lambda_2 = lambda_1 * lambda_1
-      lambda_3 = hessian$residuals * lambda_2
-      lambda_4 = hessian$residuals * lambda_3
-      lambda_5 = hessian$residuals * lambda_1
-
       # estimate effect on likelihood for degrees of freedom for mu
-      effect_mu = sapply( pool_mu, function(col){
+      effect_mu = numeric()
+      if (length(pool_mu) > 0){
 
-        # augment H_mu_mu
-        vec = object$X_mu[,col] * lambda_2
-        row = as.numeric(Matrix::t(iterobject$X_mu) %*% vec)
-        H_mu_mu = cbind( hessian$H_mu_mu, -row)
+        prepared = prep_for_mu(iterobject)
+        lambda_1 = 1 / prepared$sigma
+        lambda_2 = lambda_1 * lambda_1
+        lambda_3 = prepared$residuals * lambda_2
+        lambda_4 = prepared$residuals * lambda_3
+        lambda_5 = prepared$residuals * lambda_1
 
-        vec = object$X_mu[,col] * lambda_1
-        row = c( row, as.numeric(vec %*% vec))
-        H_mu_mu = rbind( H_mu_mu, -row)
+        effect_mu = sapply( pool_mu, function(col){
 
-        # augment H_mu_sigma
-        vec = -2 * object$X_mu[,col] * lambda_3
-        row = vec %*% iterobject$X_sigma
-        H_mu_sigma = rbind( hessian$H_mu_sigma, row)
+          # augment H_mu_mu
+          vec = object$X_mu[,col] * lambda_2
+          row = as.numeric(Matrix::crossprod( iterobject$X_mu, vec))
+          H_mu_mu = cbind( prepared$H_mu_mu, -row)
 
-        # augment Hessian
-        H = rbind( cbind( H_mu_mu, H_mu_sigma), cbind( Matrix::t(H_mu_sigma), hessian$H_sigma_sigma))
+          vec = object$X_mu[,col] * lambda_1
+          row = c( row, as.numeric(vec %*% vec))
+          H_mu_mu = rbind( H_mu_mu, -row)
 
-        # invert Hessian
-        H = tryCatch( solve(H),
-                      error = function(e){
-                        return("error")
-                      })
+          # augment H_mu_sigma
+          vec = -2 * object$X_mu[,col] * lambda_3
+          row = vec %*% iterobject$X_sigma
+          H_mu_sigma = rbind( prepared$H_mu_sigma, row)
 
-        if (class(H) == "character"){
-          return(NA)
-        }
-        else{
-          dLogLdB = as.numeric(object$X_mu[,col] %*% lambda_3)
+          # augment Hessian
+          H = rbind( cbind( H_mu_mu, H_mu_sigma), cbind( Matrix::t(H_mu_sigma), prepared$H_sigma_sigma))
 
-          n = ncol(H_mu_mu)
-          return( -0.5 * dLogLdB^2 * H[ n, n])
-        }
-      })
+          # invert Hessian
+          H = tryCatch( solve(H),
+                        error = function(e){
+                          return("error")
+                        })
+
+          if (class(H) == "character"){
+            return(NA)
+          }
+          else{
+
+            # Calculate estmated change in log-likelihood
+            dLogLdB = as.numeric(object$X_mu[,col] %*% lambda_3)
+            n = ncol(H_mu_mu)
+            est_logl = -0.5 * dLogLdB^2 * H[ n, n]
+            if (est_logl < 0){
+              est_logl = -3 * est_logl
+            }
+            return(est_logl)
+          }
+        })
+      }
 
       # estimate effect on likelihood for degrees of freedom for sigma
-      effect_sigma = sapply( pool_sigma, function(col){
+      effect_sigma = numeric()
+      if (length(pool_sigma) > 0){
 
-        # augment H_mu_sigma
-        vec = 2 * object$X_sigma[,col] * lambda_3
-        row = Matrix::t(iterobject$X_mu) %*% vec
-        H_mu_sigma = cbind( hessian$H_mu_sigma, -row)
+        prepared = prep_for_sigma(iterobject)
 
-        # augment H_sigma_sigma
-        vec = 2 * object$X_sigma[,col] * lambda_4
-        row = as.numeric(Matrix::t(iterobject$X_sigma) %*% vec)
-        H_sigma_sigma = cbind( hessian$H_sigma_sigma, -row)
+        effect_sigma = sapply( pool_sigma, function(col){
 
-        vec = object$X_sigma[,col] * lambda_5
-        row = c( row, -2 * as.numeric(vec %*% vec))
-        H_sigma_sigma = rbind( H_sigma_sigma, row)
+          # calculate profile Hessian
+          vec = object$X_sigma[,col]
 
-        # augment Hessian
-        H = rbind( cbind( hessian$H_mu_mu, H_mu_sigma), cbind( Matrix::t(H_mu_sigma), H_sigma_sigma))
+          X = cbind( prepared$H_base_1, prepared$M_1 %*% vec)
+          H = Matrix::crossprod(X)
 
-        # invert Hessian
-        H = tryCatch( solve(H),
-                      error = function(e){
-                        return("error")
-                      })
+          X = vec %*% prepared$M_2
+          x = vec * prepared$lambda_2
+          x = -2 * (x %*% x)
+          M = rbind( cbind( prepared$H_base_2, Matrix::t(X)),
+                     cbind( X, x))
+          H = H + M
 
-        if (class(H) == "character"){
-          return(NA)
-        }
-        else{
-          dLogLdB = as.numeric(object$X_sigma[,col] %*% (lambda_4 - 1))
+          # invert Hessian
+          H = tryCatch( solve(H),
+                        error = function(e){
+                          return("error")
+                        })
 
-          n = ncol(H)
-          return( -0.5 * dLogLdB^2 * H[ n, n])
-        }
-      })
+          if (class(H) == "character"){
+            return(NA)
+          }
+          else{
 
-      # set names of estimats for sigma
-      names_sigma = beta_sigma_names( colnames(object$X_mu), colnames(object$X_sigma))
-      names_sigma = names_sigma[names(effect_sigma)]
-      names(effect_sigma) = names_sigma
+            # Calculate estmated change in log-likelihood
+            dLogLdB = as.numeric(vec %*% prepared$lambda)
+            n = ncol(H)
+            est_logl = -0.5 * H[n,n] * dLogLdB^2
+            if (est_logl < 0){
+              est_logl = -3 * est_logl
+            }
+            return(est_logl)
+          }
+        })
+
+        # set names of estimates for sigma
+        names_sigma = beta_sigma_names( colnames(object$X_mu), colnames(object$X_sigma))
+        names_sigma = names_sigma[names(effect_sigma)]
+        names(effect_sigma) = names_sigma
+      }
 
       # order effects
       if (length(effect_mu) == 0){
         effect_mu = numeric()
-      }
-      if (length(effect_sigma) == 0){
-        effect_sigma = numeric()
       }
       effect_sorted = sort( c( effect_mu, effect_sigma), decreasing = TRUE)
 
@@ -279,14 +325,39 @@ fwbw.lmvar <- function( object, fun, fw = FALSE, counter = TRUE, removal_percent
     cat( format( iter, width = 9), format( n, width = 32), format( fun, width = 17), s)
   }
 
+  slvr_options <- function(){
+
+    slvr_options = object$slvr_options
+
+    if("start" %in% names(slvr_options)){
+
+      start = slvr_options$start
+      names(start) = colnames(object$X_sigma)
+
+      if (is.null(X_sigma)){
+        start = start[1]
+      }
+      else {
+        if (object$intercept_sigma){
+          start = c( start[1], start[colnames(X_sigma)])
+          }
+        else {
+          start = start[colnames(X_sigma)]
+        }
+      }
+      slvr_options$start = start
+    }
+    return(slvr_options)
+  }
+
   # check inputs
-  if (class(object) != "lmvar"){
-    stop("object must be of class 'lmvar'")
+  if (!("lmvar_no_fit" %in% class(object))){
+    stop("object must be of class 'lmvar' or 'lmvar_no_fit'")
   }
   if (missing(fun)){
     stop("a function must be specified to measure the goodness-of-fit")
   }
-  if (removal_percentage<=0 | removal_percentage>=1){
+  if (df_percentage<=0 | df_percentage>=1){
     stop("the removal percentage must be between 0 and 1")
   }
 
@@ -308,18 +379,10 @@ fwbw.lmvar <- function( object, fun, fw = FALSE, counter = TRUE, removal_percent
     insert = counter
   }
 
-  # set whether inserts and removals are done
-  if (fw){
-    insert = TRUE
-    remove = counter
-  }
-  else {
-    remove = TRUE
-    insert = counter
-  }
-
   # initialize current model
   if (fw){
+
+    # set matrices
     col = colnames(object$X_mu)[1]
     X_mu = Matrix::Matrix(object$X_mu[,1])
     colnames(X_mu) = col
@@ -334,12 +397,24 @@ fwbw.lmvar <- function( object, fun, fw = FALSE, counter = TRUE, removal_percent
     if (object$intercept_sigma){
       X_sigma = NULL
     }
+
     iterobject = lmvar( object$y, X_mu, X_sigma, intercept_mu = object$intercept_mu,
                         intercept_sigma = object$intercept_sigma, sigma_min = object$sigma_min,
-                        slvr_options = object$slvr_options, control = object$control)
+                        slvr_options = slvr_options(), control = object$control)
   }
   else {
-    iterobject = object
+    if ("lmvar" %in% class(object)){
+      iterobject = object
+    }
+    else {
+
+      X_mu = remove_intercept( object$X_mu, mu = TRUE)
+      X_sigma = remove_intercept( object$X_sigma, mu = FALSE)
+
+      iterobject = lmvar( object$y, X_mu, X_sigma, intercept_mu = object$intercept_mu,
+                          intercept_sigma = object$intercept_sigma, sigma_min = object$sigma_min,
+                          slvr_options = object$slvr_options, control = object$control)
+    }
   }
 
   # set-up list with iteration results
@@ -351,6 +426,13 @@ fwbw.lmvar <- function( object, fun, fw = FALSE, counter = TRUE, removal_percent
     cat( "Iteration    attempted removals/insertions    function value\n")
     monitor( 0, 0, iterlist[[1]]$fun)
   }
+
+  # initialize with large value
+  n_success_remove = dfree(object)
+  n_success_insert = dfree(object)
+
+  # initialize counter
+  failed_steps = 0
 
   # iterate over backward-forward steps
   proceed = TRUE
@@ -365,8 +447,13 @@ fwbw.lmvar <- function( object, fun, fw = FALSE, counter = TRUE, removal_percent
     if (remove & df_remove > 0){
 
       # iterate over attempts to remove degrees of freedom
-      removal_percentage_iter = removal_percentage
+      df_percentage_iter = df_percentage
       proceed_remove = TRUE
+
+      # number of degrees of freedom to remove
+      n_remove = min( 2 * n_success_remove, trunc(df_percentage * df_remove))
+      n_remove = 2 * n_remove
+
       while(proceed_remove){
 
         # calculate z-values of coefficients
@@ -390,7 +477,6 @@ fwbw.lmvar <- function( object, fun, fw = FALSE, counter = TRUE, removal_percent
           i = which(names(z_values) == "(Intercept)")
         }
         else {
-#          df_mu = ncol(iterobject$X_mu)
           i = which.max(abs(z_values[1:df_mu]))
         }
         col_mu = names(z_values)[i]
@@ -398,7 +484,7 @@ fwbw.lmvar <- function( object, fun, fw = FALSE, counter = TRUE, removal_percent
         z_in_mu = z_in_mu[-i]
 
         # number of degrees of freedom to remove
-        n_remove = max( 1, trunc(removal_percentage_iter * df_remove))
+        n_remove = max( 1, trunc(n_remove / 2))
 
         # calculate columns to keep
         z_sorted = sort( abs(z_values), index.return = TRUE)
@@ -441,7 +527,7 @@ fwbw.lmvar <- function( object, fun, fw = FALSE, counter = TRUE, removal_percent
         # fit
         fit = lmvar( object$y, X_mu, X_sigma, intercept_mu = object$intercept_mu,
                      intercept_sigma = object$intercept_sigma, sigma_min = object$sigma_min,
-                     slvr_options = object$slvr_options, control = object$control)
+                     slvr_options = slvr_options(), control = object$control)
         fun_iter = fun(fit)
 
         # set iteration counter
@@ -457,21 +543,32 @@ fwbw.lmvar <- function( object, fun, fw = FALSE, counter = TRUE, removal_percent
           proceed_remove = FALSE
           iterlist[[iter + 1]] = list(fun = fun_iter)
           iterobject = fit
+          n_success_remove = n_remove
         }
         else {
-          if (n_remove > 1){
-            removal_percentage_iter = removal_percentage_iter / 2
-          }
-          else {
+          if (n_remove == 1){
             proceed_remove = FALSE
+            n_success_remove = 0
           }
         }
       }
     }
+
+    # check whether iteration must continue
+    if (success_remove){
+      failed_steps = 0
+    }
+    else {
+      failed_steps = failed_steps + 1
+      if (failed_steps == 2){
+        proceed = FALSE
+      }
+    }
+
     # Insert degrees of freedom
 
     success_insert = FALSE
-    if (insert){
+    if (insert & proceed){
 
       # Get the most promising degrees of freedom
       effect_sorted = sort_logl(iterobject)
@@ -482,31 +579,34 @@ fwbw.lmvar <- function( object, fun, fw = FALSE, counter = TRUE, removal_percent
       else {
         proceed_insert = FALSE
       }
+
+      # number of degrees of freedom to insert
+      n_insert = min( 2 * n_success_insert, trunc(df_percentage * length(effect_sorted)))
+      n_insert = 2 * n_insert
+
       while (proceed_insert){
 
-        # add new degree of freedom to model matrix
-        col = names(effect_sorted[1])
-        if (col %in% colnames(object$X_mu)){
+        # number of degrees of freedom to insert
+        n_insert = max( 1, trunc(n_insert / 2))
 
-          # add column to model matrix for mu
-          cols = colnames(object$X_mu) %in% c( colnames(iterobject$X_mu), col)
-          X_mu = object$X_mu[, cols]
-
-          X_sigma = iterobject$X_sigma
+        # add new degrees of freedom to model matrices
+        col = names(effect_sorted[1:n_insert])
+        cols = colnames(object$X_mu) %in% c( colnames(iterobject$X_mu), col)
+        X_mu = object$X_mu[, cols]
+        if (class(X_mu) == "numeric"){
+          X_mu = as.matrix(X_mu)
+          colnames(X_mu) = colnames(object$X_mu)[cols]
         }
-        else {
 
-          # restore the name of column
-          names_sigma = beta_sigma_names( colnames(object$X_mu), colnames(object$X_sigma))
-          i = which(names_sigma == col)
-          col = names(names_sigma)[i]
-
-          # add column to model matrix for sigma
-          cols = colnames(object$X_sigma) %in% c( colnames(iterobject$X_sigma), col)
-          X_sigma = object$X_sigma[, cols]
-
-          X_mu = iterobject$X_mu
+        names_sigma = beta_sigma_names( colnames(object$X_mu), colnames(object$X_sigma))
+        col = names(names_sigma[names_sigma %in% col])
+        cols = colnames(object$X_sigma) %in% c( colnames(iterobject$X_sigma), col)
+        X_sigma = object$X_sigma[, cols]
+        if (class(X_sigma) == "numeric"){
+          X_sigma = as.matrix(X_sigma)
+          colnames(X_sigma) = colnames(object$X_sigma)[cols]
         }
+
         # remove intercept terms from model matrices
         X_mu = remove_intercept( X_mu, mu = TRUE)
         X_sigma = remove_intercept( X_sigma, mu = FALSE)
@@ -514,7 +614,7 @@ fwbw.lmvar <- function( object, fun, fw = FALSE, counter = TRUE, removal_percent
         # fit
         fit = lmvar( object$y, X_mu, X_sigma, intercept_mu = object$intercept_mu,
                      intercept_sigma = object$intercept_sigma, sigma_min = object$sigma_min,
-                     slvr_options = object$slvr_options, control = object$control)
+                     slvr_options = slvr_options(), control = object$control)
         fun_iter = fun(fit)
 
         # set iteration counter
@@ -522,30 +622,44 @@ fwbw.lmvar <- function( object, fun, fw = FALSE, counter = TRUE, removal_percent
 
         # monitor
         if (control$monitor){
-          monitor( iter, 1, fun_iter, insert = TRUE)
+          monitor( iter, n_insert, fun_iter, insert = TRUE)
         }
 
         if (fun_iter < iterlist[[iter]]$fun){
           success_insert = TRUE
+          proceed_insert = FALSE
           iterlist[[iter + 1]] = list(fun = fun_iter)
           iterobject = fit
+          n_success_insert = n_insert
         }
         else {
-          proceed_insert = FALSE
-        }
+          if (n_insert > 1){
 
-        # proceed with next degree of freedom
-        effect_sorted = effect_sorted[-1]
-        if (length(effect_sorted) == 0){
+            # check if insertion of degrees of freedom increases log-likelihood
+            if (logLik.lmvar(fit) < logLik.lmvar(iterobject)){
+
+              # enforce that only 1 degree of freedom is inserted in next attempt
+              n_insert = 1
+            }
+          }
+          else {
           proceed_insert = FALSE
+          n_success_insert = 0
+          }
         }
       }
     }
 
-    if (!success_remove & !success_insert){
-      proceed = FALSE
+    # check whether iteration must continue
+    if (success_insert){
+      failed_steps = 0
     }
-
+    else {
+      failed_steps = failed_steps + 1
+      if (failed_steps == 2){
+        proceed = FALSE
+      }
+    }
   }
   iter = length(iterlist)
 

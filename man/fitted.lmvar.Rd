@@ -57,7 +57,7 @@ estimators and intervals for the observations \eqn{Y} stored in \code{object}.
 
 If \code{log = TRUE}, \code{fitted.lmvar} returns estimators and intervals for \eqn{e^Y}.
 
-Confidence intervals are calculated under teh assumption of asymptotic normality. This assumption holds when the number of observations is
+Confidence intervals are calculated under the assumption of asymptotic normality. This assumption holds when the number of observations is
 large. Intervals must be treated cautiously in case of a small number of observations.
 Intervals can also be unreliable if
 \code{object} was created with a constraint on the minimum values of the standard deviations sigma.

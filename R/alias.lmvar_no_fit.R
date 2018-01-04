@@ -4,7 +4,7 @@
 #' @description Returns the columns present in the user-specified model-matrices \eqn{X_\mu} and \eqn{X_\sigma} that were removed by
 #' \code{lmvar} to make the matrices full-rank.
 #'
-#' @param object Object of class 'lmvar'
+#' @param object Object of class 'lmvar_no_fit' (hence it can also be of class 'lmvar')
 #' @param mu Boolean, specifies whether the aliased columns from the model matrix \eqn{X_\mu} must be returned
 #' @param sigma Boolean, specifies whether the aliased columns from the model matrix \eqn{X_\sigma} must be returned
 #' @param ... Additional arguments, not used in the current implementation
@@ -25,7 +25,7 @@
 #'
 #' @example R/examples/alias_examples.R
 #'
-alias.lmvar <- function( object, mu = TRUE, sigma = TRUE, ...){
+alias.lmvar_no_fit <- function( object, mu = TRUE, sigma = TRUE, ...){
 
   aliased_mu = character()
   if (mu){

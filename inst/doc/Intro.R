@@ -36,7 +36,7 @@ summary(fit)
 
 ## ------------------------------------------------------------------------
 sigma = fitted(fit, mu = FALSE)
-plot(cats$Bwt, residuals(fit) / sigma, xlab = "Body weight", ylab = "Standardized residual")
+plot(cats$Bwt, residuals(fit) / sigma, xlab = "Body weight", ylab = "z-score")
 abline(0, 0, col = "red")
 
 ## ------------------------------------------------------------------------

@@ -61,7 +61,7 @@ After adding the intercept columns (if not suppressed), the package will check w
 
 The addition of an intercept column and, possibly, the removal of columns to obtain a full-rank matrix, imply that the actual matrices used in the fit can be different from the user-specified matrices. The matrices that are actually used in the fit are returned as members of the `lmvar` object.
 
-Carrying out the fit boils down to solving a set of non-linear equations. By default this is carried out in the background by the function `maxNR` from the package 'maxLik' but it is possible to use another function from teh same package.
+Carrying out the fit boils down to solving a set of non-linear equations. By default this is carried out in the background by the function `maxNR` from the package 'maxLik' but it is possible to use another function from the same package.
 
 More mathematical details about the model can be found in the vignette 'Math' which comes with this package. It can be viewed with `vignette("Math")` or `vignette("Math", package="lmvar")`.
 
@@ -113,7 +113,7 @@ We have now created the object `fit`, which is our object of class `lmvar`. To o
 ```{r}
 summary(fit)
 ```
-The first line shows the call that created `fit`. Then, we are told something about the distribution of the standardized residuals. 
+The first line shows the call that created `fit`. Then, we are told something about the distribution of the standard scores (also called the z-scores). 
 
 Next, the summary shows the matrix with the coefficients $\beta_\mu$ and $\beta_\sigma$. The coefficients $\beta_\mu$ are `(Intercept)`, and `Bwt`. The coefficients $\beta_\sigma$ are `(Intercept_s)`, and `Bwt_s`. They are called this way to distinguish them from the coefficients for $\beta_\mu$. In cases where there is no risk of confusion, the true names of the coefficients $\beta_\sigma$ will be used, which are `(Intercept_s)` and `Bwt`.
 
@@ -122,6 +122,8 @@ The matrix with coefficients shows that `Bwt` and `Bwt_s` are statistically sign
 The next piece of information gives an impression of the distribution of the standard deviations $\sigma$. 
 
 Finally the model is compared to a classical linear model with the same model matrix $X_\mu$ but a standard deviation that is the same for all observations. The summary shows the difference in log-likelihood between the two models and the difference in degrees of freedom. Twice the difference in log-likelihood is the difference in deviance, for which a p-value is calculated. The p-value of 0.00433, indicates that the `lmvar` fit is a better fit than the classical linear model at the 5% confidence level. I.e., it makes sense to let the standard deviation vary instead of keeping it fixed.
+
+Another useful, high-level check of the fit is to look at a number of diagnostic plots with the command `plot (fit)`.
 
 The number of observations in the fit and the log-likelihood are
 ```{r}
@@ -149,10 +151,10 @@ summary(fit)
 ```
 The summary overview has left out the comparison with the classical linear model as well. The classical linear model and the model in `fit` are no longer nested models because of the absence on an intercept term in $X_\sigma$.
 
-Let's see whether the standardized residuals appear to be correlated with the body weight 
+Let's see whether the z-scores appear to be correlated with the body weight 
 ```{r}
 sigma = fitted(fit, mu = FALSE)
-plot(cats$Bwt, residuals(fit) / sigma, xlab = "Body weight", ylab = "Standardized residual")
+plot(cats$Bwt, residuals(fit) / sigma, xlab = "Body weight", ylab = "z-score")
 abline(0, 0, col = "red")
 ```
 
@@ -219,6 +221,14 @@ Hopefully this demonstration has given an idea of how to work with the package. 
 
 We refer to the package index for a list of all available functions. The index can be viewed with `help(package="lmvar")`. Various generic functions from the 'stats' package work for an 'lmvar' object as well. Examples are `BIC` and `confint`.
 
+### Plots
+
+The function `plot.lmvar` returns a number of diagnostic plots for an  'lmvar' object, similar to the function `plot.lm` for an 'lm' object.
+
+The function `plot_qq` produces a QQ-plot for one or two fits. They can be of class 'lm' or class 'lmvar'. It is also possible that one id of class 'lm' and the other of class 'lmvar'.
+
+The function `plot_qdis` produces a plot of the distribution of quantiles. Like `plot_qq`, one can specify two plots, each of class 'lm' or class 'lmvar'.
+
 ### Variable selection
 
 The package provides the function `fwbw` for a selection of the independent model-variables (also called the 'predictors' or 'covariates'). It searches for an optimal subset of variables by means of
@@ -234,7 +244,7 @@ details.
 
 The package 'lmvar'is concerned mostly with objects of class 'lmvar'. However, it also contains the function `lmvar_no_fit` which creates an object of class 'lmvar_no_fit'. This class is like the class 'lmvar' but misses any information that is the result of a model fit. 
 
-The class 'lmvar' is an extension of the class 'lmvar_no_fit'. This means that whenever an object of class 'lmvar_no_fit' is required, an object of class 'lmvar' can be used as well. An example is the version of the function `nobs` supplied by this package. It takes as input an object of class 'lmvar_no_fit'. Therefore it will also accept an object of class 'lmvar'.
+The class 'lmvar' is an extension of the class 'lmvar_no_fit'. This means that whenever an object of class 'lmvar_no_fit' is required, an object of class 'lmvar' can be used as well. An example is the function `nobs.lmvar_no_fit` supplied by this package. It takes as input an object of class 'lmvar_no_fit'. Therefore it will also accept an object of class 'lmvar'.
 
 ## What if the fit does not converge? {#notconverge}
 
@@ -244,7 +254,7 @@ What are your options if this happens? You can try the following strategies.
 
 * Check whether the model for $\sigma$ contains factor levels which occur only a few times, or which occur almost always. Such levels are columns in $X_\sigma$ where nearly all elements are equal to 0 and a few equal to 1, or nearly all elements are equal to 1 and a few equal to zero. Remove these columns from $X_\sigma$ and run `lmvar` again.
 
-* Run `lmvar` with the argument `control = list(remove_df_sigma = TRUE)`. With this option, `lmvar` tries to remove degrees of freedom from the model for $\sigma$ that prevent the fit to converge. See the vignette 'Math' for a mathematical background of this option. 
+* Run `lmvar` with the argument `control = list(remove_df_sigma_post = TRUE)`. With this option, `lmvar` tries to remove degrees of freedom from the model for $\sigma$ that prevent the fit to converge. See the vignette 'Math' for a mathematical background of this option. 
 
 * Create the model by starting with a model with only 2 degrees of freedom and gradually adding degrees of freedom, avoiding ones that prevent the fit to converge. This can be done by first running `lmvar_no_fit` (with the same arguments as `lmvar`). The resulting object is then input for the function `fwbw`. This function must be run with argument `fw = TRUE`. The function `fwbw` requires one to select a function that measures the goodness of fit. Reasonable choices for this function are e.g. `AIC` or `BIC`. The output of `fwbw` contains a model-fit which is hopefully one you can work with.
 

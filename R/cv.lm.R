@@ -117,7 +117,7 @@
 cv.lm <- function( object, k = 10, ks_test = FALSE, fun = NULL, log = FALSE, seed = NULL, max_cores = NULL, ...){
 
   # Check input
-  if (!any(class(object) == "lm")){
+  if (!inherits( object, "lm")){
     stop("Object must be of type 'lm'")
   }
 
@@ -143,7 +143,6 @@ cv.lm <- function( object, k = 10, ks_test = FALSE, fun = NULL, log = FALSE, see
 
   # Retrieve info from object
   y = object$y
-  X = object$x
 
   # set the folds
   remaining = seq.int( from = 1, to = length(y))
@@ -168,23 +167,25 @@ cv.lm <- function( object, k = 10, ks_test = FALSE, fun = NULL, log = FALSE, see
     foldrows = is.element(1:length(y), selected_obs[i,])
 
     # create model matrix
-    XX = X[!foldrows,]
-    if (class(XX) == "numeric"){
+    XX = object$x[!foldrows,]
+    if (inherits( XX, "numeric")){
       XX = as.matrix(XX)
-      colnames(XX) = colnames(X)
+      colnames(XX) = colnames(object$x)
     }
     XX = make_matrix_full_rank(XX)
-    XX_predict = X[ foldrows, colnames(XX)]
-    if (class(XX_predict) == "numeric"){
-      XX_predict = as.matrix(XX_predict)
-      colnames(XX_predict) = colnames(XX)
-    }
 
     # perform fit on rows not in fold
     fit = stats::lm( y[!foldrows] ~ . - 1, as.data.frame(XX), x = TRUE)
 
     # predict values for rows in fold
-    mu_not_log = stats::predict( fit, as.data.frame(XX_predict))
+    cols = colnames(XX)
+    XX = object$x[ foldrows, cols]
+    if (inherits( XX, "numeric")){
+      XX = as.matrix(XX)
+      colnames(XX) = cols
+    }
+
+    mu_not_log = stats::predict( fit, as.data.frame(XX))
     sigma_not_log = summary(fit)$sigma
 
     if (log){
@@ -235,7 +236,7 @@ cv.lm <- function( object, k = 10, ks_test = FALSE, fun = NULL, log = FALSE, see
 
     # Calculate user-specified function
     if (isFunc){
-      f_user = tryCatch(fun( fit, y[foldrows], XX_predict),
+      f_user = tryCatch(fun( fit, y[foldrows], XX),
                         error = function(e){
                           outlist = list(error = e)
                           class(outlist) = "error_func"
@@ -264,7 +265,7 @@ cv.lm <- function( object, k = 10, ks_test = FALSE, fun = NULL, log = FALSE, see
     if ("ks" %in% names(cv_result)){
 
       # handle warnings
-      if (class(cv_result$ks) == "error_ks"){
+      if (inherits( cv_result$ks, "error_ks")){
         warning(cv_result$ks$warning)
         dup = cv_result$ks$duplicates
         warning("  Observations ", dup[1], " and ", dup[2],
@@ -276,7 +277,7 @@ cv.lm <- function( object, k = 10, ks_test = FALSE, fun = NULL, log = FALSE, see
     }
 
     if ("fun" %in% names(cv_result)){
-      if (class(cv_result$fun) == "error_func"){
+      if (inherits( cv_result$fun, "error_func")){
         warning( "Error in user-specified function: ", cv_result$fun$error, call. = FALSE)
         cv_result$fun= NA
       }

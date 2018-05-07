@@ -33,8 +33,8 @@
 #'
 #' Although \code{lmvar_no_fit} does not carry out a model fit, it will do the following:
 #' \itemize{
-#' \item add an intercept term to the model matrices (unless \code{intercept_mu} is \code{FALSE} and/or
-#' \code{intercept_sigma} is \code{FALSE}), and
+#' \item add an intercept term to the model matrices (unless \code{intercept_mu} is FALSE and/or
+#' \code{intercept_sigma} is FALSE), and
 #' \item make the model matrices full rank.
 #' }
 #'
@@ -48,17 +48,17 @@
 #' \item \code{call} the function call
 #' \item \code{y} the vector of observations
 #' \item \code{X_mu} the  model matrix for \eqn{\mu}. In general, it differs from the user-supplied \code{X_mu} because
-#' \code{lmvar_no_fit} adds an intercept-column (unless \code{intercept_mu} is \code{FALSE}) and makes the matrix full-rank.
+#' \code{lmvar_no_fit} adds an intercept-column (unless \code{intercept_mu} is FALSE) and makes the matrix full-rank.
 #' \item \code{X_sigma} the  model matrix for \eqn{\log \sigma}. In general, it differs from the user-supplied
-#' \code{X_sigma} because \code{lmvar_no_fit} adds an intercept-column (unless \code{intercept_sigma} is {FALSE}) and makes
+#' \code{X_sigma} because \code{lmvar_no_fit} adds an intercept-column (unless \code{intercept_sigma} is FALSE) and makes
 #' the matrix full-rank.
 #' \item \code{intercept_mu} boolean which tells whether or not an intercept column \code{(Intercept)} has been added to the
 #' model matrix \eqn{X_\mu}
 #' \item \code{intercept_sigma} boolean which tells whether or not an intercept column \code{(Intercept_s)} has been added to the
 #' model matrix \eqn{X_\sigma}
-#' \item \code{sigma_min} the value of the argument \code{sigma_min} in the call of \code{lmvar}
-#' \item \code{slvr_options} the value of the argument \code{slvr_options} in the call of \code{lmvar}
-#' \item \code{control} the value of the argument \code{control} in the call of \code{lmvar}
+#' \item \code{sigma_min} the value of the argument \code{sigma_min} in the call of \code{lmvar_no_fit}
+#' \item \code{slvr_options} the value of the argument \code{slvr_options} in the call of \code{lmvar_no_fit}
+#' \item \code{control} the value of the argument \code{control} in the call of \code{lmvar_no_fit}
 #' }
 #'
 #' @export
@@ -68,6 +68,9 @@
 lmvar_no_fit <- function( y, X_mu = NULL, X_sigma = NULL,
                    intercept_mu = TRUE, intercept_sigma = TRUE, sigma_min = 0,
                    slvr_options = list(method = "NR"), control = list(), ...){
+
+  # store argument values
+  control_call = control
 
   # Set whether or not matrices have been specified
   isnull_X = FALSE
@@ -82,11 +85,19 @@ lmvar_no_fit <- function( y, X_mu = NULL, X_sigma = NULL,
   }
 
   # Turn vectors into matrices
-  if (class(X_mu) == 'numeric'){
+  if (inherits( X_mu, 'numeric')){
     X_mu = as.matrix(X_mu)
   }
-  if (class(X_sigma) == 'numeric'){
+  if (inherits( X_sigma, 'numeric')){
     X_sigma = as.matrix(X_sigma)
+  }
+
+  # set default control options
+  if (!("mu_full_rank" %in% names(control))){
+    control$mu_full_rank = FALSE
+  }
+  if (!("sigma_full_rank" %in% names(control))){
+    control$sigma_full_rank = FALSE
   }
 
   # Check inputs
@@ -134,22 +145,37 @@ lmvar_no_fit <- function( y, X_mu = NULL, X_sigma = NULL,
     X_sigma = cbind( Intercept, X_sigma)
   }
 
-  # Initialize aliased columns
-  aliased_mu = logical(length = ncol(X_mu))
-  aliased_sigma = logical(length = ncol(X_sigma))
-  names = matrix_column_names( X_mu, X_sigma, intercept_mu, intercept_sigma)
-  names(aliased_mu) = names$colnames_X
-  names(aliased_sigma) = names$colnames_X_sigma
-
   # Give matrices column names if there are none
   names = matrix_column_names( X_mu, X_sigma, intercept_mu, intercept_sigma)
   colnames(X_mu) = names$colnames_X
   colnames(X_sigma) = names$colnames_X_sigma
 
+  # Initialize aliased columns
+  aliased_mu = logical(length = ncol(X_mu))
+  aliased_sigma = logical(length = ncol(X_sigma))
+  names(aliased_mu) = colnames(X_mu)
+  names(aliased_sigma) = colnames(X_sigma)
+
   # Turn matrices into a full-rank matrices
+  equal_matrices = FALSE
+  if (!control$sigma_full_rank & ncol(X_mu) == ncol(X_sigma)){
+    if (all(X_mu == X_sigma)){
+      equal_matrices = TRUE
+    }
+  }
+
   qX = Matrix::qr(X_mu)
-  X_mu = make_matrix_full_rank( qX, X_mu)
-  X_sigma = make_matrix_full_rank(X_sigma)
+  if (!control$mu_full_rank){
+    X_mu = make_matrix_full_rank( qX, X_mu)
+  }
+  if (!control$sigma_full_rank){
+    if (equal_matrices){
+      i = names(aliased_mu) %in% colnames(X_mu)
+      X_sigma = X_mu
+      colnames(X_sigma) = names(aliased_sigma)[i]
+    }
+    else X_sigma = make_matrix_full_rank(X_sigma)
+  }
 
   # set aliased columns
   names = names(aliased_mu)
@@ -174,7 +200,7 @@ lmvar_no_fit <- function( y, X_mu = NULL, X_sigma = NULL,
                 intercept_sigma = intercept_sigma,
                 sigma_min = sigma_min,
                 slvr_options = slvr_options,
-                control = control)
+                control = control_call)
 
   class(rlist) = "lmvar_no_fit"
 

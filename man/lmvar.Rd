@@ -35,10 +35,19 @@ log-likelihood is at a maximum. The default value is TRUE.
 The default value is FALSE.
 \item \code{monitor} Boolean, if TRUE diagnostic messages about errors that occur will be
 printed during the run. The default value is FALSE.
-\item \code{remove_df_sigma} Boolean, if TRUE the algorithm will reduce the degrees of freedom of the model for \eqn{\sigma}
-if this is necessary to achieve
-a satisfactory fit. This option has no effect if \code{sigma_min} (or one of its elements) is larger than zero.
+\item \code{remove_df_sigma_pre} Warning: this is an experimental option which could cause
+unexpected issues! Boolean, if TRUE the algorithm removes degrees of freedom of
+the model for \eqn{\sigma} to avoid convergence problems. They are removed before carrying out
+the fit. See 'Details'. The default value is FALSE.
+\item \code{remove_df_sigma_post} Boolean, if TRUE the algorithm will remove degrees of
+freedom of the model for \eqn{\sigma} if this is necessary to achieve
+a satisfactory fit. They are removed after a fit has been attempted and turned out to fail.
+This option has no effect if \code{sigma_min} (or one of its elements) is larger than zero.
 See 'Details'. The default value is FALSE.
+\item \code{mu_full_rank} Boolean, if TRUE it is assumed that \code{X_mu} (with the intercept term added in
+case \code{intercept_mu = TRUE}) is full-rank. The default value is FALSE.
+\item \code{sigma_full_rank} Boolean, if TRUE it is assumed that \code{X_sigma} (with the intercept term added in
+case \code{intercept_sigma = TRUE}) is full-rank. The default value is FALSE.
 }}
 
 \item{...}{Additional arguments, not used in the current implementation}
@@ -161,21 +170,33 @@ somehow did not succeed to fit an 'lmvar' model properly. The same is true if th
 negative-definite.
 
 In this situation, a proper fit can sometimes be achieved if one drops a few extra columns (sometimes just one column) from
-\code{X_sigma}. See the vignette 'Math' for details. The option
-\code{control = list(remove_df_sigma = TRUE)}) does just that. It attempts to achieve a proper fit by dropping
+\code{X_sigma}. See the vignette 'Math' for details. The options
+\code{control = list(remove_df_sigma_pre = TRUE, remove_df_sigma_post = TRUE)}) do just that.
+They attempt to achieve a proper fit by dropping
 columns (i.e., reducing the degrees of freedom of the model for \eqn{\sigma}) if necessary.
 
-The option \code{remove_df_sigma = TRUE} attempts to achieve a proper fit in the following two cases.
+The option \code{remove_df_sigma_pre} inspects the model matrices and the response vector before
+carrying out the fit, and drops columns from \code{X_sigma} if necessary. Warning: this is an
+experimental option which could cause unexpected issues!
+
+The option \code{remove_df_sigma_post = TRUE} attempts to achieve a proper fit in the following two cases.
 \itemize{
 \item \code{maxLik} uses the solve-method
 "NR" (the default method) or "BFGSR" and exits with return code 3. Note that this not the case when \code{sigma_min} (or one
 of its elements) has been set to a value larger than zero because then the method "BFGS" is used.
 \item The option \code{check_hessian} is \code{TRUE} and the Hessian of the log-likelihood is not negative-definite.
 }
+I.e., this option drops columns from \code{X_sigma} based on the results of a failed fit.
 }
 \subsection{Other}{
 When \code{check_hessian = TRUE}, it is checked whether the fitted log-likelihood is at a maximum. A warning will be issued if
 that is not the case.
+
+The control options \code{mu_full_rank} and \code{sigma_full_rank} are for efficiency purposes. If set to TRUE, the
+corresponding model matrices will not be made full-rank because it is assumed they are full-rank already. However,
+setting one of these to TRUE while the corresponding model matrix is not full-rank will cause unpredictable and
+possibly unnoticed errors. These options should therefore only be changed from their default value with the
+utmost care.
 
 See the vignettes
 that come with the \code{lmvar} package for more info. Run \code{vignette(package="lmvar")} to list the available vignettes.
@@ -213,4 +234,8 @@ fit = lmvar(attenu$accel, X, X_s,
             slvr_options = list(start = beta_sigma_start),
             control = list(slvr_log = TRUE))
 fit$slvr_log
+}
+\seealso{
+\code{\link{lmvar_no_fit}} to create an object which is like an 'lmvar' object without carrying out a
+model fit.
 }

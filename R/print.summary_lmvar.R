@@ -21,7 +21,7 @@ print.summary_lmvar <- function( x, ...){
   cat( "Number of observations: ", x$nobs, "\n")
   cat( "Degrees of freedom    : ", x$df, "\n\n")
 
-  cat ("Standardized residuals: \n")
+  cat ("Z-scores: \n")
   print( round( x$residuals, 4))
   cat("\n")
 

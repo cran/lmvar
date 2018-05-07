@@ -166,10 +166,10 @@ fwbw.lm <- function( object, fun, fw = FALSE, counter = TRUE, df_percentage = 0.
         # invert Hessian
         H = tryCatch( solve(H),
                       error = function(e){
-                        return("error")
+                        return(NA)
                       })
 
-        if (class(H) == "character"){
+        if (inherits( H, "logical")){
           return(NA)
         }
         else{
@@ -201,7 +201,7 @@ fwbw.lm <- function( object, fun, fw = FALSE, counter = TRUE, df_percentage = 0.
       cols = colnames(X)
       i = which(colnames(X) == "(Intercept)")
       X = X[,-i]
-      if (class(X) == "numeric"){
+      if (inherits( X, "numeric")){
         X = as.matrix(X)
         colnames(X) = cols[-i]
       }
@@ -218,7 +218,7 @@ fwbw.lm <- function( object, fun, fw = FALSE, counter = TRUE, df_percentage = 0.
   }
 
   # check inputs
-  if (class(object) != "lm"){
+  if (!inherits( object, "lm")){
     stop("object must be of class 'lm'")
   }
   if (!("x" %in% names(object)) | !("y" %in% names(object))){
@@ -281,6 +281,10 @@ fwbw.lm <- function( object, fun, fw = FALSE, counter = TRUE, df_percentage = 0.
     monitor( 0, 0, iterlist[[1]]$fun)
   }
 
+  # initialize with large value
+  n_success_remove = ncol(object$x)
+  n_success_insert = ncol(object$x)
+
   # iterate over backward-forward steps
   proceed = TRUE
   while(proceed){
@@ -293,9 +297,13 @@ fwbw.lm <- function( object, fun, fw = FALSE, counter = TRUE, df_percentage = 0.
     success_remove = FALSE
     if (remove & df_remove > 0){
 
+      # number of degrees of freedom to remove
+      n_remove = min( 2 * n_success_remove, trunc(df_percentage * df_remove))
+      n_remove = 2 * n_remove
+
       # iterate over attempts to remove degrees of freedom
-      df_percentage_iter = df_percentage
       proceed_remove = TRUE
+
       while(proceed_remove){
 
         # calculate z-values of coefficients
@@ -312,7 +320,7 @@ fwbw.lm <- function( object, fun, fw = FALSE, counter = TRUE, df_percentage = 0.
         z_values = z_values[-i]
 
         # number of degrees of freedom to remove
-        n_remove = max( 1, trunc(df_percentage_iter * df_remove))
+        n_remove = max( 1, trunc(n_remove / 2))
 
         # calculate columns to keep
         z_sorted = sort( abs(z_values), index.return = TRUE)
@@ -329,7 +337,7 @@ fwbw.lm <- function( object, fun, fw = FALSE, counter = TRUE, df_percentage = 0.
         cols = c( cols, col_mu)
         cols = colnames(iterobject$x) %in% cols
         X_mu = iterobject$x[, cols]
-        if (class(X_mu) == "numeric"){
+        if (inherits( X_mu, "numeric")){
           X_mu = as.matrix(X_mu)
         }
         colnames(X_mu) = itercols[cols]
@@ -368,13 +376,12 @@ fwbw.lm <- function( object, fun, fw = FALSE, counter = TRUE, df_percentage = 0.
           iterlist[[iter + 1]] = list(fun = fun_iter)
           iterobject = fit
           itercols = cols_fit
+          n_success_remove = n_remove
         }
         else {
-          if (n_remove > 1){
-            df_percentage_iter = df_percentage_iter / 2
-          }
-          else {
+          if (n_remove == 1){
             proceed_remove = FALSE
+            n_success_remove = 0
           }
         }
       }
@@ -390,15 +397,19 @@ fwbw.lm <- function( object, fun, fw = FALSE, counter = TRUE, df_percentage = 0.
 
       if (length(effect_sorted) > 0){
         proceed_insert = TRUE
-        df_percentage_iter = df_percentage
       }
       else {
         proceed_insert = FALSE
       }
+
+      # number of degrees of freedom to insert
+      n_insert = min( 2 * n_success_insert, trunc(df_percentage * length(effect_sorted)))
+      n_insert = 2 * n_insert
+
       while (proceed_insert){
 
         # number of degrees of freedom to insert
-        n_insert = max( 1, trunc(df_percentage_iter * length(effect_sorted)))
+        n_insert = max( 1, trunc(n_insert / 2))
 
         # add new degree of freedom to model matrix
         col = names(effect_sorted[1:n_insert])
@@ -435,21 +446,14 @@ fwbw.lm <- function( object, fun, fw = FALSE, counter = TRUE, df_percentage = 0.
           iterlist[[iter + 1]] = list(fun = fun_iter)
           iterobject = fit
           itercols = cols_fit
+          n_success_insert = n_insert
         }
         else {
-          if (n_insert > 1){
-            df_percentage_iter = df_percentage_iter / 2
-          }
-          else {
+          if (n_insert == 1){
             proceed_insert = FALSE
+            n_success_insert = 0
           }
         }
-
-        # # proceed with next degree of freedom
-        # effect_sorted = effect_sorted[-1]
-        # if (length(effect_sorted) == 0){
-        #   proceed_insert = FALSE
-        # }
       }
     }
 

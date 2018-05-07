@@ -113,10 +113,10 @@ plot_lm_loglik <- function( y, X, beta_or, beta_x, beta_y, add_qa = FALSE, plot_
   }
 
   # Convert names to indices
-  if (class(beta_x) == "character"){
+  if (inherits( beta_x, "character")){
     beta_x = which(names(beta_or) == beta_x)
   }
-  if (class(beta_y) == "character"){
+  if (inherits( beta_y, "character")){
     beta_y = which(names(beta_or) == beta_y)
   }
 

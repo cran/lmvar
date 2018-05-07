@@ -39,11 +39,14 @@ beta_sigma_names <- function( beta_mu_names, beta_sigma_names, ...){
     if (bool){
       beta_sigma_names_new = sapply( beta_sigma_names, function(x){
         if (x != "(Intercept_s)"){
-          return(paste( x, "_s", sep=""))
+          x = paste0( x, "_s")
+
+          # Keep adding "_s" until name is not amongst beta_mu names anymore
+          while(x %in% beta_mu_names){
+            x = paste0( x, "_s")
+          }
         }
-        else {
-          return(x)
-        }
+        return(x)
       })
     }
     else {

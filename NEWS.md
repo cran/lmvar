@@ -1,3 +1,25 @@
+Version 1.5.0
+-------------
+
+* Add the function 'plot.lmvar()' to create a number of diagnostic plots for an 'lmvar' fit.
+
+* Add the function 'plot_qdis()' to plot the quantile distribution for one or two 'lm' or 'lmvar' objects.
+
+* Add the function 'plot_qq()' to create a QQ-plot for one or two 'lm' or 'lmvar' objects.
+
+* Modify the algorithm of 'fwbw.lm()' to make the insertion and removal attempts more likely to succeed. This can change the outcome compared to previous versions of the package.  
+
+* Improve speed of function 'lmvar()'.
+
+* Add the control options 'mu_full_rank' and 'sigma_full_rank' to the function 'lmvar()'.
+
+* Rename the control option 'remove_df_sigma' of 'lmvar()' to 'remove_df_sigma_post' and add the experimental control
+option 'remove_df_sigma_pre'.
+
+* Make 'beta_sigma_names()' fail-safe for the case that names of beta_mu end with "_s".
+
+* More efficient memory usage of 'cv.lm()' and 'cv.lmvar()'.
+
 Version 1.4.0
 -------------
 

@@ -27,7 +27,7 @@
 
 dfree <- function( object, mu = TRUE, sigma = TRUE, ...){
 
-  if (!('lmvar_no_fit' %in% class(object))){
+  if (!(inherits( object, 'lmvar_no_fit'))){
     stop("Object must be an 'lmvar_no_fit' (or 'lmvar') object")
   }
 

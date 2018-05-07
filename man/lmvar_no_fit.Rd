@@ -38,17 +38,17 @@ Exceptions are the following list members for which no accessor functions exist:
 \item \code{call} the function call
 \item \code{y} the vector of observations
 \item \code{X_mu} the  model matrix for \eqn{\mu}. In general, it differs from the user-supplied \code{X_mu} because
-\code{lmvar_no_fit} adds an intercept-column (unless \code{intercept_mu} is \code{FALSE}) and makes the matrix full-rank.
+\code{lmvar_no_fit} adds an intercept-column (unless \code{intercept_mu} is FALSE) and makes the matrix full-rank.
 \item \code{X_sigma} the  model matrix for \eqn{\log \sigma}. In general, it differs from the user-supplied
-\code{X_sigma} because \code{lmvar_no_fit} adds an intercept-column (unless \code{intercept_sigma} is {FALSE}) and makes
+\code{X_sigma} because \code{lmvar_no_fit} adds an intercept-column (unless \code{intercept_sigma} is FALSE) and makes
 the matrix full-rank.
 \item \code{intercept_mu} boolean which tells whether or not an intercept column \code{(Intercept)} has been added to the
 model matrix \eqn{X_\mu}
 \item \code{intercept_sigma} boolean which tells whether or not an intercept column \code{(Intercept_s)} has been added to the
 model matrix \eqn{X_\sigma}
-\item \code{sigma_min} the value of the argument \code{sigma_min} in the call of \code{lmvar}
-\item \code{slvr_options} the value of the argument \code{slvr_options} in the call of \code{lmvar}
-\item \code{control} the value of the argument \code{control} in the call of \code{lmvar}
+\item \code{sigma_min} the value of the argument \code{sigma_min} in the call of \code{lmvar_no_fit}
+\item \code{slvr_options} the value of the argument \code{slvr_options} in the call of \code{lmvar_no_fit}
+\item \code{control} the value of the argument \code{control} in the call of \code{lmvar_no_fit}
 }
 }
 \description{
@@ -75,8 +75,8 @@ degrees of freedom, starting with the smallest subset possible.
 
 Although \code{lmvar_no_fit} does not carry out a model fit, it will do the following:
 \itemize{
-\item add an intercept term to the model matrices (unless \code{intercept_mu} is \code{FALSE} and/or
-\code{intercept_sigma} is \code{FALSE}), and
+\item add an intercept term to the model matrices (unless \code{intercept_mu} is FALSE and/or
+\code{intercept_sigma} is FALSE), and
 \item make the model matrices full rank.
 }
 }

@@ -175,7 +175,7 @@ cv.lmvar <- function( object, k = 10, ks_test = FALSE, fun = NULL, log = FALSE, 
 
   # make matrix a matrix again
   matrix_as_matrix <- function( X, col_names){
-    if (class(X) == "numeric"){
+    if (inherits(X, "numeric")){
       X = as.matrix(X)
       colnames(X) = col_names
     }
@@ -183,7 +183,7 @@ cv.lmvar <- function( object, k = 10, ks_test = FALSE, fun = NULL, log = FALSE, 
   }
 
   # Check input
-  if (!any(class(object) == "lmvar")){
+  if (!inherits( object, "lmvar")){
     stop("Object must be of type 'lmvar'")
   }
 
@@ -215,8 +215,6 @@ cv.lmvar <- function( object, k = 10, ks_test = FALSE, fun = NULL, log = FALSE, 
 
   # Retrieve info from object
   y = object$y
-  X_mu = object$X_mu
-  X_sigma = object$X_sigma
   intercept_mu = object$intercept_mu
   intercept_sigma = object$intercept_sigma
   slvr_options_object = object$slvr_options
@@ -230,36 +228,12 @@ cv.lmvar <- function( object, k = 10, ks_test = FALSE, fun = NULL, log = FALSE, 
     if (!(option %in% names(slvr_options))){
       slvr_options[option] = slvr_options_object[option]
     }
-    else if(class(slvr_options_object[option]) == 'list'){
+    else if(inherits( slvr_options_object[option], "list")){
       for (suboption in names(slvr_options_object[[option]])){
         if (!(suboption %in% names(slvr_options[[option]]))){
           slvr_options[[option]][suboption] = slvr_options_object[[option]][suboption]
         }
       }
-    }
-  }
-
-  # Remove intercept terms from model matrices
-  if (intercept_mu){
-    if (ncol(X_mu) > 1){
-      X_mu = X_mu[,-1]
-      if(class(X_mu) == "numeric"){
-        X_mu = as.matrix(X_mu)
-      }
-    }
-    else {
-      X_mu = NULL
-    }
-  }
-  if (intercept_sigma){
-    if (ncol(X_sigma) > 1){
-      X_sigma = X_sigma[,-1]
-      if(class(X_sigma) == "numeric"){
-        X_sigma = as.matrix(X_sigma)
-      }
-    }
-    else {
-      X_sigma = NULL
     }
   }
 
@@ -292,39 +266,53 @@ cv.lmvar <- function( object, k = 10, ks_test = FALSE, fun = NULL, log = FALSE, 
     foldrows = is.element(1:length(y), selected_obs[i,])
 
     # create corresponding model matrices
-    if (is.null(X_mu)){
-      XX = NULL
-      XX_predict = matrix( 1, nrow = sum(foldrows), ncol = 1)
-    }
-    else {
-      XX = X_mu[!foldrows,]
-      XX = matrix_as_matrix( XX, colnames(X_mu))
-      XX = make_matrix_full_rank(XX)
-      XX_predict = X_mu[foldrows, colnames(XX)]
-      XX_predict = matrix_as_matrix( XX_predict, colnames(XX))
+    X_mu = object$X_mu[!foldrows,]
+    if(inherits( X_mu, "numeric")){
+      X_mu = matrix_as_matrix( X_mu, colnames(object$X_mu))
     }
 
-    if (is.null(X_sigma)){
-      XX_sigma = NULL
-      XX_sigma_predict = matrix( 1, nrow = sum(foldrows), ncol = 1)
+    if(intercept_mu){
+      if(ncol(X_mu) > 1){
+        X_mu = X_mu[,-1]
+        if(inherits( X_mu, "numeric")){
+          X_mu = matrix_as_matrix( X_mu, colnames(object$X_mu)[-1])
+        }
+      }
+      else {
+        X_mu = NULL
+      }
     }
-    else {
-      XX_sigma = X_sigma[ !foldrows,]
-      XX_sigma = matrix_as_matrix( XX_sigma, colnames(X_sigma))
-      XX_sigma = make_matrix_full_rank(XX_sigma)
-      XX_sigma_predict = X_sigma[foldrows, colnames(XX_sigma)]
-      XX_sigma_predict = matrix_as_matrix( XX_sigma_predict, colnames(XX_sigma))
+
+    X_sigma = object$X_sigma[!foldrows,]
+    if(inherits( X_sigma, "numeric")){
+      X_sigma = matrix_as_matrix( X_sigma, colnames(object$X_sigma))
     }
+
+    if (intercept_sigma){
+      if(ncol(X_sigma) > 1){
+        X_sigma = X_sigma[,-1]
+        if(inherits( X_sigma, "numeric")){
+          X_sigma = matrix_as_matrix( X_sigma, colnames(object$X_sigma)[-1])
+        }
+      }
+      else {
+        X_sigma = NULL
+      }
+    }
+
+    # model matrices are not guaranteed to be full rank
+    control$mu_full_rank = FALSE
+    control$sigma_full_rank = FALSE
 
     # perform fit on rows not in fold
-    fit = tryCatch( lmvar( y[!foldrows], XX, XX_sigma,
+    fit = tryCatch( lmvar( y[!foldrows], X_mu, X_sigma,
                            intercept_mu = intercept_mu, intercept_sigma = intercept_sigma,
                            sigma_min = sigma_min, slvr_options = slvr_options,
                            control = control),
 
                     error = function(e){
                       outlist = list( error = e, warning = NULL,
-                                      y = y[!foldrows], X_mu = XX, X_sigma = XX_sigma,
+                                      y = y[!foldrows], X_mu = X_mu, X_sigma = X_sigma,
                                       intercept_mu = intercept_mu, intercept_sigma = intercept_sigma,
                                       sigma_min = sigma_min, slvr_options = slvr_options, control = control,
                                       training_rows = which(!foldrows))
@@ -333,24 +321,59 @@ cv.lmvar <- function( object, k = 10, ks_test = FALSE, fun = NULL, log = FALSE, 
                     },
                     warning = function(w){
                       outlist = list( error = NULL, warning = w,
-                                      y = y[!foldrows], X_mu = XX, X_sigma = XX_sigma,
+                                      y = y[!foldrows], X_mu = X_mu, X_sigma = X_sigma,
                                       intercept_mu = intercept_mu, intercept_sigma = intercept_sigma,
                                       sigma_min = sigma_min, slvr_options = slvr_options, control = control,
                                       training_rows = which(!foldrows))
                       class(outlist) = "error_fit"
                       return(outlist)
                     })
-    if (class(fit) == "error_fit"){
+    if (inherits( fit, "error_fit")){
       return(fit)
     }
 
+    # create prediction matrices
+    X_mu = object$X_mu[foldrows & !excluded_rows,]
+    if (inherits( X_mu, "numeric")){
+      X_mu = matrix_as_matrix( X_mu, colnames(object$X_mu))
+    }
+
+    if (intercept_mu){
+      if(ncol(X_mu) > 1){
+        X_mu = X_mu[,-1]
+        if (inherits( X_mu, "numeric")){
+          X_mu = matrix_as_matrix( X_mu, colnames(object$X_mu)[-1])
+        }
+      }
+      else {
+        X_mu = matrix( 1, nrow = sum(foldrows), ncol = 1)
+      }
+    }
+
+    X_sigma = object$X_sigma[foldrows & !excluded_rows,]
+    if (inherits( X_sigma, "numeric")){
+      X_sigma = matrix_as_matrix( X_sigma, colnames(object$X_sigma))
+    }
+
+    if (intercept_sigma){
+      if(ncol(X_sigma) > 1){
+        X_sigma = X_sigma[,-1]
+        if (inherits( X_sigma, "numeric")){
+          X_sigma = matrix_as_matrix( X_sigma, colnames(object$X_sigma)[-1])
+        }
+      }
+      else {
+        X_sigma = matrix( 1, nrow = sum(foldrows), ncol = 1)
+      }
+    }
+
     # predict values for rows in fold
-    predictions = predict.lmvar( fit, XX_predict, XX_sigma_predict, log = FALSE)
+    predictions = predict.lmvar( fit, X_mu, X_sigma, log = FALSE)
     mu_not_log = predictions[,"mu"]
     sigma_not_log = predictions[,"sigma"]
 
     if (log){
-      predictions = predict.lmvar( fit, XX_predict, XX_sigma_predict, log = log)
+      predictions = predict.lmvar( fit, X_mu, X_sigma, log = log)
       mu = predictions[,"mu"]
       sigma = predictions[,"sigma"]
     }
@@ -361,17 +384,12 @@ cv.lmvar <- function( object, k = 10, ks_test = FALSE, fun = NULL, log = FALSE, 
 
     # Calculate MAE and MSE for rows in fold
     if (log){
-      mae = abs(exp(y[foldrows]) - mu)
+      mae = abs(exp(y[foldrows & !excluded_rows]) - mu)
     }
     else {
-      mae = abs(y[foldrows] - mu)
+      mae = abs(y[foldrows & !excluded_rows] - mu)
     }
     mse = mae^2
-
-    # Exclude rows
-    excluded_foldrows = excluded_rows[foldrows]
-    mae = mae[!excluded_foldrows]
-    mse = mse[!excluded_foldrows]
 
     # Calculate Kolmogorov-Smirnov distance
     if (ks_test){
@@ -403,8 +421,9 @@ cv.lmvar <- function( object, k = 10, ks_test = FALSE, fun = NULL, log = FALSE, 
 
     # Calculate user-specified function
     if (isFunc){
-      rows = foldrows & !excluded_rows
-      f_user = tryCatch(fun( fit, y[rows], object$X_mu[rows,], object$X_sigma[rows,]),
+      f_user = tryCatch(fun( fit, y[foldrows & !excluded_rows],
+                             object$X_mu[foldrows & !excluded_rows,],
+                             object$X_sigma[foldrows & !excluded_rows,]),
                         error = function(e){
                           outlist = list(error = e)
                           class(outlist) = "error_func"
@@ -430,7 +449,7 @@ cv.lmvar <- function( object, k = 10, ks_test = FALSE, fun = NULL, log = FALSE, 
   cv_results = lapply( cv_results, function(cv_result){
 
     # Handle failing fit
-    if (class(cv_result) == "error_fit"){
+    if (inherits( cv_result, "error_fit")){
       if (is.null(cv_result$warning)){
         warning(cv_result$error)
       }
@@ -444,7 +463,7 @@ cv.lmvar <- function( object, k = 10, ks_test = FALSE, fun = NULL, log = FALSE, 
       if ("ks" %in% names(cv_result)){
 
         # handle warnings
-        if (class(cv_result$ks) == "error_ks"){
+        if (inherits( cv_result$ks, "error_ks")){
           warning(cv_result$ks$warning)
           dup = cv_result$ks$duplicates
           warning("  Observations ", dup[1], " and ", dup[2],
@@ -456,7 +475,7 @@ cv.lmvar <- function( object, k = 10, ks_test = FALSE, fun = NULL, log = FALSE, 
       }
 
       if ("fun" %in% names(cv_result)){
-        if (class(cv_result$fun) == "error_func"){
+        if (inherits( cv_result$fun, "error_func")){
           warning( "Error in user-specified function: ", cv_result$fun$error, call. = FALSE)
           cv_result$fun= NA
         }

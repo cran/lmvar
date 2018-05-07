@@ -3,10 +3,10 @@ context("lmvar constructor")
 test_that("missing arguments are handled correctly", {
 
   y = fit$y
-  fittest = lmvar(y)
+  fit_test = lmvar(y)
   fitlm = lm( y~1, as.data.frame(fit$X_mu))
-  expect_equal( coef(fittest)[1], coef(fitlm))
-  expect_lt( abs(as.numeric(exp(coef(fittest)[2])) - summary(fitlm)$sigma), 0.002)
+  expect_equal( coef(fit_test)[1], coef(fitlm))
+  expect_lt( abs(as.numeric(exp(coef(fit_test)[2])) - summary(fitlm)$sigma), 0.002)
 
 })
 
@@ -16,10 +16,10 @@ test_that("no errors occur when working with class Matrix",{
   M_mu = M_mu[, -1]
   M_sigma = Matrix::Matrix(fit$X_sigma)
   M_sigma = M_sigma[, -1]
-  fittest = lmvar( fit$y, M_mu, M_sigma)
-  expect_equal( coef(fittest), coef(fit))
+  fit_test = lmvar( fit$y, M_mu, M_sigma)
+  expect_equal( coef(fit_test), coef(fit))
 
-  expect_error( summary(fittest), NA)
+  expect_error( summary(fit_test), NA)
 
 })
 
@@ -83,25 +83,25 @@ test_that("coefficient names are as expected", {
   colnames(X_mu) = names_mu
   colnames(X_sigma) = names_sigma
 
-  fittest = lmvar( fit$y, X_mu, X_sigma)
-  expect_equal(names(coef( fittest, sigma = FALSE)), c( "(Intercept)", names_mu))
-  expect_equal(names(coef( fittest, mu = FALSE)), c( "(Intercept_s)", names_sigma))
+  fit_test = lmvar( fit$y, X_mu, X_sigma)
+  expect_equal(names(coef( fit_test, sigma = FALSE)), c( "(Intercept)", names_mu))
+  expect_equal(names(coef( fit_test, mu = FALSE)), c( "(Intercept_s)", names_sigma))
 
-  fittest = lmvar( fit$y, X_mu, X_sigma, intercept_mu = FALSE, intercept_sigma = FALSE)
-  expect_equal(names(coef( fittest, sigma = FALSE)), names_mu)
-  expect_equal(names(coef( fittest, mu = FALSE)), names_sigma)
+  fit_test = lmvar( fit$y, X_mu, X_sigma, intercept_mu = FALSE, intercept_sigma = FALSE)
+  expect_equal(names(coef( fit_test, sigma = FALSE)), names_mu)
+  expect_equal(names(coef( fit_test, mu = FALSE)), names_sigma)
 
-  fittest = lmvar(fit$y)
-  expect_equal(names(coef( fittest, sigma = FALSE)), "(Intercept)")
-  expect_equal(names(coef( fittest, mu = FALSE)), "(Intercept_s)")
+  fit_test = lmvar(fit$y)
+  expect_equal(names(coef( fit_test, sigma = FALSE)), "(Intercept)")
+  expect_equal(names(coef( fit_test, mu = FALSE)), "(Intercept_s)")
 })
 
 test_that("control options have effect", {
 
   # Request solver log
   y = fit$y
-  fittest = lmvar(y, control = list(slvr_log = TRUE))
-  expect_true("slvr_log" %in% names(fittest))
+  fit_test = lmvar(y, control = list(slvr_log = TRUE))
+  expect_true("slvr_log" %in% names(fit_test))
 
   # Fit model without solution
   c1 = rep(1, 7)
@@ -115,14 +115,14 @@ test_that("control options have effect", {
   beta_start = c(1, -1, -1, -1)
 
   # Test that warning about Hessian appears
-  fittest = capture_warnings(lmvar( y, X_sigma = X, intercept_sigma = FALSE, slvr_options = list(start = -10 * beta_start),
-                                    control = list(monitor = FALSE)))
-  expect_true(any(grepl( "Log-likelihood appears not to be at a maximum!", fittest)))
+  expect_warning( lmvar( y, X_sigma = X, intercept_sigma = FALSE, slvr_options = list(start = -10 * beta_start)),
+                         "Log-likelihood appears not to be at a maximum!")
 
   # Test that warning about Hessian does not appear
-  fittest = capture_warnings(lmvar( y, X_sigma = X, intercept_sigma = FALSE, slvr_options = list(start = -10 * beta_start),
-                            control = list( check_hessian = FALSE, monitor = FALSE)))
-  expect_false(any(grepl( "Log-likelihood appears not to be at a maximum!", fittest)))
+  warnings = capture_warnings(lmvar( y, X_sigma = X, intercept_sigma = FALSE,
+                                     slvr_options = list(start = -10 * beta_start),
+                                     control = list(check_hessian = FALSE)))
+  expect_false(any(grepl( warnings, "Log-likelihood appears not to be at a maximum!")))
 })
 
 test_that("solve with constraint on sigma", {
@@ -154,10 +154,50 @@ test_that("Option to remove degrees of freedom to improve fit", {
   start = 10 * c( 1, 1, 0, -1)
 
   # Check that warning appears
-  fit_test = capture_warnings(lmvar( fit$y[1:n], fit$X_mu[1:n,-1], X_sigma[,-1], slvr_options = list(start = start)))
-  expect_true(any(grepl( "Last step could not find a value above the current.", fit_test)))
+  expect_warning(lmvar( fit$y[1:n], fit$X_mu[1:n,-1], X_sigma[,-1], slvr_options = list(start = start)),
+                 "Last step could not find a value above the current.")
 
-  # Check that no warning appears
+  # Check that no warning appears with post removal
   expect_warning(lmvar( fit$y[1:n], fit$X_mu[1:n,-1], X_sigma[,-1], slvr_options = list(start = start),
-                    control = list(remove_df_sigma = TRUE)), NA)
+                    control = list(remove_df_sigma_post = TRUE)), NA)
+
+  X_sigma = fit$X_sigma[1:n,]
+  col = X_sigma[,1] + X_sigma[,2]
+
+  # Make sure col is not a strict linear combination of the first two columns of X_sigma
+  rows = which(col != 0)
+  i = sample( rows, 1)
+  col[i] = -col[1]
+
+  X_sigma = cbind( X_sigma, col)
+
+  # Check that no warning appears with pre removal
+  expect_warning(lmvar( fit$y[1:n], fit$X_mu[1:n,-1], X_sigma[,-1], slvr_options = list(start = start),
+                 control = list(remove_df_sigma_pre = TRUE)), NA)
 })
+
+test_that("options 'mu_full_rank' and 'sigma_full_rank' work correctly", {
+
+  X_mu = fit$X_mu
+  X_sigma = fit$X_sigma
+  col_mu = ncol(X_mu)
+  col_sigma = ncol(X_sigma)
+
+  X_mu = cbind( X_mu, X_mu[,1] + X_mu[,2])
+  X_sigma = cbind( X_sigma, X_sigma[,1] + X_sigma[,2])
+
+  fit_test = lmvar( fit$y, X_mu[,-1], X_sigma[,-1])
+  expect_equal( ncol(fit_test$X_mu), col_mu)
+  expect_equal( ncol(fit_test$X_sigma), col_sigma)
+
+  expect_error( suppressWarnings(lmvar( fit$y, X_mu[,-1], X_sigma[,-1], control = list(mu_full_rank = TRUE))),
+                regexp = "requires numeric/complex matrix/vector arguments")
+
+  expect_warning( lmvar( fit$y, X_mu[,-1], X_sigma[,-1], control = list(sigma_full_rank = TRUE)),
+                  regexp = "Log-likelihood appears not to be at a maximum!")
+
+  expect_error( suppressWarnings(lmvar( fit$y, X_mu[,-1], X_sigma[,-1],
+                                        control = list( mu_full_rank = TRUE, sigma_full_rank = TRUE))),
+                regexp = "requires numeric/complex matrix/vector arguments")
+})
+

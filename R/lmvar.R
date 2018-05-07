@@ -21,10 +21,19 @@
 #' The default value is FALSE.
 #' \item \code{monitor} Boolean, if TRUE diagnostic messages about errors that occur will be
 #' printed during the run. The default value is FALSE.
-#' \item \code{remove_df_sigma} Boolean, if TRUE the algorithm will reduce the degrees of freedom of the model for \eqn{\sigma}
-#' if this is necessary to achieve
-#' a satisfactory fit. This option has no effect if \code{sigma_min} (or one of its elements) is larger than zero.
+#' \item \code{remove_df_sigma_pre} Warning: this is an experimental option which could cause
+#' unexpected issues! Boolean, if TRUE the algorithm removes degrees of freedom of
+#' the model for \eqn{\sigma} to avoid convergence problems. They are removed before carrying out
+#' the fit. See 'Details'. The default value is FALSE.
+#' \item \code{remove_df_sigma_post} Boolean, if TRUE the algorithm will remove degrees of
+#' freedom of the model for \eqn{\sigma} if this is necessary to achieve
+#' a satisfactory fit. They are removed after a fit has been attempted and turned out to fail.
+#' This option has no effect if \code{sigma_min} (or one of its elements) is larger than zero.
 #' See 'Details'. The default value is FALSE.
+#' \item \code{mu_full_rank} Boolean, if TRUE it is assumed that \code{X_mu} (with the intercept term added in
+#' case \code{intercept_mu = TRUE}) is full-rank. The default value is FALSE.
+#' \item \code{sigma_full_rank} Boolean, if TRUE it is assumed that \code{X_sigma} (with the intercept term added in
+#' case \code{intercept_sigma = TRUE}) is full-rank. The default value is FALSE.
 #' }
 #' @param ... Additional arguments, not used in the current implementation
 #'
@@ -120,21 +129,33 @@
 #' negative-definite.
 #'
 #' In this situation, a proper fit can sometimes be achieved if one drops a few extra columns (sometimes just one column) from
-#' \code{X_sigma}. See the vignette 'Math' for details. The option
-#' \code{control = list(remove_df_sigma = TRUE)}) does just that. It attempts to achieve a proper fit by dropping
+#' \code{X_sigma}. See the vignette 'Math' for details. The options
+#' \code{control = list(remove_df_sigma_pre = TRUE, remove_df_sigma_post = TRUE)}) do just that.
+#' They attempt to achieve a proper fit by dropping
 #' columns (i.e., reducing the degrees of freedom of the model for \eqn{\sigma}) if necessary.
 #'
-#' The option \code{remove_df_sigma = TRUE} attempts to achieve a proper fit in the following two cases.
+#' The option \code{remove_df_sigma_pre} inspects the model matrices and the response vector before
+#' carrying out the fit, and drops columns from \code{X_sigma} if necessary. Warning: this is an
+#' experimental option which could cause unexpected issues!
+#'
+#' The option \code{remove_df_sigma_post = TRUE} attempts to achieve a proper fit in the following two cases.
 #' \itemize{
 #' \item \code{maxLik} uses the solve-method
 #' "NR" (the default method) or "BFGSR" and exits with return code 3. Note that this not the case when \code{sigma_min} (or one
 #' of its elements) has been set to a value larger than zero because then the method "BFGS" is used.
 #' \item The option \code{check_hessian} is \code{TRUE} and the Hessian of the log-likelihood is not negative-definite.
 #' }
+#' I.e., this option drops columns from \code{X_sigma} based on the results of a failed fit.
 #' }
 #' \subsection{Other}{
 #' When \code{check_hessian = TRUE}, it is checked whether the fitted log-likelihood is at a maximum. A warning will be issued if
 #' that is not the case.
+#'
+#' The control options \code{mu_full_rank} and \code{sigma_full_rank} are for efficiency purposes. If set to TRUE, the
+#' corresponding model matrices will not be made full-rank because it is assumed they are full-rank already. However,
+#' setting one of these to TRUE while the corresponding model matrix is not full-rank will cause unpredictable and
+#' possibly unnoticed errors. These options should therefore only be changed from their default value with the
+#' utmost care.
 #'
 #' See the vignettes
 #' that come with the \code{lmvar} package for more info. Run \code{vignette(package="lmvar")} to list the available vignettes.
@@ -161,6 +182,9 @@
 #' if the argument \code{slvr_log} has the value \code{TRUE}.
 #' See \code{\link[maxLik]{maxLik}} for details about this output.
 #' }
+#'
+#' @seealso \code{\link{lmvar_no_fit}} to create an object which is like an 'lmvar' object without carrying out a
+#' model fit.
 #'
 #' @export
 #'
@@ -197,7 +221,7 @@ lmvar <- function( y, X_mu = NULL, X_sigma = NULL,
 
     sigma_inv = as.numeric(exp(- X_sigma %*% beta_sigma))
     M = X_mu * sigma_inv
-    M = tryCatch( chol2inv(chol(Matrix::t(M) %*% M)),          # Exploit that t(M) %*% M is symmetric and positive-definite
+    M = tryCatch( chol2inv(chol(Matrix::crossprod(M))),          # Exploit that crossprod(M) is symmetric and positive-definite
 
                   error = function(e){
 
@@ -209,11 +233,11 @@ lmvar <- function( y, X_mu = NULL, X_sigma = NULL,
                     return(NA)
                   })
 
-    if(class(M) == 'logical'){
+    if(inherits( M, "logical")){
       return (NA)
     }
 
-    beta_mu = M %*% Matrix::t(X_mu) %*% (y * sigma_inv^2)
+    beta_mu = M %*% (Matrix::t(X_mu) %*% (y * sigma_inv^2))
     mu = as.numeric(X_mu %*% beta_mu)
     res = (y - mu) * sigma_inv
 
@@ -243,14 +267,14 @@ lmvar <- function( y, X_mu = NULL, X_sigma = NULL,
                       }
                       return(NA)
                    })
-      if(class(M) == 'logical'){
+      if(inherits( M, "logical")){
         return (NA)
       }
 
-      XT = M %*% Matrix::t(X_mu) %*% (X_sigma * (res * sigma_inv)) # Use Choleski decomposition to have H_ss_1 symmetric
-      H_ss_1 = 4 * Matrix::t(XT) %*% XT
+      XT = M %*% (Matrix::t(X_mu) %*% (X_sigma * (res * sigma_inv))) # Use Choleski decomposition to have H_ss_1 symmetric
+      H_ss_1 = 4 * Matrix::crossprod(XT)
       XT = X_sigma * abs(res)
-      H_ss_2 = -2 * Matrix::t(XT) %*% XT
+      H_ss_2 = -2 * Matrix::crossprod(XT)
 
       # Set attribute
       attr( logLik, "hessian") = as.matrix(H_ss_1 + H_ss_2)
@@ -289,10 +313,10 @@ lmvar <- function( y, X_mu = NULL, X_sigma = NULL,
   }
 
   # Turn vectors into matrices
-  if (class(X_mu) == 'numeric'){
+  if (inherits( X_mu, 'numeric')){
     X_mu = as.matrix(X_mu)
   }
-  if (class(X_sigma) == 'numeric'){
+  if (inherits( X_sigma, 'numeric')){
     X_sigma = as.matrix(X_sigma)
   }
 
@@ -314,8 +338,17 @@ lmvar <- function( y, X_mu = NULL, X_sigma = NULL,
   if (!("monitor" %in% names(control))){
     control$monitor = FALSE
   }
-  if (!("remove_df_sigma" %in% names(control))){
-    control$remove_df_sigma = FALSE
+  if (!("remove_df_sigma_pre" %in% names(control))){
+    control$remove_df_sigma_pre = FALSE
+  }
+  if (!("remove_df_sigma_post" %in% names(control))){
+    control$remove_df_sigma_post = FALSE
+  }
+  if (!("mu_full_rank" %in% names(control))){
+    control$mu_full_rank = FALSE
+  }
+  if (!("sigma_full_rank" %in% names(control))){
+    control$sigma_full_rank = FALSE
   }
 
   # Check inputs
@@ -363,22 +396,52 @@ lmvar <- function( y, X_mu = NULL, X_sigma = NULL,
     X_sigma = cbind( Intercept, X_sigma)
   }
 
-  # Initialize aliased columns
-  aliased_mu = logical(length = ncol(X_mu))
-  aliased_sigma = logical(length = ncol(X_sigma))
-  names = matrix_column_names( X_mu, X_sigma, intercept_mu, intercept_sigma)
-  names(aliased_mu) = names$colnames_X
-  names(aliased_sigma) = names$colnames_X_sigma
-
   # Give matrices column names if there are none
   names = matrix_column_names( X_mu, X_sigma, intercept_mu, intercept_sigma)
   colnames(X_mu) = names$colnames_X
   colnames(X_sigma) = names$colnames_X_sigma
 
+  # Initialize aliased columns
+  aliased_mu = logical(length = ncol(X_mu))
+  aliased_sigma = logical(length = ncol(X_sigma))
+  names(aliased_mu) = colnames(X_mu)
+  names(aliased_sigma) = colnames(X_sigma)
+
   # Turn matrices into a full-rank matrices
+  equal_matrices = FALSE
+  if (!control$sigma_full_rank & ncol(X_mu) == ncol(X_sigma)){
+    if (all(X_mu == X_sigma)){
+      equal_matrices = TRUE
+    }
+  }
+
   qX = Matrix::qr(X_mu)
-  X_mu = make_matrix_full_rank( qX, X_mu)
-  X_sigma = make_matrix_full_rank(X_sigma)
+  if (!control$mu_full_rank){
+    X_mu = make_matrix_full_rank( qX, X_mu)
+  }
+  if (!control$sigma_full_rank){
+    if (equal_matrices){
+      i = names(aliased_mu) %in% colnames(X_mu)
+      X_sigma = X_mu
+      colnames(X_sigma) = names(aliased_sigma)[i]
+    }
+    else X_sigma = make_matrix_full_rank(X_sigma)
+  }
+
+  # Carry out pre-check on convergence
+  if (control$remove_df_sigma_pre){
+    pre_check = convergence_precheck( y, X_mu, X_sigma)
+    if (class(pre_check) == "list"){
+      names = colnames(X_sigma)[pre_check$column_numbers]
+      X_sigma = X_sigma[,pre_check$column_numbers]
+
+      # Turn vector into matrix
+      if (inherits( X_sigma, 'numeric')){
+        X_sigma = as.matrix(X_sigma)
+        colnames(X_sigma) = names
+      }
+    }
+  }
 
   # set aliased columns
   names = names(aliased_mu)
@@ -442,7 +505,7 @@ lmvar <- function( y, X_mu = NULL, X_sigma = NULL,
 
   # Check if attempt to improve fit is needed
   improve_fit = FALSE
-  if (control$remove_df_sigma){
+  if (control$remove_df_sigma_post){
     # Check return code of maxLik
     if(solve_result$code == 3 & slvr_options$method %in% c( "NR", "BFGSR")){
       improve_fit = TRUE
@@ -514,14 +577,14 @@ lmvar <- function( y, X_mu = NULL, X_sigma = NULL,
   # Calculate beta for expectation value mu
   sigma = as.numeric(exp( X_sigma %*% beta_sigma))
   M = X_mu * (1/sigma)
-  M = tryCatch( chol2inv(chol(Matrix::t(M) %*% M)),
+  M = tryCatch( chol2inv(chol(Matrix::crossprod(M))),
                 error = function(e){
                   message (e)
                   cat("\n")
                   print_diagnostics( beta_sigma, 1 / sigma, colnames(X_sigma))
                   stop()
                 })
-  beta = as.numeric(M %*% Matrix::t(X_mu) %*% (y / (sigma^2)))
+  beta = as.numeric(M %*% (Matrix::t(X_mu) %*% (y / (sigma^2))))
 
   # Check Hessian
   if (control$check_hessian){

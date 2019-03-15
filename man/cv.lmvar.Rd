@@ -5,8 +5,8 @@
 \title{Cross-validation for an object of class 'lmvar'}
 \usage{
 cv.lmvar(object, k = 10, ks_test = FALSE, fun = NULL, log = FALSE,
-  seed = NULL, sigma_min = NULL, exclude = NULL, slvr_options = list(),
-  max_cores = NULL, ...)
+  seed = NULL, sigma_min = NULL, exclude = NULL,
+  slvr_options = list(), max_cores = NULL, ...)
 }
 \arguments{
 \item{object}{Object of class 'lmvar'}

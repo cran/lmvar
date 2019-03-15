@@ -110,7 +110,9 @@ test_that("control options have effect", {
   c4 = c( 0, 0, 0, 0, 0, 1, 1)
   X = matrix( c( c1, c2, c3, c4), nrow = 7)
 
+  suppressWarnings(RNGversion("3.5.0"))
   set.seed(5678)
+
   y = rnorm( 7, mean = 1)
   beta_start = c(1, -1, -1, -1)
 
@@ -136,6 +138,7 @@ test_that("solve with constraint on sigma", {
 
 test_that("Option to remove degrees of freedom to improve fit", {
 
+  suppressWarnings(RNGversion("3.5.0"))
   set.seed(1349)
 
   n = 1000

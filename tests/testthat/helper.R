@@ -1,6 +1,7 @@
 library(lmvar)
 
 # Set RNG seed
+suppressWarnings(RNGversion("3.5.0"))
 set.seed(345981)
 
 # Set number of observations

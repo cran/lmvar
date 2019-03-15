@@ -4,9 +4,9 @@
 \alias{predict.lmvar}
 \title{Predictions for model matrices}
 \usage{
-\method{predict}{lmvar}(object, X_mu = NULL, X_sigma = NULL, mu = TRUE,
-  sigma = TRUE, log = FALSE, interval = c("none", "confidence",
-  "prediction"), level = 0.95, ...)
+\method{predict}{lmvar}(object, X_mu = NULL, X_sigma = NULL,
+  mu = TRUE, sigma = TRUE, log = FALSE, interval = c("none",
+  "confidence", "prediction"), level = 0.95, ...)
 }
 \arguments{
 \item{object}{Object of class 'lmvar'}

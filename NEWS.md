@@ -1,3 +1,9 @@
+Version 1.5.1
+-------------
+
+* This version is equal to verson 1.5.0 but contains technical fixes pertaining to changes in the implementation of
+random number generators in R3.6.0.
+
 Version 1.5.0
 -------------
 

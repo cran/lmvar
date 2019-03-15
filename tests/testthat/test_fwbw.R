@@ -2,6 +2,7 @@ context("Forward-backward model selection")
 
 test_that("Selection retrieves original model (lmvar)", {
 
+  suppressWarnings(RNGversion("3.5.0"))
   set.seed(3456)
 
   # create 'lmvar' object
@@ -62,6 +63,7 @@ test_that("Selection retrieves original model (lmvar)", {
 
 test_that("Selection retrieves original model (lm and lmvar as lm)", {
 
+  suppressWarnings(RNGversion("3.5.0"))
   set.seed(1234)
 
   # create 'lm' object
@@ -249,6 +251,7 @@ test_that("No intercept term (lm)", {
 
 test_that("Unusual variable names (lm)", {
 
+  suppressWarnings(RNGversion("3.5.0"))
   set.seed(1234)
 
   # create 'lm' object
@@ -299,6 +302,7 @@ test_that("Unusual variable names (lm)", {
 
 test_that("Unusual variable names (lmvar)", {
 
+  suppressWarnings(RNGversion("3.5.0"))
   set.seed(8901)
 
   # create 'lmvar' object
@@ -360,6 +364,7 @@ test_that("Unusual variable names (lmvar)", {
 
 test_that( "fwbw works on object of class 'lmvar_no_fit", {
 
+  suppressWarnings(RNGversion("3.5.0"))
   set.seed(3456)
 
   # create 'lmvar' object

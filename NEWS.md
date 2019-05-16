@@ -1,3 +1,8 @@
+Version 1.5.2
+-------------
+
+* This version is equal to verson 1.5.1. It contains technical fixes required by a change in BLAS version used in CRAN checks.
+
 Version 1.5.1
 -------------
 

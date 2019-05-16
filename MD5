@@ -1,6 +1,6 @@
-fe8e7eb8c6330d7f2d384ce234b8ac7b *DESCRIPTION
+09fd6768509bbf33a6b64259804ab865 *DESCRIPTION
 749a2ed134c1cb625596f210b2032f24 *NAMESPACE
-765ae48ce254299d979c2aa7937b316d *NEWS.md
+d4f7d9dca8a1ffc6d8e2bad3894cf244 *NEWS.md
 799ae591e93eb076cea0d9f8150235dd *R/AIC.lmvar.R
 625dea541a0b4657fa96a308a8ba0f3a *R/alias.lmvar_no_fit.R
 a8ca451e1d9d9cc0dfac990ac83a6189 *R/beta_sigma_names.R
@@ -68,12 +68,12 @@ a57fc156653d7c9ed6179fc3068774d1 *R/round_to_sd_accuracy.R
 53a0a56108ded09b0576e9dce23fa7fb *R/summary.lmvar.R
 4a911bd1219a39c7ca8408ebb5c6ca0a *R/vcov.lmvar.R
 5fdc6d693e515357f427f5c480c00cc2 *README.md
-8140051b70d5ab9ced23f8d5535d3f55 *build/vignette.rds
+4322f5e9e1648b804a7e9c060fb06c1c *build/vignette.rds
 43420a9c34b4be8e636927beaf480d82 *inst/doc/Intro.R
 8165b0a56648f6e7358b9df2fc27f381 *inst/doc/Intro.Rmd
-8ba51479204b12ce07c46d00aa90503f *inst/doc/Intro.html
+4523e8d75c54568ee0fe2dec604ba883 *inst/doc/Intro.html
 d14af0a8f0cc7cd7096c4d68cff40a9c *inst/doc/Math.ltx
-1aa854fa90b9a7e1df9fda9ffc7183e5 *inst/doc/Math.pdf
+e8058c40a3b16b537b9d141a1da3ee71 *inst/doc/Math.pdf
 cdc8775371ef46701cbbfdd098441d22 *man/AIC.lmvar.Rd
 9155d6d400a240a721c21b9fcd3f2600 *man/alias.lmvar_no_fit.Rd
 96870ffeb6e33b5476b9014730e99d0f *man/beta_sigma_names.Rd
@@ -114,7 +114,7 @@ cbc022948d6c0009e705b9f0111937cf *tests/testthat.R
 0904e44a027ff53c93eb48cd7b7ff128 *tests/testthat/test_extractors.R
 eb28bd3a2e6287b188e64cf00196e9a8 *tests/testthat/test_fwbw.R
 662b803897ac92828a7d5368f62f7e45 *tests/testthat/test_gradient_and_hessian.R
-32f095985080a01d3d3157c399dd1087 *tests/testthat/test_lmvar.R
+9d1a8f19354b20e95d278896ce8f8c52 *tests/testthat/test_lmvar.R
 6f5648dc0119906e28f182d0897627cb *tests/testthat/test_lmvar_no_fit.R
 2de1a3ebd02098ee93f67c401f92d281 *tests/testthat/test_predict.R
 8165b0a56648f6e7358b9df2fc27f381 *vignettes/Intro.Rmd

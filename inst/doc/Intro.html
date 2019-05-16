@@ -12,7 +12,7 @@
 
 <meta name="author" content="Posthuma Partners" />
 
-<meta name="date" content="2019-03-15" />
+<meta name="date" content="2019-05-16" />
 
 <title>A linear model with non-constant variances</title>
 
@@ -20,41 +20,67 @@
 
 <style type="text/css">code{white-space: pre;}</style>
 <style type="text/css" data-origin="pandoc">
-div.sourceCode { overflow-x: auto; }
-table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
-  margin: 0; padding: 0; vertical-align: baseline; border: none; }
-table.sourceCode { width: 100%; line-height: 100%; }
-td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
-td.sourceCode { padding-left: 5px; }
-code > span.kw { color: #007020; font-weight: bold; } /* Keyword */
-code > span.dt { color: #902000; } /* DataType */
-code > span.dv { color: #40a070; } /* DecVal */
-code > span.bn { color: #40a070; } /* BaseN */
-code > span.fl { color: #40a070; } /* Float */
-code > span.ch { color: #4070a0; } /* Char */
-code > span.st { color: #4070a0; } /* String */
-code > span.co { color: #60a0b0; font-style: italic; } /* Comment */
-code > span.ot { color: #007020; } /* Other */
-code > span.al { color: #ff0000; font-weight: bold; } /* Alert */
-code > span.fu { color: #06287e; } /* Function */
-code > span.er { color: #ff0000; font-weight: bold; } /* Error */
-code > span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
-code > span.cn { color: #880000; } /* Constant */
-code > span.sc { color: #4070a0; } /* SpecialChar */
-code > span.vs { color: #4070a0; } /* VerbatimString */
-code > span.ss { color: #bb6688; } /* SpecialString */
-code > span.im { } /* Import */
-code > span.va { color: #19177c; } /* Variable */
-code > span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
-code > span.op { color: #666666; } /* Operator */
-code > span.bu { } /* BuiltIn */
-code > span.ex { } /* Extension */
-code > span.pp { color: #bc7a00; } /* Preprocessor */
-code > span.at { color: #7d9029; } /* Attribute */
-code > span.do { color: #ba2121; font-style: italic; } /* Documentation */
-code > span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
-code > span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
-code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+a.sourceLine { display: inline-block; line-height: 1.25; }
+a.sourceLine { pointer-events: none; color: inherit; text-decoration: inherit; }
+a.sourceLine:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode { white-space: pre; position: relative; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+code.sourceCode { white-space: pre-wrap; }
+a.sourceLine { text-indent: -1em; padding-left: 1em; }
+}
+pre.numberSource a.sourceLine
+  { position: relative; left: -4em; }
+pre.numberSource a.sourceLine::before
+  { content: attr(title);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; pointer-events: all; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {  }
+@media screen {
+a.sourceLine::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
 
 </style>
 <script>
@@ -81,7 +107,192 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 
 
 
-<link href="data:text/css;charset=utf-8,body%20%7B%0Abackground%2Dcolor%3A%20%23fff%3B%0Amargin%3A%201em%20auto%3B%0Amax%2Dwidth%3A%20700px%3B%0Aoverflow%3A%20visible%3B%0Apadding%2Dleft%3A%202em%3B%0Apadding%2Dright%3A%202em%3B%0Afont%2Dfamily%3A%20%22Open%20Sans%22%2C%20%22Helvetica%20Neue%22%2C%20Helvetica%2C%20Arial%2C%20sans%2Dserif%3B%0Afont%2Dsize%3A%2014px%3B%0Aline%2Dheight%3A%201%2E35%3B%0A%7D%0A%23header%20%7B%0Atext%2Dalign%3A%20center%3B%0A%7D%0A%23TOC%20%7B%0Aclear%3A%20both%3B%0Amargin%3A%200%200%2010px%2010px%3B%0Apadding%3A%204px%3B%0Awidth%3A%20400px%3B%0Aborder%3A%201px%20solid%20%23CCCCCC%3B%0Aborder%2Dradius%3A%205px%3B%0Abackground%2Dcolor%3A%20%23f6f6f6%3B%0Afont%2Dsize%3A%2013px%3B%0Aline%2Dheight%3A%201%2E3%3B%0A%7D%0A%23TOC%20%2Etoctitle%20%7B%0Afont%2Dweight%3A%20bold%3B%0Afont%2Dsize%3A%2015px%3B%0Amargin%2Dleft%3A%205px%3B%0A%7D%0A%23TOC%20ul%20%7B%0Apadding%2Dleft%3A%2040px%3B%0Amargin%2Dleft%3A%20%2D1%2E5em%3B%0Amargin%2Dtop%3A%205px%3B%0Amargin%2Dbottom%3A%205px%3B%0A%7D%0A%23TOC%20ul%20ul%20%7B%0Amargin%2Dleft%3A%20%2D2em%3B%0A%7D%0A%23TOC%20li%20%7B%0Aline%2Dheight%3A%2016px%3B%0A%7D%0Atable%20%7B%0Amargin%3A%201em%20auto%3B%0Aborder%2Dwidth%3A%201px%3B%0Aborder%2Dcolor%3A%20%23DDDDDD%3B%0Aborder%2Dstyle%3A%20outset%3B%0Aborder%2Dcollapse%3A%20collapse%3B%0A%7D%0Atable%20th%20%7B%0Aborder%2Dwidth%3A%202px%3B%0Apadding%3A%205px%3B%0Aborder%2Dstyle%3A%20inset%3B%0A%7D%0Atable%20td%20%7B%0Aborder%2Dwidth%3A%201px%3B%0Aborder%2Dstyle%3A%20inset%3B%0Aline%2Dheight%3A%2018px%3B%0Apadding%3A%205px%205px%3B%0A%7D%0Atable%2C%20table%20th%2C%20table%20td%20%7B%0Aborder%2Dleft%2Dstyle%3A%20none%3B%0Aborder%2Dright%2Dstyle%3A%20none%3B%0A%7D%0Atable%20thead%2C%20table%20tr%2Eeven%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0A%7D%0Ap%20%7B%0Amargin%3A%200%2E5em%200%3B%0A%7D%0Ablockquote%20%7B%0Abackground%2Dcolor%3A%20%23f6f6f6%3B%0Apadding%3A%200%2E25em%200%2E75em%3B%0A%7D%0Ahr%20%7B%0Aborder%2Dstyle%3A%20solid%3B%0Aborder%3A%20none%3B%0Aborder%2Dtop%3A%201px%20solid%20%23777%3B%0Amargin%3A%2028px%200%3B%0A%7D%0Adl%20%7B%0Amargin%2Dleft%3A%200%3B%0A%7D%0Adl%20dd%20%7B%0Amargin%2Dbottom%3A%2013px%3B%0Amargin%2Dleft%3A%2013px%3B%0A%7D%0Adl%20dt%20%7B%0Afont%2Dweight%3A%20bold%3B%0A%7D%0Aul%20%7B%0Amargin%2Dtop%3A%200%3B%0A%7D%0Aul%20li%20%7B%0Alist%2Dstyle%3A%20circle%20outside%3B%0A%7D%0Aul%20ul%20%7B%0Amargin%2Dbottom%3A%200%3B%0A%7D%0Apre%2C%20code%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0Aborder%2Dradius%3A%203px%3B%0Acolor%3A%20%23333%3B%0Awhite%2Dspace%3A%20pre%2Dwrap%3B%20%0A%7D%0Apre%20%7B%0Aborder%2Dradius%3A%203px%3B%0Amargin%3A%205px%200px%2010px%200px%3B%0Apadding%3A%2010px%3B%0A%7D%0Apre%3Anot%28%5Bclass%5D%29%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0A%7D%0Acode%20%7B%0Afont%2Dfamily%3A%20Consolas%2C%20Monaco%2C%20%27Courier%20New%27%2C%20monospace%3B%0Afont%2Dsize%3A%2085%25%3B%0A%7D%0Ap%20%3E%20code%2C%20li%20%3E%20code%20%7B%0Apadding%3A%202px%200px%3B%0A%7D%0Adiv%2Efigure%20%7B%0Atext%2Dalign%3A%20center%3B%0A%7D%0Aimg%20%7B%0Abackground%2Dcolor%3A%20%23FFFFFF%3B%0Apadding%3A%202px%3B%0Aborder%3A%201px%20solid%20%23DDDDDD%3B%0Aborder%2Dradius%3A%203px%3B%0Aborder%3A%201px%20solid%20%23CCCCCC%3B%0Amargin%3A%200%205px%3B%0A%7D%0Ah1%20%7B%0Amargin%2Dtop%3A%200%3B%0Afont%2Dsize%3A%2035px%3B%0Aline%2Dheight%3A%2040px%3B%0A%7D%0Ah2%20%7B%0Aborder%2Dbottom%3A%204px%20solid%20%23f7f7f7%3B%0Apadding%2Dtop%3A%2010px%3B%0Apadding%2Dbottom%3A%202px%3B%0Afont%2Dsize%3A%20145%25%3B%0A%7D%0Ah3%20%7B%0Aborder%2Dbottom%3A%202px%20solid%20%23f7f7f7%3B%0Apadding%2Dtop%3A%2010px%3B%0Afont%2Dsize%3A%20120%25%3B%0A%7D%0Ah4%20%7B%0Aborder%2Dbottom%3A%201px%20solid%20%23f7f7f7%3B%0Amargin%2Dleft%3A%208px%3B%0Afont%2Dsize%3A%20105%25%3B%0A%7D%0Ah5%2C%20h6%20%7B%0Aborder%2Dbottom%3A%201px%20solid%20%23ccc%3B%0Afont%2Dsize%3A%20105%25%3B%0A%7D%0Aa%20%7B%0Acolor%3A%20%230033dd%3B%0Atext%2Ddecoration%3A%20none%3B%0A%7D%0Aa%3Ahover%20%7B%0Acolor%3A%20%236666ff%3B%20%7D%0Aa%3Avisited%20%7B%0Acolor%3A%20%23800080%3B%20%7D%0Aa%3Avisited%3Ahover%20%7B%0Acolor%3A%20%23BB00BB%3B%20%7D%0Aa%5Bhref%5E%3D%22http%3A%22%5D%20%7B%0Atext%2Ddecoration%3A%20underline%3B%20%7D%0Aa%5Bhref%5E%3D%22https%3A%22%5D%20%7B%0Atext%2Ddecoration%3A%20underline%3B%20%7D%0A%0Acode%20%3E%20span%2Ekw%20%7B%20color%3A%20%23555%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Edt%20%7B%20color%3A%20%23902000%3B%20%7D%20%0Acode%20%3E%20span%2Edv%20%7B%20color%3A%20%2340a070%3B%20%7D%20%0Acode%20%3E%20span%2Ebn%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Efl%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Ech%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Est%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Eco%20%7B%20color%3A%20%23888888%3B%20font%2Dstyle%3A%20italic%3B%20%7D%20%0Acode%20%3E%20span%2Eot%20%7B%20color%3A%20%23007020%3B%20%7D%20%0Acode%20%3E%20span%2Eal%20%7B%20color%3A%20%23ff0000%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Efu%20%7B%20color%3A%20%23900%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%20code%20%3E%20span%2Eer%20%7B%20color%3A%20%23a61717%3B%20background%2Dcolor%3A%20%23e3d2d2%3B%20%7D%20%0A" rel="stylesheet" type="text/css" />
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#header {
+text-align: center;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
 
 </head>
 
@@ -91,8 +302,8 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 
 
 <h1 class="title toc-ignore">A linear model with non-constant variances</h1>
-<h4 class="author"><em>Posthuma Partners</em></h4>
-<h4 class="date"><em>2019-03-15</em></h4>
+<h4 class="author">Posthuma Partners</h4>
+<h4 class="date">2019-05-16</h4>
 
 
 
@@ -105,32 +316,26 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <div id="the-model" class="section level2">
 <h2>The model</h2>
 <p>The package fits the following model. A vector <span class="math inline">\(Y\)</span> of observations (also called ‘responses’) of length <span class="math inline">\(n\)</span> is a stochastic vector. It is distributed according to a multivariate Gaussian distribution:</p>
-<span class="math display">\[\begin{equation}
+<p><span class="math display">\[\begin{equation}
 Y \sim \mathcal{N}_n( \mu, \Sigma),
-\end{equation}\]</span>
-where <span class="math inline">\(\mu\)</span> is the vector of expected values and <span class="math inline">\(\Sigma\)</span> the covariance matrix (also called the ‘variance-covariance matrix’). Just like in the standard linear model, the covariance matrix is taken to be a <span class="math inline">\(n \times n\)</span> diagonal matrix but contrary to the standard linear model, the diagonal entries need not be all the same:
-<span class="math display">\[\begin{equation}
+\end{equation}\]</span> where <span class="math inline">\(\mu\)</span> is the vector of expected values and <span class="math inline">\(\Sigma\)</span> the covariance matrix (also called the ‘variance-covariance matrix’). Just like in the standard linear model, the covariance matrix is taken to be a <span class="math inline">\(n \times n\)</span> diagonal matrix but contrary to the standard linear model, the diagonal entries need not be all the same: <span class="math display">\[\begin{equation}
 \Sigma_{ij} =
 \begin{cases}
 0 &amp; i \neq j\\
 \sigma_i^2 &amp; i=j
 \end{cases}
-\end{equation}\]</span>
+\end{equation}\]</span></p>
 <div id="model-for-the-expectation-values" class="section level3">
 <h3>Model for the expectation values</h3>
-As in the classical linear model, the vector of expectation values <span class="math inline">\(\mu\)</span> is given by
-<span class="math display">\[\begin{equation}
+<p>As in the classical linear model, the vector of expectation values <span class="math inline">\(\mu\)</span> is given by <span class="math display">\[\begin{equation}
 \mu = X_\mu \beta_\mu
-\end{equation}\]</span>
-<p>where <span class="math inline">\(X_\mu\)</span> is the ‘model matrix’ or ‘design matrix’ for <span class="math inline">\(\mu\)</span> and <span class="math inline">\(\beta_\mu\)</span> the parameter vector for <span class="math inline">\(\mu\)</span>. <span class="math inline">\(X_\mu\)</span> is a <span class="math inline">\(n \times k_\mu\)</span> matrix and <span class="math inline">\(\beta_\mu\)</span> a vector of length <span class="math inline">\(k_\mu\)</span>.</p>
+\end{equation}\]</span> where <span class="math inline">\(X_\mu\)</span> is the ‘model matrix’ or ‘design matrix’ for <span class="math inline">\(\mu\)</span> and <span class="math inline">\(\beta_\mu\)</span> the parameter vector for <span class="math inline">\(\mu\)</span>. <span class="math inline">\(X_\mu\)</span> is a <span class="math inline">\(n \times k_\mu\)</span> matrix and <span class="math inline">\(\beta_\mu\)</span> a vector of length <span class="math inline">\(k_\mu\)</span>.</p>
 </div>
 <div id="model-for-the-variances" class="section level3">
 <h3>Model for the variances</h3>
-Let <span class="math inline">\(\sigma\)</span> denotes the vector <span class="math inline">\((\sigma_1, \dots, \sigma_n)\)</span>. The model for <span class="math inline">\(\sigma\)</span> is
-<span class="math display">\[\begin{equation}
+<p>Let <span class="math inline">\(\sigma\)</span> denotes the vector <span class="math inline">\((\sigma_1, \dots, \sigma_n)\)</span>. The model for <span class="math inline">\(\sigma\)</span> is <span class="math display">\[\begin{equation}
 \log \sigma = X_\sigma \beta_\sigma
-\end{equation}\]</span>
-<p>where <span class="math inline">\(\log \sigma\)</span> stands for the vector <span class="math inline">\((\log\sigma_1, \dots, \log\sigma_n)\)</span>, <span class="math inline">\(X_\sigma\)</span> is the ‘model matrix’ or ‘design matrix’ for <span class="math inline">\(\sigma\)</span> and <span class="math inline">\(\beta_\sigma\)</span> the parameter vector for <span class="math inline">\(\sigma\)</span>. The logarithm is taken to be the ‘natural logarithm’ with base <span class="math inline">\(e\)</span>. The dimensions of <span class="math inline">\(X_\sigma\)</span> are <span class="math inline">\(n \times k_\sigma\)</span> and <span class="math inline">\(\beta_\sigma\)</span> is a vector of length <span class="math inline">\(k_\sigma\)</span>.</p>
+\end{equation}\]</span> where <span class="math inline">\(\log \sigma\)</span> stands for the vector <span class="math inline">\((\log\sigma_1, \dots, \log\sigma_n)\)</span>, <span class="math inline">\(X_\sigma\)</span> is the ‘model matrix’ or ‘design matrix’ for <span class="math inline">\(\sigma\)</span> and <span class="math inline">\(\beta_\sigma\)</span> the parameter vector for <span class="math inline">\(\sigma\)</span>. The logarithm is taken to be the ‘natural logarithm’ with base <span class="math inline">\(e\)</span>. The dimensions of <span class="math inline">\(X_\sigma\)</span> are <span class="math inline">\(n \times k_\sigma\)</span> and <span class="math inline">\(\beta_\sigma\)</span> is a vector of length <span class="math inline">\(k_\sigma\)</span>.</p>
 </div>
 <div id="also-know-that" class="section level3">
 <h3>Also know that…</h3>
@@ -165,20 +370,20 @@ Let <span class="math inline">\(\sigma\)</span> denotes the vector <span class="
 <div id="demonstration" class="section level2">
 <h2>Demonstration</h2>
 <p>We demonstrate the package with the help of the dataframe <code>cats</code> which can be found in the <code>MASS</code> package.</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># As example we use the dataset 'cats' from the library 'MASS'.  </span>
-<span class="kw">require</span>(lmvar); <span class="kw">require</span>(MASS)
-
-<span class="co"># A plot of the heart weight versus the body weight in the data set</span>
-<span class="kw">plot</span>(cats<span class="op">$</span>Bwt, cats<span class="op">$</span>Hwt, <span class="dt">xlab =</span> <span class="st">&quot;Body weight&quot;</span>, <span class="dt">ylab =</span> <span class="st">&quot;Heart weight&quot;</span>)</code></pre></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb1-1" title="1"><span class="co"># As example we use the dataset &#39;cats&#39; from the library &#39;MASS&#39;.  </span></a>
+<a class="sourceLine" id="cb1-2" title="2"><span class="kw">require</span>(lmvar); <span class="kw">require</span>(MASS)</a>
+<a class="sourceLine" id="cb1-3" title="3"></a>
+<a class="sourceLine" id="cb1-4" title="4"><span class="co"># A plot of the heart weight versus the body weight in the data set</span></a>
+<a class="sourceLine" id="cb1-5" title="5"><span class="kw">plot</span>(cats<span class="op">$</span>Bwt, cats<span class="op">$</span>Hwt, <span class="dt">xlab =</span> <span class="st">&quot;Body weight&quot;</span>, <span class="dt">ylab =</span> <span class="st">&quot;Heart weight&quot;</span>)</a></code></pre></div>
 <p><img src="data:image/png;base64,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" /><!-- --></p>
 <p>We want to regress the cats heart weight ‘Hwt’ onto the body weight ‘Bwt’.</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># Create the model matrix. It only contains the body weight. An intercept term will be added by 'lmvar'. </span>
-X =<span class="st"> </span><span class="kw">model.matrix</span>(<span class="op">~</span><span class="st"> </span>Bwt <span class="op">-</span><span class="st"> </span><span class="dv">1</span>, cats)
-
-<span class="co"># Carry out the fit with the same model matrix for mu (the expected heart weight) and for log sigma (the standard deviation)</span>
-fit =<span class="st"> </span><span class="kw">lmvar</span>(cats<span class="op">$</span>Hwt, <span class="dt">X_mu =</span> X, <span class="dt">X_sigma =</span> X)</code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb2-1" title="1"><span class="co"># Create the model matrix. It only contains the body weight. An intercept term will be added by &#39;lmvar&#39;. </span></a>
+<a class="sourceLine" id="cb2-2" title="2">X =<span class="st"> </span><span class="kw">model.matrix</span>(<span class="op">~</span><span class="st"> </span>Bwt <span class="op">-</span><span class="st"> </span><span class="dv">1</span>, cats)</a>
+<a class="sourceLine" id="cb2-3" title="3"></a>
+<a class="sourceLine" id="cb2-4" title="4"><span class="co"># Carry out the fit with the same model matrix for mu (the expected heart weight) and for log sigma (the standard deviation)</span></a>
+<a class="sourceLine" id="cb2-5" title="5">fit =<span class="st"> </span><span class="kw">lmvar</span>(cats<span class="op">$</span>Hwt, <span class="dt">X_mu =</span> X, <span class="dt">X_sigma =</span> X)</a></code></pre></div>
 <p>We have now created the object <code>fit</code>, which is our object of class <code>lmvar</code>. To obtain a first impression of the fit, we look at the summary</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">summary</span>(fit)</code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb3-1" title="1"><span class="kw">summary</span>(fit)</a></code></pre></div>
 <pre><code>## Call: 
 ##  lmvar(y = cats$Hwt, X_mu = X, X_sigma = X)
 ## 
@@ -196,7 +401,7 @@ fit =<span class="st"> </span><span class="kw">lmvar</span>(cats<span class="op"
 ## (Intercept_s) -0.522274   0.337044 -1.5496  0.121244    
 ## Bwt_s          0.315837   0.121843  2.5922  0.009537 ** 
 ## ---
-## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
 ## 
 ## Standard deviations: 
 ##    Min     1Q Median     3Q    Max 
@@ -213,21 +418,21 @@ fit =<span class="st"> </span><span class="kw">lmvar</span>(cats<span class="op"
 <p>Finally the model is compared to a classical linear model with the same model matrix <span class="math inline">\(X_\mu\)</span> but a standard deviation that is the same for all observations. The summary shows the difference in log-likelihood between the two models and the difference in degrees of freedom. Twice the difference in log-likelihood is the difference in deviance, for which a p-value is calculated. The p-value of 0.00433, indicates that the <code>lmvar</code> fit is a better fit than the classical linear model at the 5% confidence level. I.e., it makes sense to let the standard deviation vary instead of keeping it fixed.</p>
 <p>Another useful, high-level check of the fit is to look at a number of diagnostic plots with the command <code>plot (fit)</code>.</p>
 <p>The number of observations in the fit and the log-likelihood are</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">nobs</span>(fit)</code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb5-1" title="1"><span class="kw">nobs</span>(fit)</a></code></pre></div>
 <pre><code>## [1] 144</code></pre>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">logLik</span>(fit)</code></pre></div>
-<pre><code>## 'log Lik.' -252.991 (df=4)</code></pre>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb7-1" title="1"><span class="kw">logLik</span>(fit)</a></code></pre></div>
+<pre><code>## &#39;log Lik.&#39; -252.991 (df=4)</code></pre>
 <p>The rank of the matrix <span class="math inline">\(X_\mu\)</span> used in the fit is</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">dfree</span>(fit, <span class="dt">sigma =</span> <span class="ot">FALSE</span>)</code></pre></div>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb9-1" title="1"><span class="kw">dfree</span>(fit, <span class="dt">sigma =</span> <span class="ot">FALSE</span>)</a></code></pre></div>
 <pre><code>## [1] 2</code></pre>
 <p>The value 2 is correct: the user-supplied matrix had 1 column and <code>lmvar</code> added an intercept column. The two columns are linearly independent so no column had to be removed.</p>
 <p>We run the regression again, but this time without intercept terms</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">fit =<span class="st"> </span><span class="kw">lmvar</span>(cats<span class="op">$</span>Hwt, <span class="dt">X_mu =</span> X, <span class="dt">X_sigma =</span> X, <span class="dt">intercept_mu =</span> <span class="ot">FALSE</span>, <span class="dt">intercept_sigma =</span> <span class="ot">FALSE</span>)</code></pre></div>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb11-1" title="1">fit =<span class="st"> </span><span class="kw">lmvar</span>(cats<span class="op">$</span>Hwt, <span class="dt">X_mu =</span> X, <span class="dt">X_sigma =</span> X, <span class="dt">intercept_mu =</span> <span class="ot">FALSE</span>, <span class="dt">intercept_sigma =</span> <span class="ot">FALSE</span>)</a></code></pre></div>
 <p>The rank of <span class="math inline">\(X_\mu\)</span> as used in the fit is now equal to 1:</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">dfree</span>(fit, <span class="dt">sigma =</span> <span class="ot">FALSE</span>)</code></pre></div>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb12-1" title="1"><span class="kw">dfree</span>(fit, <span class="dt">sigma =</span> <span class="ot">FALSE</span>)</a></code></pre></div>
 <pre><code>## [1] 1</code></pre>
 <p>The summary no longer shows the intercept terms:</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">summary</span>(fit)</code></pre></div>
+<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb14-1" title="1"><span class="kw">summary</span>(fit)</a></code></pre></div>
 <pre><code>## Call: 
 ##  lmvar(y = cats$Hwt, X_mu = X, X_sigma = X, intercept_mu = FALSE, 
 ##     intercept_sigma = FALSE)
@@ -244,64 +449,64 @@ fit =<span class="st"> </span><span class="kw">lmvar</span>(cats<span class="op"
 ## Bwt   3.903044   0.044278 88.1489 &lt; 2.2e-16 ***
 ## Bwt_s 0.134489   0.021302  6.3135 2.728e-10 ***
 ## ---
-## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
 ## 
 ## Standard deviations: 
 ##    Min     1Q Median     3Q    Max 
 ## 1.3086 1.3625 1.4378 1.5021 1.6896</code></pre>
 <p>The summary overview has left out the comparison with the classical linear model as well. The classical linear model and the model in <code>fit</code> are no longer nested models because of the absence on an intercept term in <span class="math inline">\(X_\sigma\)</span>.</p>
 <p>Let’s see whether the z-scores appear to be correlated with the body weight</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">sigma =<span class="st"> </span><span class="kw">fitted</span>(fit, <span class="dt">mu =</span> <span class="ot">FALSE</span>)
-<span class="kw">plot</span>(cats<span class="op">$</span>Bwt, <span class="kw">residuals</span>(fit) <span class="op">/</span><span class="st"> </span>sigma, <span class="dt">xlab =</span> <span class="st">&quot;Body weight&quot;</span>, <span class="dt">ylab =</span> <span class="st">&quot;z-score&quot;</span>)
-<span class="kw">abline</span>(<span class="dv">0</span>, <span class="dv">0</span>, <span class="dt">col =</span> <span class="st">&quot;red&quot;</span>)</code></pre></div>
+<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb16-1" title="1">sigma =<span class="st"> </span><span class="kw">fitted</span>(fit, <span class="dt">mu =</span> <span class="ot">FALSE</span>)</a>
+<a class="sourceLine" id="cb16-2" title="2"><span class="kw">plot</span>(cats<span class="op">$</span>Bwt, <span class="kw">residuals</span>(fit) <span class="op">/</span><span class="st"> </span>sigma, <span class="dt">xlab =</span> <span class="st">&quot;Body weight&quot;</span>, <span class="dt">ylab =</span> <span class="st">&quot;z-score&quot;</span>)</a>
+<a class="sourceLine" id="cb16-3" title="3"><span class="kw">abline</span>(<span class="dv">0</span>, <span class="dv">0</span>, <span class="dt">col =</span> <span class="st">&quot;red&quot;</span>)</a></code></pre></div>
 <p><img src="data:image/png;base64,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" /><!-- --></p>
 <p>Let’s also plot the average heart weights versus the body weight, with a 95% confidence interval as error bar.</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">mu =<span class="st"> </span><span class="kw">fitted</span>(fit, <span class="dt">sigma =</span> <span class="ot">FALSE</span>)
-
-<span class="kw">plot</span>(cats<span class="op">$</span>Bwt, mu, <span class="dt">xlab =</span> <span class="st">&quot;Body weight&quot;</span>, <span class="dt">ylab =</span> <span class="st">&quot;Average heart weight&quot;</span>, <span class="dt">ylim =</span> <span class="kw">c</span>(<span class="dv">7</span>, <span class="dv">16</span>))
-
-intervals =<span class="st"> </span><span class="kw">fitted</span>(fit, <span class="dt">interval =</span> <span class="st">&quot;confidence&quot;</span>, <span class="dt">level =</span> <span class="fl">0.95</span>)
-lwr =<span class="st"> </span>intervals[, <span class="st">&quot;mu_lwr&quot;</span>]
-upr =<span class="st"> </span>intervals[, <span class="st">&quot;mu_upr&quot;</span>]
-
-<span class="kw">segments</span>(cats<span class="op">$</span>Bwt, lwr, cats<span class="op">$</span>Bwt, upr)</code></pre></div>
+<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb17-1" title="1">mu =<span class="st"> </span><span class="kw">fitted</span>(fit, <span class="dt">sigma =</span> <span class="ot">FALSE</span>)</a>
+<a class="sourceLine" id="cb17-2" title="2"></a>
+<a class="sourceLine" id="cb17-3" title="3"><span class="kw">plot</span>(cats<span class="op">$</span>Bwt, mu, <span class="dt">xlab =</span> <span class="st">&quot;Body weight&quot;</span>, <span class="dt">ylab =</span> <span class="st">&quot;Average heart weight&quot;</span>, <span class="dt">ylim =</span> <span class="kw">c</span>(<span class="dv">7</span>, <span class="dv">16</span>))</a>
+<a class="sourceLine" id="cb17-4" title="4"></a>
+<a class="sourceLine" id="cb17-5" title="5">intervals =<span class="st"> </span><span class="kw">fitted</span>(fit, <span class="dt">interval =</span> <span class="st">&quot;confidence&quot;</span>, <span class="dt">level =</span> <span class="fl">0.95</span>)</a>
+<a class="sourceLine" id="cb17-6" title="6">lwr =<span class="st"> </span>intervals[, <span class="st">&quot;mu_lwr&quot;</span>]</a>
+<a class="sourceLine" id="cb17-7" title="7">upr =<span class="st"> </span>intervals[, <span class="st">&quot;mu_upr&quot;</span>]</a>
+<a class="sourceLine" id="cb17-8" title="8"></a>
+<a class="sourceLine" id="cb17-9" title="9"><span class="kw">segments</span>(cats<span class="op">$</span>Bwt, lwr, cats<span class="op">$</span>Bwt, upr)</a></code></pre></div>
 <p><img src="data:image/png;base64,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" /><!-- --></p>
 <p>We carry out a classical linear fit, without an intercept term in the model matrix</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">fit_lm =<span class="st"> </span><span class="kw">lm</span>(cats<span class="op">$</span>Hwt <span class="op">~</span><span class="st"> </span>Bwt <span class="op">-</span><span class="st"> </span><span class="dv">1</span>, cats)</code></pre></div>
+<div class="sourceCode" id="cb18"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb18-1" title="1">fit_lm =<span class="st"> </span><span class="kw">lm</span>(cats<span class="op">$</span>Hwt <span class="op">~</span><span class="st"> </span>Bwt <span class="op">-</span><span class="st"> </span><span class="dv">1</span>, cats)</a></code></pre></div>
 <p>and we compare AIC and BIC values</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">AIC</span>(fit); <span class="kw">AIC</span>(fit_lm)</code></pre></div>
+<div class="sourceCode" id="cb19"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb19-1" title="1"><span class="kw">AIC</span>(fit); <span class="kw">AIC</span>(fit_lm)</a></code></pre></div>
 <pre><code>## [1] 512.7867</code></pre>
 <pre><code>## [1] 518.3905</code></pre>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">BIC</span>(fit); <span class="kw">BIC</span>(fit_lm)</code></pre></div>
+<div class="sourceCode" id="cb22"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb22-1" title="1"><span class="kw">BIC</span>(fit); <span class="kw">BIC</span>(fit_lm)</a></code></pre></div>
 <pre><code>## [1] 518.7263</code></pre>
 <pre><code>## [1] 524.3301</code></pre>
 <p>Both AIC and BIC favor the fit with <code>lmvar</code> over the fit with <code>lm</code>.</p>
 <p>We plot again the expected heart weight versus the body weight, but now we add the predictions of the classical linear fit as red points</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">plot</span>(cats<span class="op">$</span>Bwt, mu, <span class="dt">xlab =</span> <span class="st">&quot;Body weight&quot;</span>, <span class="dt">ylab =</span> <span class="st">&quot;Average heart weight&quot;</span>, <span class="dt">ylim =</span> <span class="kw">c</span>(<span class="dv">7</span>, <span class="dv">16</span>))
-<span class="kw">segments</span>(cats<span class="op">$</span>Bwt, lwr, cats<span class="op">$</span>Bwt, upr)
-<span class="kw">points</span>(cats<span class="op">$</span>Bwt, <span class="kw">fitted</span>(fit_lm), <span class="dt">col =</span> <span class="st">&quot;red&quot;</span>)</code></pre></div>
+<div class="sourceCode" id="cb25"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb25-1" title="1"><span class="kw">plot</span>(cats<span class="op">$</span>Bwt, mu, <span class="dt">xlab =</span> <span class="st">&quot;Body weight&quot;</span>, <span class="dt">ylab =</span> <span class="st">&quot;Average heart weight&quot;</span>, <span class="dt">ylim =</span> <span class="kw">c</span>(<span class="dv">7</span>, <span class="dv">16</span>))</a>
+<a class="sourceLine" id="cb25-2" title="2"><span class="kw">segments</span>(cats<span class="op">$</span>Bwt, lwr, cats<span class="op">$</span>Bwt, upr)</a>
+<a class="sourceLine" id="cb25-3" title="3"><span class="kw">points</span>(cats<span class="op">$</span>Bwt, <span class="kw">fitted</span>(fit_lm), <span class="dt">col =</span> <span class="st">&quot;red&quot;</span>)</a></code></pre></div>
 <p><img src="data:image/png;base64,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" /><!-- --></p>
 <p>Te plot shows that the predicted values from the classical linear model are nearly the same as the predictions from <code>lmvar</code>. We can also plot the fitted standard deviations with their 95% confidence interval:</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">plot</span>(cats<span class="op">$</span>Bwt, sigma, <span class="dt">xlab =</span> <span class="st">&quot;Body weight&quot;</span>, <span class="dt">ylab =</span> <span class="st">&quot;St dev of heart weight&quot;</span>, <span class="dt">ylim =</span> <span class="kw">c</span>(<span class="dv">1</span>, <span class="dv">2</span>))
-
-lwr =<span class="st"> </span>intervals[, <span class="st">&quot;sigma_lwr&quot;</span>]
-upr =<span class="st"> </span>intervals[, <span class="st">&quot;sigma_upr&quot;</span>]
-<span class="kw">segments</span>(cats<span class="op">$</span>Bwt, lwr, cats<span class="op">$</span>Bwt, upr)
-
-sigma_lm =<span class="st"> </span><span class="kw">summary</span>(fit_lm)<span class="op">$</span>sigma
-<span class="kw">abline</span>(sigma_lm, <span class="dv">0</span>, <span class="dt">col =</span> <span class="st">&quot;red&quot;</span>)</code></pre></div>
+<div class="sourceCode" id="cb26"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb26-1" title="1"><span class="kw">plot</span>(cats<span class="op">$</span>Bwt, sigma, <span class="dt">xlab =</span> <span class="st">&quot;Body weight&quot;</span>, <span class="dt">ylab =</span> <span class="st">&quot;St dev of heart weight&quot;</span>, <span class="dt">ylim =</span> <span class="kw">c</span>(<span class="dv">1</span>, <span class="dv">2</span>))</a>
+<a class="sourceLine" id="cb26-2" title="2"></a>
+<a class="sourceLine" id="cb26-3" title="3">lwr =<span class="st"> </span>intervals[, <span class="st">&quot;sigma_lwr&quot;</span>]</a>
+<a class="sourceLine" id="cb26-4" title="4">upr =<span class="st"> </span>intervals[, <span class="st">&quot;sigma_upr&quot;</span>]</a>
+<a class="sourceLine" id="cb26-5" title="5"><span class="kw">segments</span>(cats<span class="op">$</span>Bwt, lwr, cats<span class="op">$</span>Bwt, upr)</a>
+<a class="sourceLine" id="cb26-6" title="6"></a>
+<a class="sourceLine" id="cb26-7" title="7">sigma_lm =<span class="st"> </span><span class="kw">summary</span>(fit_lm)<span class="op">$</span>sigma</a>
+<a class="sourceLine" id="cb26-8" title="8"><span class="kw">abline</span>(sigma_lm, <span class="dv">0</span>, <span class="dt">col =</span> <span class="st">&quot;red&quot;</span>)</a></code></pre></div>
 <p><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAkAAAAJACAMAAABSRCkEAAAAb1BMVEUAAAAAADoAAGYAOjoAOpAAZrY6AAA6ADo6AGY6Ojo6OpA6kLY6kNtmAABmADpmZgBmZmZmkJBmtv+QOgCQkGaQtpCQ27aQ2/+2ZgC2kDq2tma2///bkDrb/7bb////AAD/tmb/25D//7b//9v///+d7LOQAAAACXBIWXMAAA7DAAAOwwHHb6hkAAASsElEQVR4nO2djWKjuBVGnVknO7uNp23cNrRDU2L7/Z+xBox/MgYjfbpCiHN2ZyZRyFWAE3ElQFodAARWU/8AMG8QCCQQCCQQCCQQCCQQCCQQCCQQCCQQCCQQCCQQCCQQCCQQCCQQCCQQCCQQCCQQCCQQCCQQCCQQCCQQCCQQCCQQCCQQCCQQCCQQCCQQCCQQCCQQCCQQCCQQCCQQCCQQCCQQCCQQCCQQCCQQCCQQCCQQCCQQCCQQCCQQCCQQCCQQCCQQCCQQCCQQCCQQCCQQCCQQCCQQCCQQCCQQCCQQCCQQCCQQCCQQCCQQCCQQCCQQCCQQCCQQCCQQCCQQCCQQCCQQCCQQCCQQCCQQCCQQCCQQCCQQCCQQCCQQCCQQCCQQCCQQCCQCC7SCTJhKoLDhYCoQCCQQCCQQCCSMBNpv2wzr288g4SBZbAQqV6/tB1X3gRQO0sVEoP32rE25/pDDQcKYCLTbvHUfVj0XMQTKBFogkLDKgU5NEDlQ7hj1wnabthfW0/4gUDYwDgQSCAQS1gKV9MLyJnIL5P4UAKQNlzCQQCCQMBKoPF6kmqEgcqDMMRpIfHo/7DbPBwTKHsNbGfvt+gOBcsf0Zmqx/kCgzLG9mVo8I1DmGOVAJ212m75nEhEoE8x6Ye1FbL9FoLxhHAgkEAgkEAgkEAhc+OW8IRC4gEAggUAggUAggUAggUAggUAggUAggUAggUAggUAggUAwkvtnCIFgJAgEEggEEggEEggEEggEEggEEggEEggEEggEEggEEggEIxmpyv1SBAIEAgkEAgkEAgkEAgkEAgkEAgkEAgkEAgkEAgkEAgkEgnH0HHQEgnEgEEggEEggEEggEEggEEggEEggEEggEEggEEggEEggEIzExQkEgl9AIJCYvUDFavW8365Wp9W/1XDgyNwFKtcfR4eeD4fd5jVAOHBl5gLtt0dtqqf3Q6uSGg6cmblAu83xylV9+3no/tbCgTMzF4gWaGpmLtAlB2pUksOBK3MXiF7YxMxeoNjh4BYEgpFIZz9ACGuBSnphtuQu0NcoZ4KEg6UJZBVuuSAQSCAQSCAQSGQp0G5zSZbphdmSpUCH/bbHG79w0E+eAh0Neg4ZDnrJVKBD1XsXzCsc9JGrQJHDLRcEgpHoqiDQokEgw3BLAIEMwy0BBDIMtwQQyDDcEkAgw3BLAIEMwy0BBDIMtwQQyDDcEkAgw3BLAIEMw2WFxXk2C4xA6YFA8cNlBQLFD5cVCBQ/XFYgUPxwWYFA8cNlBQLFD5cVCBQ/XFYgUPxwWYFA8cNlBQLFDzdT4p1ns8AINCUI5A0C1SxSoN2P9+bfvjnoHcMtmkUL1Dd9pmO4RbNAgYrLzD89c9A7hVs4CxTo0gJpIFDN7AT6dXpdkugpmZtAq+a/MTGH4jVrYPRPXucabsnMTKBV9//jmEPxCskc13qzZpEC9a5i6QQC1SxUoOHJ6xzDLYSpO0thAgfJgR7On+kWbiHkIVCYXtjnS4AmCIFcS5MQSB4HGjGFuEu45TD1eXYO3LOgUoCBxDAgkGtpXIHuZDv3t0WgOMxMoHv9rfvb+vTCzhcxIRdCINfSbAQ6VM1t1Gr1powIIZBraTYCdd34cv1RLw/vCQK5lmaTA3UDidW3n8IzZQjkWppNL2y/bS9cdQuEQL+S5nCNWWAlB1LGpBHItdQs8Ni25n6pTze+6YcdGx/ltjwCuZZaBR6d7dwvZRwoNDMTaHx/634pAoUGge6DQCNBoPu0G+42r+eRaG6m3mVmApEDpcbcBJqgFxYCBHItTTSwZzd+/VFoT0YjkGtpgIvV/aYmukDV03u5/hCfrUcg19IA6fL9ZCe2QPWtjPou6uB9jHqM8fNltXrqe4s1A4FmdaUZ6G7FFqi+mVoLNHQntfHn9/eBVzgQyLU0G4G6Fqjof5ajubwVzY2yvic+EMi1NBuBTjlQOfA8Yt3unG7a97VTCORamk0OdLqZ2pvd1NStT0kLFLQ0n17YCHabbz+bJqjq8wyBXEsTDWwjUP24UEPvA0MI5FqaaGCfXli/FuNBINfSABerNATq3usZTIIcws2WdAVyuz860SWsTnNGfFvfcCMCuZYG6LCnI1DdCHm1QJc36z2+eTJmlqqkLlB9i0KepAyB7AInLtDIa9fYcHNgZgIlnwMdmyC5H4ZAloHT7oXVlNLMCi71pkDCAmmPE7pvHKcXNmIaKgQKElh8oNl94xACFcNq1Oy3j/IkBAoR2DFdTkOgY/PyuAf/8K1nBAoReJYCjaN6kCMhUIjAGQsUOZwtyQo0zxwoCIkKFLe3vehemAgCZRLYI4nOecnLqU/HUKne1qQlUJZLXk59OvpLQ2Q7KQiU+ZKXU5+O3tIg/a0UBMp8ycupT0dvaUYCdZNsaiCQW2lGAmW9XtjUp6O/NJcc6KB2v1zrjcvUp2OoNJteWM4zlE19OuYX2KMFCsLUApmdpAAXK4sXSAdKEShg/VOfjkN/spOPQN01bNaXsGQF6u1u5SNQsf4on9WVUxGopzR/gerJf6p6hjL/tZ5c6jUCgQKF8BHo7fD5/Wfzxx8E6ivNPgeqR6Lr2xkIZBQi+15YfRu+eOUSZhZiVoE9BKrnHzv2xLTxaAQ69LY12QsUAgTqz3YQKH4455oSEKi3v5W9QPNa6gCBTAN7CDSzpQ4QyDSwu0CjljoYH86cZAVaag40ZqkDh3DmpCvQQnthI5Y6cAlnThICTf7+n1lg7xxoaKkDp3DWpCDQ9G8gmwX27IWps/wuSyDHdDl7gUKAQCECBylFoOGYCGQa2EOg/TbRJxKnPpb9xeRA1xsWqb7WM/WxHCimF3bZUByCdq1Xjhn7JKX5+pZZYB+BUn0zdepj2Ram+QKpWWB3gR7On+kWLiBTH8tDoHQ5c4HU9zEc65VjIpBpYEeBRkwh7hIuLFMfywMCDRD4jGcqEDlQLwg0spRemEst3mjh0jyWoULMKjAC+W48r9e3zAIjkOfGM3uB1Cywcy/sLYVJNqc/lr3drQR+tqiBnQV6RaBTEQINxOz9zjKJcaDpjyUCDccc+E5aoFMZOdBAzNGV+/I/yAQPgeqF46d9JjruL2MOb9+YBfZogapmlYw4b2WkcCyzeP/PLLC7QN1SB1HmB0rgWPamywn8bAkE9kiiTw+URXkzNYFjiUCDpbRAj4oRaLCUHOhhMTnQUKmHQDF7YUkcS3phA6U+Ao1m4OHXNAXK9+0bs8AmAo148DVJgTJ+/88ssE0L1KZJc2uBHNPlWZ1ns8BGl7Ddpu6juQiUwLFEII9SsxyoOGbZCBSwNNHAdkl0uXqdmUDkQB6l7gLtNiPfTP18+W1mAtELe7yx52bXGxZjR4H22/7BxokFsnsiPo3znLRAh7qXdUR6RX5agQyfBkvjPKcu0KFuXkbdTO2bTXpSgXqz5WzOc+oCebdAlwHGcT8IAk0WeCTuAjUz3Il3wmiB0g88EneBRvfC3OolB0os8Ei8cyCRaQWiFzaieBw+Apks92R1LGM/izFDgSQ8BHq83JPP3XijYxn9aTAEerThmOWeHvfxIwnUmy4jUCB8kugRyz09nIkTgdIJLOHfAg0v91Q9eGQagdIJLOGdA4V+qJ4cyD6wBZ69sPAP1dMLsw9sgY9AJvXqxzKNZzEQSN3QM5x8LBN5GgyBBje0m2hcPZaO6XLmAsXDJ4luXrmotCQIgUwDx8NdoG6IJ/C78QgUMnA83AUymp2DHChk4Hj4tEDtTbDA68Y7HeG7/a1l9sKmxisHqpugcrocKOkFTRDo8YZNV0xqfySBgmQ7CBQIH4FM6kUgv8BTg0DphUAgn3DkQI8Cp8kcBUp6UTcEUjf0DHdfifmtyYVAjzbs1sqIMJA4x/UoEOjRhp1AQ89Ee9R7Pym+ny1nLtCscBWouNyNl97rQaCBEHPCvwUKXC8CzZOkk+iF5kCzwlmgz5fXZnaOKM9E594LywBXgZppD+vbqQPzH/rUm81s8Ag0vGFRP01W1B2wIuQMZfmsR4FAgxs2b8S3zySGHAfqTZcRKHWcBXo7WYRATiGyxUegNv0J+Uw0As0WnxyoeRjx4fQJTvVmnwNli6tA1dN7uw5GIV3BFtcLyxbncaCqeZr182W6R1odN0YgU5wFsqo3G4EWBgKFDrEwECh0iIWBQKFDLAwE8t8YDgikbAwHBFI2hgMCKRvDAYHGFUMvCDSmGHpBoDHF0AsCjSmGXhAIJBAIJBAIJBAIJJYqEAQCgUACgUACgUAif4HAFAQCCQQCCQQCiZwEggkwEqhcrdplwfvmckWgTLARqJ5+YbepZ19AoMwxEahdk26/XX8gUO6YCNStilmsP2wEgmQwbIEO9WxCCJQ5RjnQSZvdpm91eQTKBLNeWHsR228RKG8SHweC1EEgkLAWSEyiIXUit0CXxaJs4kNskrmEwTxBIJBAIJBAIJAwuhd2SZbH9sJgnti0QL0D0H7hIF2MLmEPl2JBoEywyoGq1fCKmAiUCSTRIIFAIIFAIIFAIIFAIIFAIIFAIIFAIIFAIIFAIIFAIIFAIIFAIIFAIIFAIIFAIIFAIIFAIIFAIIFAIIFAIIFAIIFAIIFAIIFAIIFAIIFAIIFAIIFAIIFAIIFAIIFAIIFAIIFAIIFAIIFAIIFAIIFAIIFAIIFAIIFAIIFAIIFAIIFAIIFAIIFAIIFAIIFAIIFAIIFAIIFAIIFAIIFAIIFAIIFAIGEk0H67avj2M0g4SBYbgcrVa/tB1X0ghYN0MRFovz1rU64/5HCQMCYC7TZv3YdVz0UMgTKBFggkrHKgUxNEDpQ7Rr2w3abthfW0PwiUDYwDgQQCgYS1QCW9sLyJ3AKtzgQJB5PDJQwkEAgkEAgkEAgkjO6FXZJlemF5Y9MC7be9DwL5hIN0MXug7DlkOEgWqxyoWr0Nfh2BMoEkGiQQCCQQCCQQCCQQCCQQCCQmEwgyYSKBoseftrrcd28ECDSn+hDIGgSKDQLNqT4EsgaBYoNAc6oPgaxBoNgg0JzqQyBrECg2Cf5IMCcQCCQQCCQQCCQQCCQQCCQQCCQQCCQQCCQQCCQQCCQQCCQQCCRsBGrWFTuvhlCtVk/vJvXcq66dBuvBNDQi5fUeme/eTXUxds8FE4H22+P+lt1eVsdPKstDfFvd5++2Z/PQzpJ93iPz3butLsLuOWEi0OdLPYvQaTLydo2fwvB35qa63pWowrHbvF7m2rLfvZvqIuyeG4Y50OmX5vb0mld3KOM0790ZjbR7Z4Ei7d5oDAUq2oPatrn2vzin6g7FH9f5lxnlyddIu9dVF2v3RmMnULemWNsy2GYJV9XtNvVaVIXxIa7OJzHK7l2qi7N7DpgJVF3n0PYCVbcdE/sGb79tF02L9PvRVdeSUCJkJdBlTcMobfzXJRTbzMSULsWLdIW+UTTC7o3FSKDyckJjZJnl16wgQmf3dBJj9RFunEmoL28jUHk1G7B9P/emuvZAm7YIN1XEGqU4VRdh99wwGge6bhDMR9puq2vOpW2WWRzzkfMS1vYDiTfVRdg9J0wEKttJrp7e29GL0nis/0t1xfFj4xThVEWc3ftSXYTdc4GbqSCBQCCBQCCBQCCBQCCBQCCBQCCBQCCBQCCBQCCBQCCBQCCBQCCBQCCBQCCBQCCBQCCBQCCBQCCBQCCBQCCBQCCBQCCBQCCBQCCBQCCBQCCBQB3F6QX7X77weOaE3ebtzidVQm+w24FAHUUzBVj5qy2OU290At1YlS8I1NEK1MypewsCDYFAHZ1AzQRO3Uyo9dQt/3h6byblaSbYbaZYqer5Verty3a79puKdtvd5u8vq9Xb5/Gv62kNcwWBOk6XsNqSWpDd5rmdOrg65kX1jGD7bdOilI03z82MT/X1rp7dqhGo23a3qefNr/+lBVoUbRK9Os8GdrxytfPJFa0Mp3kJ6wta8bf1x/HT9nJ3lKv58mXb12YmOgRaGG0LVE8X3Lpw/LudirBR5rlpeg7N5Wr345/ffx6/1iZHJ1fO2zbi1Fsh0LJoBaqvRK1ARwHKs0BHPbp5CYvXzz//+6NOi6q2zVo1rpQItHBOApWdQDct0O7Hv36c+mLl+t/Ph+Ivx4zo3D2jBYJLC7T++JID1anyfvtH16X6/P7XY/r82zEjOityyYFKBFosXQ70dtULq92pmtHp8mpBu6aw3roZdTzl2Fe9sE6gdObiNQSBOq5vZXwdB7qZG7425TQ1dT0OdPzsPA707T9tl6wpKRgHgjOff46SIaEp5COBQOMoH12PmhxoIZetaxBoDJ8vj69GTad+EXnzDQgEEggEEggEEggEEggEEggEEggEEggEEggEEggEEggEEggEEggEEggEEggEEggEEggEEggEEggEEggEEggEEv8HjMve2IsbhrkAAAAASUVORK5CYII=" /><!-- --></p>
 <p>The red line is the standard deviation that is returned from the classical linear model.</p>
 <p>The coefficients <span class="math inline">\(\beta_\mu\)</span> and <span class="math inline">\(\beta_\sigma\)</span> that were displayed in the summary-overview, are obtained by</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">coef</span>(fit)</code></pre></div>
+<div class="sourceCode" id="cb27"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb27-1" title="1"><span class="kw">coef</span>(fit)</a></code></pre></div>
 <pre><code>##       Bwt     Bwt_s 
 ## 3.9030442 0.1344892</code></pre>
 <p>The suffix ’_s’ is added to show that ‘Bwt_s’ is the coefficient <span class="math inline">\(\beta_\sigma\)</span>. If we ask for <span class="math inline">\(\beta_\sigma\)</span> only, the real name of the coefficient is used</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">coef</span>(fit, <span class="dt">mu =</span> <span class="ot">FALSE</span>)</code></pre></div>
+<div class="sourceCode" id="cb29"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb29-1" title="1"><span class="kw">coef</span>(fit, <span class="dt">mu =</span> <span class="ot">FALSE</span>)</a></code></pre></div>
 <pre><code>##       Bwt 
 ## 0.1344892</code></pre>
 <p>We conclude this demonstration with the covariance matrix for the combined coefficients <span class="math inline">\((\beta_\mu, \beta_\sigma)\)</span></p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">vcov</span>(fit)</code></pre></div>
+<div class="sourceCode" id="cb31"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb31-1" title="1"><span class="kw">vcov</span>(fit)</a></code></pre></div>
 <pre><code>##              Bwt        Bwt_s
 ## Bwt   0.00196053 0.0000000000
 ## Bwt_s 0.00000000 0.0004537699</code></pre>
@@ -337,7 +542,7 @@ sigma_lm =<span class="st"> </span><span class="kw">summary</span>(fit_lm)<span 
 <ul>
 <li><p>Check whether the model for <span class="math inline">\(\sigma\)</span> contains factor levels which occur only a few times, or which occur almost always. Such levels are columns in <span class="math inline">\(X_\sigma\)</span> where nearly all elements are equal to 0 and a few equal to 1, or nearly all elements are equal to 1 and a few equal to zero. Remove these columns from <span class="math inline">\(X_\sigma\)</span> and run <code>lmvar</code> again.</p></li>
 <li><p>Run <code>lmvar</code> with the argument <code>control = list(remove_df_sigma_post = TRUE)</code>. With this option, <code>lmvar</code> tries to remove degrees of freedom from the model for <span class="math inline">\(\sigma\)</span> that prevent the fit to converge. See the vignette ‘Math’ for a mathematical background of this option.</p></li>
-<li><p>Create the model by starting with a model with only 2 degrees of freedom and gradually adding degrees of freedom, avoiding ones that prevent the fit to converge. This can be done by first running <code>lmvar_no_fit</code> (with the same arguments as <code>lmvar</code>). The resulting object is then input for the function <code>fwbw</code>. This function must be run with argument <code>fw = TRUE</code>. The function <code>fwbw</code> requires one to select a function that measures the goodness of fit. Reasonable choices for this function are e.g. <code>AIC</code> or <code>BIC</code>. The output of <code>fwbw</code> contains a model-fit which is hopefully one you can work with.</p></li>
+<li><p>Create the model by starting with a model with only 2 degrees of freedom and gradually adding degrees of freedom, avoiding ones that prevent the fit to converge. This can be done by first running <code>lmvar_no_fit</code> (with the same arguments as <code>lmvar</code>). The resulting object is then input for the function <code>fwbw</code>. This function must be run with argument <code>fw = TRUE</code>. The function <code>fwbw</code> requires one to select a function that measures the goodness of fit. Reasonable choices for this function are e.g. <code>AIC</code> or <code>BIC</code>. The output of <code>fwbw</code> contains a model-fit which is hopefully one you can work with.</p></li>
 </ul>
 </div>
 <div id="other-packages" class="section level2">
@@ -347,39 +552,39 @@ sigma_lm =<span class="st"> </span><span class="kw">summary</span>(fit_lm)<span 
 <div id="the-function-remlscore" class="section level3">
 <h3>The function ‘remlscore’</h3>
 <p>The function <code>remlscore</code> from the package ‘statmod’ <span class="citation">(Giner and Smyth 2016)</span> fits our example as follows.</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">require</span>(statmod)
-
-<span class="co"># Run the regression including intercept terms</span>
-intercept =<span class="st"> </span><span class="kw">rep</span>(<span class="dv">1</span>, <span class="kw">nrow</span>(cats))
-
-fit =<span class="st"> </span><span class="kw">remlscore</span>( cats<span class="op">$</span>Hwt, <span class="kw">cbind</span>(intercept, X), <span class="kw">cbind</span>(intercept, X))</code></pre></div>
+<div class="sourceCode" id="cb33"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb33-1" title="1"><span class="kw">require</span>(statmod)</a>
+<a class="sourceLine" id="cb33-2" title="2"></a>
+<a class="sourceLine" id="cb33-3" title="3"><span class="co"># Run the regression including intercept terms</span></a>
+<a class="sourceLine" id="cb33-4" title="4">intercept =<span class="st"> </span><span class="kw">rep</span>(<span class="dv">1</span>, <span class="kw">nrow</span>(cats))</a>
+<a class="sourceLine" id="cb33-5" title="5"></a>
+<a class="sourceLine" id="cb33-6" title="6">fit =<span class="st"> </span><span class="kw">remlscore</span>( cats<span class="op">$</span>Hwt, <span class="kw">cbind</span>(intercept, X), <span class="kw">cbind</span>(intercept, X))</a></code></pre></div>
 <p>The coefficients <span class="math inline">\(\beta\)</span> for the expected value can be obtained as <code>fit$beta</code>. The coefficients for the logarithm of the standard deviation as <code>fit$gamma</code>. By definition, the latter coefficients are twice the value calculated by <code>lmvar</code>.</p>
 </div>
 <div id="the-function-crch" class="section level3">
 <h3>The function ‘crch’</h3>
 <p>The function <code>crch</code> from the package ‘crch’ <span class="citation">(Messner, Mayr, and Zeileis 2016)</span> fits our example as follows.</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">require</span>(crch)
-
-<span class="co"># Run the regression including intercept terms</span>
-fit =<span class="st"> </span><span class="kw">crch</span>(Hwt <span class="op">~</span><span class="st"> </span>Bwt <span class="op">|</span><span class="st"> </span>Bwt , <span class="dt">data =</span> cats)</code></pre></div>
+<div class="sourceCode" id="cb34"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb34-1" title="1"><span class="kw">require</span>(crch)</a>
+<a class="sourceLine" id="cb34-2" title="2"></a>
+<a class="sourceLine" id="cb34-3" title="3"><span class="co"># Run the regression including intercept terms</span></a>
+<a class="sourceLine" id="cb34-4" title="4">fit =<span class="st"> </span><span class="kw">crch</span>(Hwt <span class="op">~</span><span class="st"> </span>Bwt <span class="op">|</span><span class="st"> </span>Bwt , <span class="dt">data =</span> cats)</a></code></pre></div>
 <p>All coefficients <span class="math inline">\(\beta\)</span> can be obtained with <code>coef(fit)</code>.</p>
 </div>
 <div id="the-function-gam" class="section level3">
 <h3>The function ‘gam’</h3>
 <p>The function <code>gam</code> from the package ‘mgcv’ <span class="citation">(Wood 2011)</span> fits our example as follows.</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">require</span>(mgcv)
-
-<span class="co"># Run the regression including intercept terms</span>
-fit =<span class="st"> </span><span class="kw">gam</span>(<span class="kw">list</span>(Hwt <span class="op">~</span><span class="st"> </span>Bwt, <span class="op">~</span><span class="st"> </span>Bwt) , <span class="dt">data =</span> cats, <span class="dt">family =</span> <span class="kw">gaulss</span>())</code></pre></div>
+<div class="sourceCode" id="cb35"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb35-1" title="1"><span class="kw">require</span>(mgcv)</a>
+<a class="sourceLine" id="cb35-2" title="2"></a>
+<a class="sourceLine" id="cb35-3" title="3"><span class="co"># Run the regression including intercept terms</span></a>
+<a class="sourceLine" id="cb35-4" title="4">fit =<span class="st"> </span><span class="kw">gam</span>(<span class="kw">list</span>(Hwt <span class="op">~</span><span class="st"> </span>Bwt, <span class="op">~</span><span class="st"> </span>Bwt) , <span class="dt">data =</span> cats, <span class="dt">family =</span> <span class="kw">gaulss</span>())</a></code></pre></div>
 <p>All coefficients <span class="math inline">\(\beta\)</span> can be obtained with <code>coef(fit)</code>.</p>
 </div>
 <div id="the-function-gamlss" class="section level3">
 <h3>The function ‘gamlss’</h3>
 <p>The function <code>gamlss</code> from the package ‘gamlss’ <span class="citation">(Rigby and Stasinopoulos 2005)</span> fits our example as follows.</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">require</span>(gamlss)
-
-<span class="co"># Run the regression including intercept terms</span>
-fit =<span class="st"> </span><span class="kw">gamlss</span>(Hwt <span class="op">~</span><span class="st"> </span>Bwt, <span class="op">~</span><span class="st"> </span>Bwt, <span class="dt">data =</span> cats)</code></pre></div>
+<div class="sourceCode" id="cb36"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb36-1" title="1"><span class="kw">require</span>(gamlss)</a>
+<a class="sourceLine" id="cb36-2" title="2"></a>
+<a class="sourceLine" id="cb36-3" title="3"><span class="co"># Run the regression including intercept terms</span></a>
+<a class="sourceLine" id="cb36-4" title="4">fit =<span class="st"> </span><span class="kw">gamlss</span>(Hwt <span class="op">~</span><span class="st"> </span>Bwt, <span class="op">~</span><span class="st"> </span>Bwt, <span class="dt">data =</span> cats)</a></code></pre></div>
 <p>The coefficients <span class="math inline">\(\beta\)</span> for the expected value can be obtained as <code>coef(fit)</code>. The coefficients for the log of the standard deviation are obtained by <code>coef(fit, what = &quot;sigma&quot;)</code>.</p>
 </div>
 <div id="other-options" class="section level3">
@@ -402,19 +607,19 @@ fit =<span class="st"> </span><span class="kw">gamlss</span>(Hwt <span class="op
 <p>Giner, Goknur, and Gordon K. Smyth. 2016. “Statmod: Probability Calculations for the Inverse Gaussian Distribution.” <em>R Journal</em> 8 (1): 339–51.</p>
 </div>
 <div id="ref-maxLik">
-<p>Henningsen, Arne, and Ott Toomet. 2011. “MaxLik: A Package for Maximum Likelihood Estimation in R.” <em>Computational Statistics</em> 26 (3): 443–58. doi:<a href="https://doi.org/10.1007/s00180-010-0217-1">10.1007/s00180-010-0217-1</a>.</p>
+<p>Henningsen, Arne, and Ott Toomet. 2011. “MaxLik: A Package for Maximum Likelihood Estimation in R.” <em>Computational Statistics</em> 26 (3): 443–58. <a href="https://doi.org/10.1007/s00180-010-0217-1">https://doi.org/10.1007/s00180-010-0217-1</a>.</p>
 </div>
 <div id="ref-geepack">
 <p>Hojsgaard, Soren, Ulrich Halekoh, and Jun Yan. 2006. “The R Package Geepack for Generalized Estimating Equations.” <em>Journal of Statistical Software</em> 15/2: 1–11.</p>
 </div>
 <div id="ref-crch">
-<p>Messner, Jakob W., Georg J. Mayr, and Achim Zeileis. 2016. “Heteroscedastic Censored and Truncated Regression with crch.” <em>The R Journal</em> 8 (1): 173–81. <a href="https://journal.r-project.org/archive/2016-1/messner-mayr-zeileis.pdf" class="uri">https://journal.r-project.org/archive/2016-1/messner-mayr-zeileis.pdf</a>.</p>
+<p>Messner, Jakob W., Georg J. Mayr, and Achim Zeileis. 2016. “Heteroscedastic Censored and Truncated Regression with crch.” <em>The R Journal</em> 8 (1): 173–81. <a href="https://journal.r-project.org/archive/2016-1/messner-mayr-zeileis.pdf">https://journal.r-project.org/archive/2016-1/messner-mayr-zeileis.pdf</a>.</p>
 </div>
 <div id="ref-gamlss">
 <p>Rigby, R. A., and D. M. Stasinopoulos. 2005. “Generalized Additive Models for Location, Scale and Shape,(with Discussion).” <em>Applied Statistics</em> 54.3: 507–54.</p>
 </div>
 <div id="ref-hglm">
-<p>Ronnegard, Lars, Xia Shen, and Moudud Alam. 2010. “Hglm: A Package for Fitting Hierarchical Generalized Linear Models.” <em>The R Journal</em> 2 (2): 20–28. <a href="https://journal.r-project.org/archive/2010-2/RJournal_2010-2_Roennegaard~et~al.pdf" class="uri">https://journal.r-project.org/archive/2010-2/RJournal_2010-2_Roennegaard~et~al.pdf</a>.</p>
+<p>Ronnegard, Lars, Xia Shen, and Moudud Alam. 2010. “Hglm: A Package for Fitting Hierarchical Generalized Linear Models.” <em>The R Journal</em> 2 (2): 20–28. <a href="https://journal.r-project.org/archive/2010-2/RJournal_2010-2_Roennegaard~et~al.pdf">https://journal.r-project.org/archive/2010-2/RJournal_2010-2_Roennegaard~et~al.pdf</a>.</p>
 </div>
 <div id="ref-mgcv">
 <p>Wood, S. N. 2011. “Fast Stable Restricted Maximum Likelihood and Marginal Likelihood Estimation of Semiparametric Generalized Linear Models.” <em>Journal of the Royal Statistical Society (B)</em> 73 (1): 3–36.</p>

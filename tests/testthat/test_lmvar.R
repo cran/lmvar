@@ -181,26 +181,49 @@ test_that("Option to remove degrees of freedom to improve fit", {
 
 test_that("options 'mu_full_rank' and 'sigma_full_rank' work correctly", {
 
-  X_mu = fit$X_mu
-  X_sigma = fit$X_sigma
-  col_mu = ncol(X_mu)
-  col_sigma = ncol(X_sigma)
+  col_mu = ncol(fit$X_mu)
+  col_sigma = ncol(fit$X_sigma)
 
-  X_mu = cbind( X_mu, X_mu[,1] + X_mu[,2])
-  X_sigma = cbind( X_sigma, X_sigma[,1] + X_sigma[,2])
+  # Obviously rank-deficient model matrices
+  X_mu = cbind( fit$X_mu, rep.int( 0, nobs(fit)))
+  X_sigma = cbind( fit$X_sigma, rep.int( 0, nobs(fit)))
 
   fit_test = lmvar( fit$y, X_mu[,-1], X_sigma[,-1])
   expect_equal( ncol(fit_test$X_mu), col_mu)
   expect_equal( ncol(fit_test$X_sigma), col_sigma)
 
-  expect_error( suppressWarnings(lmvar( fit$y, X_mu[,-1], X_sigma[,-1], control = list(mu_full_rank = TRUE))),
+  expect_error( suppressWarnings(lmvar( fit$y, X_mu[,-1], X_sigma[,-1],
+                                        control = list(mu_full_rank = TRUE))),
                 regexp = "requires numeric/complex matrix/vector arguments")
 
-  expect_warning( lmvar( fit$y, X_mu[,-1], X_sigma[,-1], control = list(sigma_full_rank = TRUE)),
+  expect_warning( lmvar( fit$y, X_mu[,-1], X_sigma[,-1],
+                         control = list(sigma_full_rank = TRUE)),
                   regexp = "Log-likelihood appears not to be at a maximum!")
 
   expect_error( suppressWarnings(lmvar( fit$y, X_mu[,-1], X_sigma[,-1],
                                         control = list( mu_full_rank = TRUE, sigma_full_rank = TRUE))),
                 regexp = "requires numeric/complex matrix/vector arguments")
+
+  # Subtly rank-deficient model matrices
+  X_mu = cbind( fit$X_mu, fit$X_mu[,1] + fit$X_mu[,2])
+  X_sigma = cbind( fit$X_sigma, fit$X_sigma[,1] + fit$X_sigma[,2])
+
+  fit_test = lmvar( fit$y, X_mu[,-1], X_sigma[,-1])
+  expect_equal( ncol(fit_test$X_mu), col_mu)
+  expect_equal( ncol(fit_test$X_sigma), col_sigma)
+
+  passed = tryCatch( {expect_error( suppressWarnings(lmvar( fit$y, X_mu[,-1], X_sigma[,-1], control = list(mu_full_rank = TRUE))),
+                regexp = "requires numeric/complex matrix/vector arguments"); TRUE},
+                error = function(e) FALSE)
+  skip_if_not(passed)
+
+  expect_warning( lmvar( fit$y, X_mu[,-1], X_sigma[,-1], control = list(sigma_full_rank = TRUE)),
+                  regexp = "Log-likelihood appears not to be at a maximum!")
+
+  passed = tryCatch( {expect_error( suppressWarnings(lmvar( fit$y, X_mu[,-1], X_sigma[,-1],
+                                        control = list( mu_full_rank = TRUE, sigma_full_rank = TRUE))),
+                regexp = "requires numeric/complex matrix/vector arguments"); TRUE},
+                error = function(e) FALSE)
+  skip_if_not(passed)
 })
 
